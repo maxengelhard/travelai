@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "SAM template for backend and related functions"
+
+Globals:
+  Function:
+    Timeout: 60
+    Tracing: PassThrough
+  Api:
+    Cors: 
+      AllowMethods: "'GET,POST,PUT,PATCH,DELETE,OPTIONS'"
+      AllowHeaders: "'Accept-Encoding,Content-Encoding,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Client-ID,key,secret,session'"
+      AllowOrigin: "'*'"
+
+Parameters:
+  HOSTEDZONEID:
+    Type: String
+  CERTIFICATEARN:
+    Type: String
+  STAGE:
+    Type: String
+  APIDOMAINSUFFIX:
+    Type: String
+  USERPOOLID:
+    Type: String
+  DBUSERNAME:
+    Type: String
+  DBPASSWORD:
+    Type: String
+  DBHOST:
+    Type: String
+  DBDATABASE:
+    Type: String
+  STRIPESECRETKEY:
+    Type: String
+  STRIPEWEBHOOKKEY:
+    Type: String
+  STRIPECONNECTWEBHOOKKEY:
+    Type: String
+  STRIPEPRODUCTID:
+    Type: String
+  STRIPECOUPON:
+    Type: String
+  EC2S3BUCKET:
+    Type: String
+  SUBNETID:
+    Type: String
+  KEYPAIRNAME:
+    Type: String
+  SENDGRIDKEY:
+    Type: String
+  TELEGRAMTOKEN:
+    Type: String
+  BARSTOOLBEARERAPI:
+    Type: String
+  PINNACLEAPIKEY:
+    Type: String
+  
+
+Conditions:
+  IsProd: !Equals [ !Ref STAGE, prd ]
+
+Resources:
+
+  # define api gateway
+  ApiGatewayBackend:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref STAGE
+      Name: !Sub "betchime_api_${STAGE}"
+      Auth:
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${USERPOOLID}"
+  
+  ApiGatewayStripe:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref STAGE
+      Name: !Sub "stripe_handler_${STAGE}"
+    
+  ApiDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !Sub "${APIDOMAINSUFFIX}.betchime.com"
+      CertificateArn:
+        Ref: CERTIFICATEARN
+
+  APIMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: ApiDomain
+    Properties: 
+      DomainName: !Sub "${APIDOMAINSUFFIX}.betchime.com"
+      RestApiId: !Ref ApiGatewayBackend
+      Stage: !Ref STAGE
+
+  Route53RecordSet:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Sub "${APIDOMAINSUFFIX}.betchime.com"
+      Type: A
+      HostedZoneId: 
+        Ref: HOSTEDZONEID
+      AliasTarget:
+        DNSName: !GetAtt ApiDomain.DistributionDomainName
+        EvaluateTargetHealth: false
+        HostedZoneId: !GetAtt ApiDomain.DistributionHostedZoneId
+
+######## API's #########
+  ServerlessTelegramBot:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "itinerary_${STAGE}"
+      Handler: itinerary.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64
+      Description: The main itinerary function
+      Environment:
+        Variables:
+          OPENAI_API_KEY: !Ref OPENAIAPIKEY
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /itinerary
+            Method: post
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
