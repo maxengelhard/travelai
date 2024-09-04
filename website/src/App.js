@@ -12,6 +12,14 @@ const backgroundImages = [
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination6.jpg',
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination7.jpg',
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination8.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination9.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination11.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination12.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination13.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination14.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination15.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination16.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination18.jpg',
 ];
 
 const styles = `
@@ -94,28 +102,56 @@ function App() {
     const scrollContent = document.createElement('div');
     scrollContent.classList.add('netflix-scroll-content');
 
-    // Create enough thumbnails to fill the container
-    const containerWidth = Math.max(window.innerWidth, window.innerHeight) * 1.5; // Use the larger dimension
-    const containerHeight = Math.max(window.innerWidth, window.innerHeight) * 1.5; // Use the larger dimension
-    const thumbnailWidth = 200 + 10; // Width + margin
-    const thumbnailHeight = 200 + 10; // Height + margin
-    const columnsNeeded = Math.ceil(containerWidth / thumbnailWidth);
-    const rowsNeeded = Math.ceil(containerHeight / thumbnailHeight);
-    const totalThumbnails = columnsNeeded * rowsNeeded;
+    const containerWidth = Math.max(window.innerWidth, window.innerHeight) * 1.5;
+    const containerHeight = Math.max(window.innerWidth, window.innerHeight) * 1.5;
+    const thumbnailWidth = 200 + 10;
+    const thumbnailHeight = 200 + 10;
+    const columns = Math.ceil(containerWidth / thumbnailWidth);
+    const rows = Math.ceil(containerHeight / thumbnailHeight);
 
-    // Create an array of shuffled indices
-    const shuffledIndices = [];
-    for (let i = 0; i < totalThumbnails; i++) {
-      shuffledIndices.push(Math.floor(Math.random() * backgroundImages.length));
-    }
+    const grid = Array(rows).fill().map(() => Array(columns).fill(null));
+    const imageCount = backgroundImages.length;
 
-    for (let i = 0; i < totalThumbnails; i++) {
-      const thumbnail = document.createElement('div');
-      thumbnail.classList.add('netflix-thumbnail');
-      // Use the shuffled index to select the image
-      const imageIndex = shuffledIndices[i];
-      thumbnail.style.backgroundImage = `url(${backgroundImages[imageIndex]})`;
-      scrollContent.appendChild(thumbnail);
+    const isValidPlacement = (row, col, imageIndex) => {
+      const adjacentPositions = [
+        [row - 1, col], [row + 1, col],
+        [row, col - 1], [row, col + 1],
+        [row - 1, col - 1], [row - 1, col + 1],
+        [row + 1, col - 1], [row + 1, col + 1]
+      ];
+
+      for (const [r, c] of adjacentPositions) {
+        if (r >= 0 && r < rows && c >= 0 && c < columns) {
+          if (grid[r][c] === imageIndex) return false;
+        }
+      }
+      return true;
+    };
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < columns; col++) {
+        let attempts = 0;
+        let placedImage = false;
+
+        while (!placedImage && attempts < imageCount) {
+          const imageIndex = Math.floor(Math.random() * imageCount);
+          if (isValidPlacement(row, col, imageIndex)) {
+            grid[row][col] = imageIndex;
+            placedImage = true;
+          }
+          attempts++;
+        }
+
+        if (!placedImage) {
+          // If we couldn't place a unique image, just place any
+          grid[row][col] = Math.floor(Math.random() * imageCount);
+        }
+
+        const thumbnail = document.createElement('div');
+        thumbnail.classList.add('netflix-thumbnail');
+        thumbnail.style.backgroundImage = `url(${backgroundImages[grid[row][col]]})`;
+        scrollContent.appendChild(thumbnail);
+      }
     }
 
     // Duplicate the content for seamless scrolling
