@@ -1,12 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TravelForm from './components/TravelForm';
 import Itinerary from './components/Itinerary';
 import Navigation from './components/Navigation';
 
+const backgroundImages = [
+  '/travel_images/destination1.jpg',
+  '/travel_images/destination2.jpg',
+  '/travel_images/destination3.jpg',
+  '/travel_images/destination4.jpg',
+  '/travel_images/destination5.jpg',
+  '/travel_images/destination6.jpg',
+  '/travel_images/destination7.jpg',
+  '/travel_images/destination8.jpg',
+];
 
 function App() {
   const [itinerary, setItinerary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const generateItinerary = async (destination, days, budget) => {
     setIsLoading(true);
@@ -16,7 +35,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ destination, days, budget }),
+        body: JSON.stringify({ destination, days: 1, budget }),
       });
 
       if (!response.ok) {
@@ -25,6 +44,7 @@ function App() {
 
       const data = await response.json();
       setItinerary(data.itinerary);
+      setShowPaymentPrompt(true);
     } catch (error) {
       console.error("Error generating itinerary:", error);
       setItinerary("Sorry, there was an error generating your itinerary. Please try again.");
@@ -32,16 +52,57 @@ function App() {
     setIsLoading(false);
   };
 
+  const handlePayment = () => {
+    // Implement Stripe payment logic here
+    console.log("Redirecting to payment...");
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 to-purple-500 flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
       <Navigation />
-      <div className="relative py-3 sm:max-w-xl sm:mx-auto">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-        <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">Travel AI Itinerary Planner</h1>
-          <TravelForm onSubmit={generateItinerary} />
-          {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
-          {itinerary && <Itinerary plan={itinerary} />}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-black opacity-50 z-10"></div>
+        <div className="flex -rotate-12 transform scale-125 animate-slide">
+          {backgroundImages.concat(backgroundImages).map((img, index) => (
+            <div
+              key={index}
+              className="w-1/4 h-screen flex-shrink-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${img})` }}
+            ></div>
+          ))}
+        </div>
+      </div>
+      <div className="flex-grow flex items-center justify-center z-20 relative pt-32">
+        <div className="container mx-auto px-4 py-12 flex">
+          <div className="w-1/2 pr-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">#1 AI Travel Planner</h1>
+            <p className="text-xl mb-4">🌍 Plan your dream vacation with AI</p>
+            <ul className="list-disc list-inside mb-4">
+              <li>📅 Get personalized day-by-day itineraries</li>
+              <li>💰 Stay within your budget</li>
+              <li>🏖️ Discover hidden gems and local favorites</li>
+            </ul>
+            <p className="text-lg">
+              Save time and money by using our AI travel planner instead of hiring an expensive travel agent!
+            </p>
+          </div>
+          <div className="w-1/2 bg-white bg-opacity-90 p-8 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Plan Your Trip</h2>
+            <TravelForm onSubmit={generateItinerary} />
+            {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
+            {itinerary && <Itinerary plan={itinerary} />}
+            {showPaymentPrompt && (
+              <div className="mt-4 p-4 bg-blue-100 rounded">
+                <p className="mb-2">Want to see the full itinerary? Sign up and pay to unlock all days!</p>
+                <button
+                  onClick={handlePayment}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  Sign Up and Pay
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
