@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import TravelForm from './components/TravelForm';
 import Itinerary from './components/Itinerary';
 import Navigation from './components/Navigation';
 
 const backgroundImages = [
-  '/travel_images/destination1.jpg',
-  '/travel_images/destination2.jpg',
-  '/travel_images/destination3.jpg',
-  '/travel_images/destination4.jpg',
-  '/travel_images/destination5.jpg',
-  '/travel_images/destination6.jpg',
-  '/travel_images/destination7.jpg',
-  '/travel_images/destination8.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination1.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination2.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination3.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination4.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination5.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination6.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination7.jpg',
+  'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination8.jpg',
 ];
 
 function App() {
