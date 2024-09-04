@@ -17,15 +17,8 @@ const backgroundImages = [
 function App() {
   const [itinerary, setItinerary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const generateItinerary = async (destination, days, budget) => {
     setIsLoading(true);
@@ -75,7 +68,7 @@ function App() {
       <div className="flex-grow flex items-center justify-center z-20 relative pt-32">
         <div className="container mx-auto px-4 py-12 flex">
           <div className="w-1/2 pr-8 text-white">
-            <h1 className="text-4xl font-bold mb-4">#1 AI Travel Planner</h1>
+            <h1 className="text-4xl font-bold mb-4">Fire Your Travel Agent</h1>
             <p className="text-xl mb-4">🌍 Plan your dream vacation with AI</p>
             <ul className="list-disc list-inside mb-4">
               <li>📅 Get personalized day-by-day itineraries</li>
