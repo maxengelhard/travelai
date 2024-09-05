@@ -88,7 +88,7 @@ Resources:
         HostedZoneId: !GetAtt ApiDomain.DistributionHostedZoneId
 
 ######## API's #########
-  ServerlessTelegramBot:
+  Itinerary:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
