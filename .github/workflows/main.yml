@@ -1,0 +1,84 @@
+name: Upload functions
+
+on:
+  push:
+    branches: [ main  , dev ]
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      STACK_NAME: 'travelai' # default stack
+      BACKEND_BUCKET: ${{ secrets.BACKEND_BUCKET }} 
+      STAGE: prd
+      APIDOMAINSUFFIX: api
+      USERPOOLID: ${{ secrets.USERPOOL_ID }}
+      COGNITOIDENTITYPOOL: ${{ secrets.COGNITO_IDENTITY_POOL_ID }}
+      USER_POOLS_WEB_CLIENT_ID: ${{ secrets.USER_POOLS_WEB_CLIENT_ID }}
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_KEY: ${{ secrets.STRIPE_WEBHOOK_KEY }}
+      STRIPE_CONNECT_WEBHOOK_KEY: ${{ secrets.STRIPE_CONNECT_WEBHOOK_KEY }} 
+      STRIPE_PRODUCT_ID: ${{ secrets.STRIPE_PRODUCT_ID }}
+      STRIPE_COUPON: ${{ secrets.STRIPE_COUPON }}
+
+    steps:
+    - uses: actions/checkout@main
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        architecture: 'x64'
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-region: us-east-1
+        role-to-assume: ${{ secrets.OPENID }}
+        role-session-name: MySessionName
+    
+
+    - name: Set ENV's based on branch
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+          echo "STACK_NAME=bowtiedjungle-backend-dev" >> $GITHUB_ENV
+          echo "FRONT_END_APP_BUCKET=${{ secrets.FRONT_END_APP_BUCKET_DEV }}" >> $GITHUB_ENV
+          echo "FRONT_END_LANDING_PAGE_BUCKET=${{ secrets.FRONT_END_LANDING_PAGE_BUCKET_DEV }}" >> $GITHUB_ENV
+          echo "BACKEND_BUCKET=${{ secrets.BACKEND_BUCKET_DEV }}" >> $GITHUB_ENV
+          echo "STAGE=dev" >> $GITHUB_ENV
+          echo "APIDOMAINSUFFIX=apidev" >> $GITHUB_ENV
+          echo "USERPOOLID=${{ secrets.USERPOOL_ID_DEV }}" >> $GITHUB_ENV
+          echo "COGNITOIDENTITYPOOL=${{ secrets.COGNITO_IDENTITY_POOL_ID_DEV }}" >> $GITHUB_ENV
+          echo "USER_POOLS_WEB_CLIENT_ID=${{ secrets.USER_POOLS_WEB_CLIENT_ID_DEV }}" >> $GITHUB_ENV
+          echo "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY_DEV }}" >> $GITHUB_ENV
+          echo "STRIPE_WEBHOOK_KEY=${{ secrets.STRIPE_WEBHOOK_KEY_DEV }}" >> $GITHUB_ENV
+          echo "STRIPE_CONNECT_WEBHOOK_KEY=${{ secrets.STRIPE_CONNECT_WEBHOOK_KEY_DEV }}" >> $GITHUB_ENV
+          echo "STRIPE_PRODUCT_ID=${{ secrets.STRIPE_PRODUCT_ID_DEV }}" >> $GITHUB_ENV
+          echo "STRIPE_COUPON=${{ secrets.STRIPE_COUPON_DEV }}" >> $GITHUB_ENV
+        fi
+
+
+#### BACKEND #####    
+    - name: Setup AWS SAM CLI
+      uses: aws-actions/setup-sam@v2
+      with:
+          use-installer: true
+
+    # - name: Copy files to telegram bucket
+    #   run:
+    #     aws s3 sync  backend/functions/src/telegram ${{ env.EC2_S3_BUCKET }}
+      
+    - name: SAM build us-east-1
+      run: sam build --template './backend/functions/template.yml'
+    
+    - name: SAM Package
+      run: sam package --template-file .aws-sam/build/template.yaml --s3-bucket ${{ env.BACKEND_BUCKET }} --output-template-file sam-packaged.yaml
+    
+    - name: SAM deploy us-east-1
+      run: sam deploy --stack-name ${{ env.STACK_NAME }} --parameter-overrides "USERPOOLID=${{ env.USERPOOLID }}" "DBUSERNAME=${{ env.DB_USERNAME }}" "DBPASSWORD=${{ env.DB_PASSWORD }}" "DBHOST=${{ env.DB_HOST }}" "DBDATABASE=${{ env.DB_DATABASE }}" "STRIPESECRETKEY=${{ env.STRIPE_SECRET_KEY }}" "APIDOMAINSUFFIX=${{ env.APIDOMAINSUFFIX }}" "STAGE=${{ env.STAGE }}"  "HOSTEDZONEID=${{ secrets.HOSTEDZONEID }}" "CERTIFICATEARN=${{ secrets.CERTIFICATEARN}}" "BUCKET=${{ env.BACKEND_BUCKET }}" "CREDKEY=${{ env.CRED_KEY }}" --template-file sam-packaged.yaml --s3-bucket ${{ env.BACKEND_BUCKET }} --region us-east-1 --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM --no-confirm-changeset --no-fail-on-empty-changeset

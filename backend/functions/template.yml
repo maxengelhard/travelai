@@ -13,23 +13,9 @@ Globals:
       AllowOrigin: "'*'"
 
 Parameters:
-  HOSTEDZONEID:
-    Type: String
-  CERTIFICATEARN:
-    Type: String
   STAGE:
     Type: String
-  APIDOMAINSUFFIX:
-    Type: String
   USERPOOLID:
-    Type: String
-  DBUSERNAME:
-    Type: String
-  DBPASSWORD:
-    Type: String
-  DBHOST:
-    Type: String
-  DBDATABASE:
     Type: String
   STRIPESECRETKEY:
     Type: String
@@ -40,20 +26,6 @@ Parameters:
   STRIPEPRODUCTID:
     Type: String
   STRIPECOUPON:
-    Type: String
-  EC2S3BUCKET:
-    Type: String
-  SUBNETID:
-    Type: String
-  KEYPAIRNAME:
-    Type: String
-  SENDGRIDKEY:
-    Type: String
-  TELEGRAMTOKEN:
-    Type: String
-  BARSTOOLBEARERAPI:
-    Type: String
-  PINNACLEAPIKEY:
     Type: String
   
 
@@ -67,7 +39,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref STAGE
-      Name: !Sub "betchime_api_${STAGE}"
+      Name: !Sub "travelai_api_${STAGE}"
       Auth:
         AddDefaultAuthorizerToCorsPreflight: false
         Authorizers:
@@ -79,33 +51,7 @@ Resources:
     Properties:
       StageName: !Ref STAGE
       Name: !Sub "stripe_handler_${STAGE}"
-    
-  ApiDomain:
-    Type: AWS::ApiGateway::DomainName
-    Properties:
-      DomainName: !Sub "${APIDOMAINSUFFIX}.betchime.com"
-      CertificateArn:
-        Ref: CERTIFICATEARN
 
-  APIMapping:
-    Type: AWS::ApiGateway::BasePathMapping
-    DependsOn: ApiDomain
-    Properties: 
-      DomainName: !Sub "${APIDOMAINSUFFIX}.betchime.com"
-      RestApiId: !Ref ApiGatewayBackend
-      Stage: !Ref STAGE
-
-  Route53RecordSet:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Name: !Sub "${APIDOMAINSUFFIX}.betchime.com"
-      Type: A
-      HostedZoneId: 
-        Ref: HOSTEDZONEID
-      AliasTarget:
-        DNSName: !GetAtt ApiDomain.DistributionDomainName
-        EvaluateTargetHealth: false
-        HostedZoneId: !GetAtt ApiDomain.DistributionHostedZoneId
 
 ######## API's #########
   ServerlessTelegramBot:
