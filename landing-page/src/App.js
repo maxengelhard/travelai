@@ -2,7 +2,6 @@ import React, { useState , useEffect } from 'react';
 import TravelForm from './components/TravelForm';
 import Itinerary from './components/Itinerary';
 import Navigation from './components/Navigation';
-// import API from './services/API';
 
 const backgroundImages = [
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination1.jpg',

@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@keyframes slide {
+  0% {
+    transform: translateX(0) rotate(-12deg) scale(1.25);
+  }
+  100% {
+    transform: translateX(-50%) rotate(-12deg) scale(1.25);
+  }
+}
+
+.netflix-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  animation: scroll 60s linear infinite;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-slide {
+  animation: slide 60s linear infinite;
+}
