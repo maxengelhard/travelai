@@ -23,16 +23,16 @@ Parameters:
     Type: String
   USERPOOLID:
     Type: String
-  STRIPESECRETKEY:
-    Type: String
-  STRIPEWEBHOOKKEY:
-    Type: String
-  STRIPECONNECTWEBHOOKKEY:
-    Type: String
-  STRIPEPRODUCTID:
-    Type: String
-  STRIPECOUPON:
-    Type: String
+  # STRIPESECRETKEY:
+  #   Type: String
+  # STRIPEWEBHOOKKEY:
+  #   Type: String
+  # STRIPECONNECTWEBHOOKKEY:
+  #   Type: String
+  # STRIPEPRODUCTID:
+  #   Type: String
+  # STRIPECOUPON:
+  #   Type: String
   OPENAIAPIKEY:
     Type: String
   
