@@ -1,0 +1,38 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-travelai-dev-9bd18-authRole",
+      "UnauthRoleArn": "arn:aws:iam::737802338670:role/amplify-travelai-dev-9bd18-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::737802338670:role/amplify-travelai-dev-9bd18-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-travelai-dev-9bd18-deployment",
+      "UnauthRoleName": "amplify-travelai-dev-9bd18-unauthRole",
+      "StackName": "amplify-travelai-dev-9bd18",
+      "StackId": "arn:aws:cloudformation:us-east-1:737802338670:stack/amplify-travelai-dev-9bd18/e4de0ba0-6b8e-11ef-8e68-12d291371dd5",
+      "AmplifyAppId": "d3lrnl7d20pot7"
+    },
+    "categories": {
+      "auth": {
+        "travelaib27efb33": {}
+      }
+    }
+  },
+  "prd": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-travelai-prd-1b77a-authRole",
+      "UnauthRoleArn": "arn:aws:iam::737802338670:role/amplify-travelai-prd-1b77a-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::737802338670:role/amplify-travelai-prd-1b77a-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-travelai-prd-1b77a-deployment",
+      "UnauthRoleName": "amplify-travelai-prd-1b77a-unauthRole",
+      "StackName": "amplify-travelai-prd-1b77a",
+      "StackId": "arn:aws:cloudformation:us-east-1:737802338670:stack/amplify-travelai-prd-1b77a/477092b0-6b8f-11ef-9bd3-12c49d2e93bd",
+      "AmplifyAppId": "d3lrnl7d20pot7"
+    },
+    "categories": {
+      "auth": {
+        "travelaib27efb33": {}
+      }
+    }
+  }
+}
