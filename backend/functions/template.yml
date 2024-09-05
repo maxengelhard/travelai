@@ -54,11 +54,11 @@ Resources:
           CognitoAuthorizer:
             UserPoolArn: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${USERPOOLID}"
   
-  ApiGatewayStripe:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Ref STAGE
-      Name: !Sub "stripe_handler_${STAGE}"
+  # ApiGatewayStripe:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     StageName: !Ref STAGE
+  #     Name: !Sub "stripe_handler_${STAGE}"
     
   ApiDomain:
     Type: AWS::ApiGateway::DomainName
