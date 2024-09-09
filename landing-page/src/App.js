@@ -200,7 +200,23 @@ function App() {
         <div className="flex-grow flex items-start lg:items-center justify-center z-20 relative pt-16 lg:pt-32 px-4">
           <div className="container mx-auto py-8 lg:py-12 flex flex-col lg:flex-row lg:items-center lg:justify-end">
             <div className="w-full lg:w-1/2 lg:pr-12 text-white mb-8 lg:mb-0">
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6">Fire Your Travel Agent</h1>
+              <div className="flex flex-col mb-8">
+                <div className="flex items-center mb-6">
+                  <div className="flex items-center">
+                    <h1 className="text-2xl font-bold text-white mr-2">
+                      #1 AI Travel App
+                    </h1>
+                    <div className="flex">
+                      {[...Array(5)].map((_, index) => (
+                        <svg key={index} className="w-6 h-6 text-yellow-400 fill-current" viewBox="0 0 24 24">
+                          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                        </svg>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <h2 className="text-4xl lg:text-5xl font-bold">Fire Your Travel Agent</h2>
+              </div>
               <p className="text-xl lg:text-2xl mb-6">🌍 Plan your dream vacation with AI</p>
               <ul className="list-disc list-inside mb-6 text-lg lg:text-xl">
                 <li>📅 Get personalized day-by-day itineraries</li>
