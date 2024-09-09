@@ -215,7 +215,7 @@ function App() {
                     </div>
                   </div>
                 </div>
-                <h2 className="text-4xl lg:text-5xl font-bold">Fire Your Travel Agent</h2>
+                <h2 className="text-4xl lg:text-5xl font-bold">🔥 Fire Your Travel Agent</h2>
               </div>
               <p className="text-xl lg:text-2xl mb-6">🌍 Plan your dream vacation with AI</p>
               <ul className="list-disc list-inside mb-6 text-lg lg:text-xl">
