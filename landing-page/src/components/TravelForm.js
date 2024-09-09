@@ -89,7 +89,6 @@ function TravelForm({ onSubmit }) {
           className="mt-1 block w-full rounded-md border-blue-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           placeholder="your@email.com"
         />
-        <p className="mt-2 text-xs text-blue-600">We'll send your itinerary to this email address.</p>
       </div>
       <button
         type="submit"
