@@ -11,13 +11,19 @@ function TravelForm({ onSubmit }) {
   const [destination, setDestination] = useState('');
   const [days, setDays] = useState('');
   const [budget, setBudget] = useState('');
+  const [email, setEmail] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!email) {
+      alert('Please enter your email address');
+      return;
+    }
     onSubmit(
       destination || 'any destination',
       days || 'flexible duration',
-      budget ? `$${budget}` : 'flexible budget'
+      budget ? `$${budget}` : 'flexible budget',
+      email
     );
   };
 
@@ -71,6 +77,19 @@ function TravelForm({ onSubmit }) {
           placeholder="e.g., 1000"
           className="mt-1 block w-full border-2 border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
         />
+      </div>
+      <div className="mt-8 bg-blue-50 p-4 rounded-lg shadow-inner">
+        <label htmlFor="email" className="block text-sm font-medium text-blue-700">Email (required)</label>
+        <input
+          type="email"
+          id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="mt-1 block w-full rounded-md border-blue-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          placeholder="your@email.com"
+        />
+        <p className="mt-2 text-xs text-blue-600">We'll send your itinerary to this email address.</p>
       </div>
       <button
         type="submit"
