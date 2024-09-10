@@ -2,6 +2,7 @@ import React, { useState , useEffect } from 'react';
 import TravelForm from './components/TravelForm';
 import Itinerary from './components/Itinerary';
 import Navigation from './components/Navigation';
+import { Analytics } from "@vercel/analytics/react"
 
 const backgroundImages = [
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination1.jpg',
@@ -186,6 +187,7 @@ function App() {
 
   return (
     <>
+      <Analytics />
       <style>{styles}</style>
       <div className="min-h-screen flex flex-col relative">
         <Navigation />
