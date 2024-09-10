@@ -1,12 +1,12 @@
 import json
-import html
+# import html
 import os
 from openai import OpenAI
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from lambda_decorators import json_http_resp, cors_headers , load_json_body
 from trip_journey_email import send_itinerary_email
 
-load_dotenv()
+# load_dotenv()
 
 
 # Set up OpenAI client
