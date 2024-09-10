@@ -160,10 +160,20 @@ function App() {
     scrollContainer.appendChild(scrollContent.cloneNode(true));
   };
 
-  const generateItinerary = async (destination, days, budget) => {
+  const generateItinerary = async (destination, days, budget,email) => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://api.tripjourney.co/itinerary');
+      const response = await fetch('https://api.tripjourney.co/itinerary', 
+        {method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          destination,
+          days,
+          budget,
+          email,
+        })});
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
