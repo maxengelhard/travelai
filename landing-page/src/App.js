@@ -187,7 +187,6 @@ function App() {
 
   return (
     <>
-      <Analytics />
       <style>{styles}</style>
       <div className="min-h-screen flex flex-col relative">
         <Navigation />
@@ -249,6 +248,7 @@ function App() {
           </div>
         </div>
       </div>
+      <Analytics />
     </>
   );
 }
