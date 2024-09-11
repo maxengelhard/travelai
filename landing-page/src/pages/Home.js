@@ -1,4 +1,5 @@
 import React, { useState , useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TravelForm from '../components/TravelForm';
 import Itinerary from '../components/Itinerary';
 import Navigation from '../components/Navigation';
@@ -92,6 +93,7 @@ function Home() {
   const [itinerary, setItinerary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     createThumbnails();
@@ -191,9 +193,8 @@ function Home() {
     setIsLoading(false);
   };
 
-  const handlePayment = () => {
-    // Implement Stripe payment logic here
-    console.log("Redirecting to payment...");
+  const handleNavigateToPricing = () => {
+    navigate('/pricing');
   };
 
   return (
@@ -246,12 +247,12 @@ function Home() {
               {itinerary && <Itinerary plan={itinerary} />}
               {showPaymentPrompt && (
                 <div className="mt-4 p-4 bg-blue-100 rounded">
-                  <p className="mb-2">Want to see the full itinerary? Sign up and pay to unlock all days!</p>
+                  <p className="mb-2">Want to see the full itinerary? Sign up to unlock all days!</p>
                   <button
-                    onClick={handlePayment}
+                    onClick={handleNavigateToPricing}
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                   >
-                    Sign Up and Pay
+                    Sign Up
                   </button>
                 </div>
               )}
