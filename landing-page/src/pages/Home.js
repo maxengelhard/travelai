@@ -164,7 +164,7 @@ function Home() {
   const generateItinerary = async (destination, days, budget,email) => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://api.tripjourney.co/itinerary', 
+      const response = await fetch(`https://${process.env.REACT_APP_DOMAIN_SUFFIX}.tripjourney.co/itinerary`, 
         {method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -40,7 +40,7 @@ const Pricing = () => {
             credits="100 lifetime credits"
             description="Perfect for planning your next trip. Get access to your initial prompt and start planning your dream vacation."
             monthly={false}
-            stripeLink="https://buy.stripe.com/6oE03j6HH11vdjOcMM"
+            stripeLink={process.env.REACT_APP_STRIPE_STARTER_URL}
             features={[
               "Customizable themes (nature, party, restaurants)",
               "Basic itinerary generation",
@@ -55,7 +55,7 @@ const Pricing = () => {
             description="Ideal for frequent travelers. Enjoy more credits each month for comprehensive trip planning."
             isPopular={true}
             monthly={true}
-            stripeLink="https://buy.stripe.com/7sIg2hea9dOhbbGaEF"
+            stripeLink={process.env.REACT_APP_STRIPE_PRO_URL}
             features={[
               "All Starter features",
               "Personalized experiences tailoring",
@@ -72,7 +72,7 @@ const Pricing = () => {
             credits="100,000 credits / month"
             description="For the ultimate travel enthusiasts. Unlimited planning possibilities for multiple trips."
             monthly={true}
-            stripeLink="https://buy.stripe.com/bIY8zP3vv7pTenS7su"
+            stripeLink={process.env.REACT_APP_STRIPE_JET_SETTER_URL}
             features={[
               "All Pro features",
               "Unlimited itinerary generations",
