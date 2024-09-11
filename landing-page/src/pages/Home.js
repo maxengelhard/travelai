@@ -2,6 +2,7 @@ import React, { useState , useEffect } from 'react';
 import TravelForm from '../components/TravelForm';
 import Itinerary from '../components/Itinerary';
 import Navigation from '../components/Navigation';
+import Testimonial from '../components/Testimonial';
 
 const backgroundImages = [
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination1.jpg',
@@ -255,6 +256,9 @@ function Home() {
               )}
             </div>
           </div>
+        </div>
+        <div className="z-20 relative w-full bg-black bg-opacity-75 py-16">
+          <Testimonial />
         </div>
       </div>
     </>
