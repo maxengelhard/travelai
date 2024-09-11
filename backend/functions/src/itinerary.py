@@ -1,16 +1,51 @@
 import json
-# import html
+import psycopg2
+from psycopg2 import sql
 import os
 from openai import OpenAI
-# from dotenv import load_dotenv
 from lambda_decorators import json_http_resp, cors_headers , load_json_body
 from trip_journey_email import send_itinerary_email
-
-# load_dotenv()
 
 
 # Set up OpenAI client
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+
+
+DB_PARAMS = {
+    'dbname': os.getenv('DB_NAME'),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD'),
+    'host': os.getenv('DB_HOST'),
+    'port': os.getenv('DB_PORT')
+}
+
+def get_db_connection():
+    """Create a database connection."""
+    return psycopg2.connect(**DB_PARAMS)
+
+def check_and_add_email(email):
+    """Check if email exists, add if it doesn't."""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # Check if email exists
+            cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+            if cur.fetchone() is not None:
+                return {'success': False, 'message': 'Email already in the system'}
+
+            # If email doesn't exist, insert it
+            cur.execute(
+                "INSERT INTO users (email, status) VALUES (%s, %s)",
+                (email, 'pre')
+            )
+            conn.commit()
+            return {'success': True, 'message': 'Email added successfully'}
+    except psycopg2.Error as e:
+        conn.rollback()
+        print(f"Database error: {e}")
+        return {'success': False, 'message': 'An error occurred'}
+    finally:
+        conn.close()
 
 
 @cors_headers
@@ -23,6 +58,18 @@ def lambda_handler(event, context):
     days = body.get('days', '')
     budget = body.get('budget', '')
     to_email = body.get('email')
+
+    psql_res = check_and_add_email(to_email)
+
+    if not psql_res['success']:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error': psql_res['message']}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
 
     prompt_parts = ["Create a detailed itinerary for a trip"]
     

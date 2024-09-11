@@ -184,8 +184,12 @@ function Home() {
 
       const data = await response.json();
       console.log(data)
-      setItinerary(data.itinerary);
-      setShowPaymentPrompt(true);
+      if (data.error) {
+        setItinerary(data.error);
+      } else {
+        setItinerary(data.itinerary);
+        setShowPaymentPrompt(true);
+      }
     } catch (error) {
       console.error("Error generating itinerary:", error);
       setItinerary("Sorry, there was an error generating your itinerary. Please try again.");
