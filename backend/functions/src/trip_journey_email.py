@@ -13,7 +13,7 @@ def send_itinerary_email(recipient_email, itinerary, destination, days, budget):
     # Prepare email content
     destination = destination if destination else "Your chosen destination"
     days_text = f"{days} days" if days else "your trip"
-    budget_text = f"${budget}" if budget else "your specified budget"
+    budget_text = f"{budget}" if budget else "your specified budget"
 
     # Format the itinerary content
     def format_itinerary_content(itinerary):
@@ -63,13 +63,12 @@ def send_itinerary_email(recipient_email, itinerary, destination, days, budget):
         <a href="https://tripjourney.co/pricing" class="cta-button">View Full Itinerary</a>
         
         <div class="note">
-            <p><strong>Note:</strong> This is just a preview of your trip. To access the full {days}-day itinerary and unlock more features, please visit our pricing page.</p>
+            <p><strong>Note:</strong> This is just a preview of your trip. To access the full {days}-day itinerary and unlock more features, sign up for a plan.</p>
         </div>
         
         <p>We hope you have a wonderful trip to {destination}!</p>
-        <p>If you have any questions or need to make changes, please don't hesitate to contact us.</p>
         <p>Safe travels!</p>
-        <p>Your AI Travel Planner</p>
+        <p>Trip Joureny AI</p>
     </body>
     </html>
     """
