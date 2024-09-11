@@ -1,12 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
-const PricingOption = ({ title, price, credits, description, features, isPopular, monthly }) => (
+const PricingOption = ({ title, price, credits, description, features, isPopular, monthly, stripeLink }) => (
   <div className={`bg-gray-800 rounded-lg shadow-lg p-6 ${isPopular ? 'border-2 border-blue-400' : ''}`}>
     {isPopular && <span className="bg-blue-400 text-gray-900 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide absolute -top-3 right-3">Most Popular</span>}
     <h3 className="text-xl font-semibold mb-4 text-white">{title}</h3>
     <p className="text-4xl font-bold mb-4 text-blue-400">${price} <span className="text-sm font-normal text-gray-300">{monthly ? '/ month': 'flat fee'}</span></p>
-    <p className="mb-4 text-gray-300">{credits}</p>
+    <p className="mb-4 text-gray-300">{credits} credits</p>
     <p className="mb-6 text-gray-400">{description}</p>
     <ul className="mb-6 text-gray-300">
       {features.map((feature, index) => (
@@ -18,7 +17,14 @@ const PricingOption = ({ title, price, credits, description, features, isPopular
         </li>
       ))}
     </ul>
-    <Link to="/signup" className="block w-full bg-blue-500 text-white text-center py-2 rounded-lg hover:bg-blue-600 transition duration-300">Get Started</Link>
+    <a 
+      href={stripeLink} 
+      className="block w-full bg-blue-500 text-white text-center py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Get Started
+    </a>
   </div>
 );
 
@@ -34,6 +40,7 @@ const Pricing = () => {
             credits="100 lifetime credits"
             description="Perfect for planning your next trip. Get access to your initial prompt and start planning your dream vacation."
             monthly={false}
+            stripeLink="https://buy.stripe.com/6oE03j6HH11vdjOcMM"
             features={[
               "Customizable themes (nature, party, restaurants)",
               "Basic itinerary generation",
@@ -48,6 +55,7 @@ const Pricing = () => {
             description="Ideal for frequent travelers. Enjoy more credits each month for comprehensive trip planning."
             isPopular={true}
             monthly={true}
+            stripeLink="https://buy.stripe.com/7sIg2hea9dOhbbGaEF"
             features={[
               "All Starter features",
               "Personalized experiences tailoring",
@@ -64,8 +72,10 @@ const Pricing = () => {
             credits="100,000 credits / month"
             description="For the ultimate travel enthusiasts. Unlimited planning possibilities for multiple trips."
             monthly={true}
+            stripeLink="https://buy.stripe.com/bIY8zP3vv7pTenS7su"
             features={[
               "All Pro features",
+              "Unlimited itinerary generations",
               "Priority customer support",
               "VIP experiences access",
               "Real-time itinerary adjustments",
