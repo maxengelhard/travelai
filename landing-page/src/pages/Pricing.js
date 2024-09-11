@@ -5,7 +5,7 @@ const PricingOption = ({ title, price, credits, description, features, isPopular
     {isPopular && <span className="bg-blue-400 text-gray-900 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide absolute -top-3 right-3">Most Popular</span>}
     <h3 className="text-xl font-semibold mb-4 text-white">{title}</h3>
     <p className="text-4xl font-bold mb-4 text-blue-400">${price} <span className="text-sm font-normal text-gray-300">{monthly ? '/ month': 'flat fee'}</span></p>
-    <p className="mb-4 text-gray-300">{credits} credits</p>
+    <p className="mb-4 text-gray-300">{credits}</p>
     <p className="mb-6 text-gray-400">{description}</p>
     <ul className="mb-6 text-gray-300">
       {features.map((feature, index) => (
