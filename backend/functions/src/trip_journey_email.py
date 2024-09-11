@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 
 def send_itinerary_email(recipient_email, itinerary, destination, days, budget):
     # AWS SES configuration
-    SENDER = "Your Travel Planner <tripjourneyai@gmail.com>"  # Replace with your verified SES email
+    SENDER = "Trip Journey AI <tripjourneyai@gmail.com>"  # Replace with your verified SES email
     AWS_REGION = "us-east-1"  # Replace with your AWS region
 
     # Parse the ChatGPT response
@@ -17,23 +17,22 @@ def send_itinerary_email(recipient_email, itinerary, destination, days, budget):
 
     # Format the itinerary content
     def format_itinerary_content(itinerary):
-        days = itinerary.split('Day')[1:]  # Skip the first empty element
+        day = itinerary.split('Day')[1:][0]  # Skip the first empty element and get the first day
         formatted_days = []
 
-        for day in days:
-            day_content = day.strip()
-            day_number = day_content.split(':')[0]
-            activities = day_content.split('\n')[1:]  # Skip the day number line
+        day_content = day.strip()
+        day_number = day_content.split(':')[0]
+        activities = day_content.split('\n')[1:]  # Skip the day number line
 
-            formatted_day = f"<div style='margin-bottom: 30px;'><h2 style='color: #3498db;'>Day {day_number}</h2>"
-            for activity in activities:
-                if activity.strip():
-                    if 'Estimated costs:' in activity:
-                        formatted_day += f"<p style='font-weight: bold; color: #e74c3c;'>{activity.strip()}</p>"
-                    else:
-                        formatted_day += f"<p style='margin-bottom: 15px;'>{activity.strip()}</p>"
-            formatted_day += "</div>"
-            formatted_days.append(formatted_day)
+        formatted_day = f"<div style='margin-bottom: 30px;'><h2 style='color: #3498db;'>Day {day_number}</h2>"
+        for activity in activities:
+            if activity.strip():
+                if 'Estimated costs:' in activity:
+                    formatted_day += f"<p style='font-weight: bold; color: #e74c3c;'>{activity.strip()}</p>"
+                else:
+                    formatted_day += f"<p style='margin-bottom: 15px;'>{activity.strip()}</p>"
+        formatted_day += "</div>"
+        formatted_days.append(formatted_day)
 
         return "".join(formatted_days)
 
@@ -42,10 +41,15 @@ def send_itinerary_email(recipient_email, itinerary, destination, days, budget):
     <html>
     <head>
         <style>
-            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-            h1 {{ color: #2c3e50; }}
-            h2 {{ color: #3498db; }}
-            .total-cost {{ font-size: 1.2em; color: #2ecc71; }}
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+            h1 {{ color: #2c3e50; text-align: center; }}
+            h2 {{ color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
+            .day {{ background-color: #f9f9f9; padding: 20px; margin-bottom: 30px; border-radius: 5px; }}
+            .activity {{ margin-bottom: 15px; }}
+            .activity-title {{ font-weight: bold; color: #2980b9; }}
+            .cost {{ color: #e74c3c; font-style: italic; }}
+            .cta-button {{ display: block; width: 200px; margin: 20px auto; padding: 10px; background-color: #3498db; color: white; text-align: center; text-decoration: none; border-radius: 5px; font-weight: bold; }}
+            .note {{ background-color: #ffffd9; padding: 10px; border-left: 5px solid #f1c40f; margin-top: 20px; }}
         </style>
     </head>
     <body>
@@ -54,6 +58,13 @@ def send_itinerary_email(recipient_email, itinerary, destination, days, budget):
         <p>We're excited to present your custom itinerary for {days_text} in {destination}, designed to fit within {budget_text}. Here's what we've planned for you:</p>
         
         {format_itinerary_content(itinerary)}
+
+        <p>Want to see the full {days}-day itinerary?</p>
+        <a href="https://tripjourney.co/pricing" class="cta-button">View Full Itinerary</a>
+        
+        <div class="note">
+            <p><strong>Note:</strong> This is just a preview of your trip. To access the full {days}-day itinerary and unlock more features, please visit our pricing page.</p>
+        </div>
         
         <p>We hope you have a wonderful trip to {destination}!</p>
         <p>If you have any questions or need to make changes, please don't hesitate to contact us.</p>
