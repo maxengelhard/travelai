@@ -75,7 +75,6 @@ const Pricing = () => {
             stripeLink={process.env.REACT_APP_STRIPE_JET_SETTER_URL}
             features={[
               "All Pro features",
-              "Unlimited itinerary generations",
               "Priority customer support",
               "VIP experiences access",
               "Real-time itinerary adjustments",
