@@ -93,6 +93,8 @@ function Home() {
   const [itinerary, setItinerary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
+  const [error, setError] = useState(null);
+  const [isExistingUser, setIsExistingUser] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -163,11 +165,12 @@ function Home() {
     scrollContainer.appendChild(scrollContent.cloneNode(true));
   };
 
-  const generateItinerary = async (destination, days, budget,email) => {
+  const generateItinerary = async (destination, days, budget, email) => {
     setIsLoading(true);
+    setError(null); // Clear any previous errors
     try {
-      const response = await fetch(`https://${process.env.REACT_APP_DOMAIN_SUFFIX}.tripjourney.co/itinerary`, 
-        {method: 'POST',
+      const response = await fetch(`https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/itinerary`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -176,25 +179,34 @@ function Home() {
           days,
           budget,
           email,
-        })});
-
+        })
+      });
+  
+      const responseData = await response.json();
+      console.log("Response:", responseData); // Log the full response for debugging
+  
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        // Parse the nested error message
+        const errorBody = JSON.parse(responseData.body);
+        throw new Error(errorBody.error || 'An error occurred');
       }
-
-      const data = await response.json();
-      console.log(data)
-      if (data.error) {
-        setItinerary(data.error);
-      } else {
-        setItinerary(data.itinerary);
-        setShowPaymentPrompt(true);
-      }
+  
+      // Assuming the successful response has the itinerary directly in responseData
+      setItinerary(responseData.itinerary);
+      setShowPaymentPrompt(true);
     } catch (error) {
       console.error("Error generating itinerary:", error);
-      setItinerary("Sorry, there was an error generating your itinerary. Please try again.");
+      
+      if (error.message === 'Email already in the system') {
+        setError("This email is already registered.");
+        setIsExistingUser(true);
+      } else {
+        setError("Sorry, there was an error generating your itinerary. Please try again.");
+      }
+      setItinerary(null); // Clear any previous itinerary
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleNavigateToPricing = () => {
@@ -245,21 +257,40 @@ function Home() {
               </p>
             </div>
             <div className="w-full lg:w-2/5 bg-white bg-opacity-90 p-6 lg:p-8 rounded-lg shadow-lg">
-              <h2 className="text-2xl lg:text-3xl font-bold mb-4 text-gray-800">Plan Your Trip</h2>
-              <TravelForm onSubmit={generateItinerary} />
-              {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
-              {itinerary && <Itinerary plan={itinerary} />}
-              {showPaymentPrompt && (
+            <h2 className="text-2xl lg:text-3xl font-bold mb-4 text-gray-800">Plan Your Trip</h2>
+            <TravelForm onSubmit={generateItinerary} />
+            {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
+            {error && (
+                <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
+                <p>{error}</p>
+                {isExistingUser && (
+                    <p className="mt-2">
+                    Please{' '}
+                    <a 
+                        href={`https://${process.env.REACT_APP_DOMAIN_SUFFIX}.tripjourney.co/`} 
+                        className="text-blue-600 hover:text-blue-800 underline"
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                    >
+                        log in or sign up
+                    </a>{' '}
+                    to continue.
+                    </p>
+                )}
+                </div>
+            )}
+            {itinerary && <Itinerary plan={itinerary} />}
+            {showPaymentPrompt && (
                 <div className="mt-4 p-4 bg-blue-100 rounded">
-                  <p className="mb-2">Want to see the full itinerary? Sign up to unlock all days!</p>
-                  <button
+                <p className="mb-2">Want to see the full itinerary? Sign up to unlock all days!</p>
+                <button
                     onClick={handleNavigateToPricing}
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    Sign Up
-                  </button>
+                >
+                    View Pricing
+                </button>
                 </div>
-              )}
+            )}
             </div>
           </div>
         </div>

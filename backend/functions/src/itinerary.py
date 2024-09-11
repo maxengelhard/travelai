@@ -36,7 +36,7 @@ def check_and_add_email(email, initial_itinerary=None):
             # If email doesn't exist, insert it
             cur.execute(
                 "INSERT INTO users (email, status, initial_itinerary) VALUES (%s, %s, %s)",
-                (email, 'not signed up yet', initial_itinerary)
+                (email, 'pre', initial_itinerary)
             )
             conn.commit()
             return {'success': True, 'message': 'Email added successfully'}
