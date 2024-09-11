@@ -23,7 +23,7 @@ def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def check_and_add_email(email):
+def check_and_add_email(email, initial_itinerary=None):
     """Check if email exists, add if it doesn't."""
     conn = get_db_connection()
     try:
@@ -35,11 +35,29 @@ def check_and_add_email(email):
 
             # If email doesn't exist, insert it
             cur.execute(
-                "INSERT INTO users (email, status) VALUES (%s, %s)",
-                (email, 'pre')
+                "INSERT INTO users (email, status, initial_itinerary) VALUES (%s, %s, %s)",
+                (email, 'not signed up yet', initial_itinerary)
             )
             conn.commit()
             return {'success': True, 'message': 'Email added successfully'}
+    except psycopg2.Error as e:
+        conn.rollback()
+        print(f"Database error: {e}")
+        return {'success': False, 'message': 'An error occurred'}
+    finally:
+        conn.close()
+
+def update_user_itinerary(email, itinerary):
+    """Update the user's initial itinerary."""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET initial_itinerary = %s WHERE email = %s",
+                (itinerary, email)
+            )
+            conn.commit()
+            return {'success': True, 'message': 'Itinerary updated successfully'}
     except psycopg2.Error as e:
         conn.rollback()
         print(f"Database error: {e}")
@@ -115,6 +133,7 @@ def lambda_handler(event, context):
         itinerary = response.choices[0].message.content.strip()
             
         print(itinerary)
+        update_user_itinerary(to_email, itinerary)
         # Send the email
         email_sent = send_itinerary_email(to_email, itinerary, destination, days, budget)
 
