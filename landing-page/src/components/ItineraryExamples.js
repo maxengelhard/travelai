@@ -52,7 +52,7 @@ const ItineraryExamples = () => {
         [
           { name: "Day trip to Palace of Versailles", cost: 27 },
           { name: "Shopping on Champs-Élysées", cost: 100 },
-          { name: "Dinner at a Michelin-star restaurant", cost: 200 }
+          { name: "Dinner at a Michelin-star restaurant Baillotte", cost: 200 }
         ],
         [
           { name: "Explore the Catacombs", cost: 15 },
