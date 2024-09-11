@@ -23,6 +23,14 @@ Parameters:
     Type: String
   USERPOOLID:
     Type: String
+  DBUSER:
+    Type: String
+  DBHOST:
+    Type: String
+  DBNAME:
+    Type: String
+  DBPASSWORD:
+    Type: String
   # STRIPESECRETKEY:
   #   Type: String
   # STRIPEWEBHOOKKEY:
@@ -101,6 +109,10 @@ Resources:
       Environment:
         Variables:
           OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
       Events:
         ApiEvent:
           Type: Api
