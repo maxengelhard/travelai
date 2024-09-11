@@ -24,13 +24,13 @@ const Testimonial = () => {
     {
       name: "Mark Thompson",
       location: "London, UK",
-      quote: "As a frequent traveler, the Pro plan has been a game-changer. It's like having a personal travel agent at my fingertips!",
+      quote: "This AI travel planner is a game-changer. It's like having a personal travel agent at my fingertips, available 24/7!",
       image: "https://randomuser.me/api/portraits/men/32.jpg"
     },
     {
       name: "Emily Chen",
       location: "Singapore",
-      quote: "The Jet Setter plan is perfect for my business trips. It helps me balance work and exploration effortlessly.",
+      quote: "TripJourney helps me balance work and exploration effortlessly. It creates perfect itineraries for my business trips with leisure time included.",
       image: "https://randomuser.me/api/portraits/women/26.jpg"
     }
   ];
