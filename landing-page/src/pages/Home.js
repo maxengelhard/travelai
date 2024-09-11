@@ -282,7 +282,7 @@ function Home() {
             {itinerary && <Itinerary plan={itinerary} />}
             {showPaymentPrompt && (
                 <div className="mt-4 p-4 bg-blue-100 rounded">
-                <p className="mb-2">Want to see the full itinerary? Sign up to unlock all days!</p>
+                <p className="mb-2">Check your email for the itinerary! Want to see the full itinerary? Sign up to unlock all days!</p>
                 <button
                     onClick={handleNavigateToPricing}
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
