@@ -31,10 +31,10 @@ Parameters:
     Type: String
   DBPASSWORD:
     Type: String
-  # STRIPESECRETKEY:
-  #   Type: String
-  # STRIPEWEBHOOKKEY:
-  #   Type: String
+  STRIPESECRETKEY:
+    Type: String
+  STRIPEWEBHOOKKEY:
+    Type: String
   # STRIPECONNECTWEBHOOKKEY:
   #   Type: String
   # STRIPEPRODUCTID:
