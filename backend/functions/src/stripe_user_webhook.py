@@ -120,7 +120,7 @@ def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def update_user_plan(stripe_customer_id, plan_type, email, duration_months=1):
+def update_user_plan(stripe_customer_id, plan_type, email):
     """
     Update user's plan information in the database.
     
@@ -141,32 +141,28 @@ def update_user_plan(stripe_customer_id, plan_type, email, duration_months=1):
             
             if result:
                 # User exists, update their plan and stripe_customer_id
-                plan_start_date = datetime.now()
-                plan_end_date = plan_start_date + timedelta(days=30*duration_months)
                 
                 cur.execute(
                     sql.SQL("""
                     UPDATE users
                     SET plan_type = %s,
                         is_pro = %s,
-                        plan_start_date = %s,
-                        plan_end_date = %s,
                         stripe_customer_id = %s
                     WHERE email = %s
                     """),
-                    (plan_type, plan_type != 'free', plan_start_date, plan_end_date, stripe_customer_id, email)
+                    (plan_type, plan_type != 'free', stripe_customer_id, email)
                 )
             else:
                 # User doesn't exist, create a new user
-                plan_start_date = datetime.now()
-                plan_end_date = plan_start_date + timedelta(days=30*duration_months)
+                # plan_start_date = datetime.now()
+                # plan_end_date = plan_start_date + timedelta(days=30*duration_months)
                 
                 cur.execute(
                     sql.SQL("""
-                    INSERT INTO users (email, plan_type, is_pro, plan_start_date, plan_end_date, stripe_customer_id)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    INSERT INTO users (email, plan_type, is_pro, stripe_customer_id)
+                    VALUES (%s, %s, %s, %s)
                     """),
-                    (email, plan_type, plan_type != 'free', plan_start_date, plan_end_date, stripe_customer_id)
+                    (email, plan_type, plan_type != 'free', stripe_customer_id)
                 )
             
             conn.commit()
