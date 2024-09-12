@@ -74,28 +74,45 @@ def send_login_email(email, temp_password):
         print(f"Email sent! Message ID: {response['MessageId']}")
         return True
 
-def create_cognito_user(email, temp_password, plan_type):
-    """Create a user in Cognito with plan type."""
+def create_or_update_cognito_user(email, plan_type):
+    """Create or update a user in Cognito with the given plan type."""
     try:
-        response = cognito_client.admin_create_user(
-            UserPoolId=USER_POOL_ID,
-            Username=email,
-            UserAttributes=[
-                {'Name': 'email', 'Value': email},
-                {'Name': 'email_verified', 'Value': 'true'},
-                {'Name': 'custom:plan_type', 'Value': plan_type},
-                {'Name': 'custom:is_pro', 'Value': str(plan_type != 'free').lower()}
-            ],
-            TemporaryPassword=temp_password,
-            MessageAction='SUPPRESS'
-        )
-        print(f"Cognito user created for email: {email} with plan: {plan_type}")
+        # Check if the user already exists
+        try:
+            user = cognito_client.admin_get_user(
+                UserPoolId=USER_POOL_ID,
+                Username=email
+            )
+            # User exists, update attributes
+            cognito_client.admin_update_user_attributes(
+                UserPoolId=USER_POOL_ID,
+                Username=email,
+                UserAttributes=[
+                    {'Name': 'custom:plan_type', 'Value': plan_type},
+                    {'Name': 'custom:is_pro', 'Value': str(plan_type != 'free').lower()}
+                ]
+            )
+        except cognito_client.exceptions.UserNotFoundException:
+            # User doesn't exist, create new user
+            temp_password = generate_temp_password()
+            cognito_client.admin_create_user(
+                UserPoolId=USER_POOL_ID,
+                Username=email,
+                UserAttributes=[
+                    {'Name': 'email', 'Value': email},
+                    {'Name': 'email_verified', 'Value': 'true'},
+                    {'Name': 'custom:plan_type', 'Value': plan_type},
+                    {'Name': 'custom:is_pro', 'Value': str(plan_type != 'free').lower()}
+                ],
+                TemporaryPassword=temp_password,
+                MessageAction='SUPPRESS'
+            )
+            # Send login email with temporary password
+            send_login_email(email, temp_password)
+        
         return True
-    except cognito_client.exceptions.UsernameExistsException:
-        print(f"User already exists in Cognito: {email}")
-        return False
     except Exception as e:
-        print(f"Error creating Cognito user: {str(e)}")
+        print(f"Error creating or updating Cognito user: {str(e)}")
         return False
 
 
@@ -156,51 +173,62 @@ def update_user_plan(stripe_customer_id, plan_type, duration_months=1):
 
 
 def lambda_handler(event, context):
-    """Main Lambda handler function."""
+    print(event)  # Log the entire event for debugging
     try:
-        # Parse the incoming JSON from API Gateway
-        body = json.loads(event['body'])
-        email = body.get('email')
-        initial_itinerary = body.get('initial_itinerary')
-        plan_type = body.get('plan_type', 'free')  # Default to 'free' if not provided
-
+        # Parse the Stripe webhook event
+        stripe_event = json.loads(event['body']) if isinstance(event.get('body'), str) else event.get('body', {})
+        
+        # Check if it's a checkout.session.completed event
+        if stripe_event['type'] != 'checkout.session.completed':
+            return {
+                'statusCode': 400,
+                'body': json.dumps({'error': 'Unsupported event type'})
+            }
+        
+        # Extract customer details from the event
+        session = stripe_event['data']['object']
+        customer_details = session.get('customer_details', {})
+        email = customer_details.get('email')
+        
         if not email:
             return {
                 'statusCode': 400,
-                'body': json.dumps({'error': 'Email is required'})
+                'body': json.dumps({'error': 'Email not found in the event data'})
             }
-
-        # Generate temporary password
-        temp_password = generate_temp_password()
-
-        # Create user in Cognito with plan type
-        cognito_success = create_cognito_user(email, temp_password, plan_type)
+        
+        # Determine the plan type based on the amount paid or other criteria
+        amount_total = session.get('amount_total', 0)
+        plan_type = 'pro' if amount_total >= 2000 else 'free'  # Adjust this logic as needed
+        
+        # Get the Stripe customer ID
+        stripe_customer_id = session.get('customer')
+        if not stripe_customer_id:
+            return {
+                'statusCode': 400,
+                'body': json.dumps({'error': 'Stripe customer ID not found in the event data'})
+            }
+        
+        # Update user's plan in the database
+        db_success = update_user_plan(stripe_customer_id, plan_type)
+        if not db_success:
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': 'Failed to update user plan in database'})
+            }
+        
+        # If this is a new user, create them in Cognito
+        cognito_success = create_or_update_cognito_user(email, plan_type)
         if not cognito_success:
             return {
                 'statusCode': 400,
-                'body': json.dumps({'error': 'Failed to create user account or user already exists'})
+                'body': json.dumps({'error': 'Failed to create or update user account in Cognito'})
             }
-
-        # Add user to database with plan type
-        db_success = update_user_plan(email, plan_type, initial_itinerary)
-        if not db_success:
-            # TODO: Consider deleting the Cognito user if database insertion fails
-            return {
-                'statusCode': 500,
-                'body': json.dumps({'error': 'Failed to add user to database'})
-            }
-
-        # Send login email
-        email_sent = send_login_email(email, temp_password)
-        if not email_sent:
-            # TODO: Consider how to handle this scenario (e.g., retry logic, manual intervention)
-            print(f"Warning: Failed to send login email to {email}")
-
+        
         return {
             'statusCode': 200,
-            'body': json.dumps({'message': 'User created successfully. Check your email for login instructions.'})
+            'body': json.dumps({'message': 'User plan updated successfully.'})
         }
-
+    
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         return {
