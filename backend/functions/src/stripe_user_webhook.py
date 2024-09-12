@@ -4,9 +4,11 @@ import psycopg2
 from psycopg2 import sql
 from datetime import datetime, timedelta
 import os
+import boto3
 
 stripe.api_key = os.environ['STRIPE_SECRET_KEY']
-
+cognito_client = boto3.client('cognito-idp')
+USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
 
 DB_PARAMS = {
     'dbname': os.getenv('DB_NAME'),
@@ -15,6 +17,47 @@ DB_PARAMS = {
     'host': os.getenv('DB_HOST'),
     'port': 5432
 }
+
+def update_cognito_user_attributes(email, plan_type):
+    """
+    Update user attributes in Cognito.
+    
+    :param email: User's email
+    :param plan_type: New plan type
+    """
+    try:
+        # First, we need to get the user's Cognito username
+        user_response = cognito_client.list_users(
+            UserPoolId=USER_POOL_ID,
+            Filter=f'email = "{email}"'
+        )
+        
+        if not user_response['Users']:
+            print(f"No Cognito user found with email: {email}")
+            return False
+        
+        username = user_response['Users'][0]['Username']
+        
+        # Now update the user's attributes
+        cognito_client.admin_update_user_attributes(
+            UserPoolId=USER_POOL_ID,
+            Username=username,
+            UserAttributes=[
+                {
+                    'Name': 'custom:plan_type',
+                    'Value': plan_type
+                },
+                {
+                    'Name': 'custom:is_pro',
+                    'Value': str(plan_type != 'free').lower()
+                }
+            ]
+        )
+        print(f"Updated Cognito attributes for user {email}")
+        return True
+    except Exception as e:
+        print(f"Error updating Cognito user attributes: {str(e)}")
+        return False
 
 def get_db_connection():
     """Create a database connection."""

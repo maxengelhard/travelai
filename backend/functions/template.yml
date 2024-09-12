@@ -160,6 +160,7 @@ Resources:
           DB_HOST: !Ref DBHOST
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
+          COGNITO_USER_POOL_ID: !Ref USERPOOLID
       Events:
         StripeWebhook:
           Type: Api

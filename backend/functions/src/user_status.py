@@ -2,7 +2,7 @@ import json
 import psycopg2
 import os
 from lambda_decorators import json_http_resp, cors_headers , load_json_body
-
+import boto3
 
 
 DB_PARAMS = {
@@ -16,7 +16,6 @@ DB_PARAMS = {
 def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
-
 
 @cors_headers
 @load_json_body
