@@ -120,48 +120,57 @@ def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def update_user_plan(stripe_customer_id, plan_type, duration_months=1):
+def update_user_plan(stripe_customer_id, plan_type, email, duration_months=1):
     """
     Update user's plan information in the database.
     
     :param stripe_customer_id: Stripe customer ID
     :param plan_type: New plan type ('starter', 'pro', 'jet_setter', etc.)
+    :param email: User's email address
     :param duration_months: Duration of the plan in months (default 1)
     """
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            # Find the user by Stripe customer ID
+            # Check if the user exists
             cur.execute(
-                "SELECT email FROM users WHERE stripe_customer_id = %s",
-                (stripe_customer_id,)
+                "SELECT email FROM users WHERE email = %s",
+                (email,)
             )
             result = cur.fetchone()
-            if not result:
-                print(f"No user found with Stripe customer ID: {stripe_customer_id}")
-                return False
-
-            email = result[0]
             
-            # Calculate plan dates
-            plan_start_date = datetime.now()
-            plan_end_date = plan_start_date + timedelta(days=30*duration_months)
-            
-            # Update user's plan information
-            cur.execute(
-                sql.SQL("""
-                UPDATE users
-                SET plan_type = %s,
-                    is_pro = %s,
-                    plan_start_date = %s,
-                    plan_end_date = %s
-                WHERE email = %s
-                """),
-                (plan_type, plan_type != 'free', plan_start_date, plan_end_date, email)
-            )
+            if result:
+                # User exists, update their plan and stripe_customer_id
+                plan_start_date = datetime.now()
+                plan_end_date = plan_start_date + timedelta(days=30*duration_months)
+                
+                cur.execute(
+                    sql.SQL("""
+                    UPDATE users
+                    SET plan_type = %s,
+                        is_pro = %s,
+                        plan_start_date = %s,
+                        plan_end_date = %s,
+                        stripe_customer_id = %s
+                    WHERE email = %s
+                    """),
+                    (plan_type, plan_type != 'free', plan_start_date, plan_end_date, stripe_customer_id, email)
+                )
+            else:
+                # User doesn't exist, create a new user
+                plan_start_date = datetime.now()
+                plan_end_date = plan_start_date + timedelta(days=30*duration_months)
+                
+                cur.execute(
+                    sql.SQL("""
+                    INSERT INTO users (email, plan_type, is_pro, plan_start_date, plan_end_date, stripe_customer_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """),
+                    (email, plan_type, plan_type != 'free', plan_start_date, plan_end_date, stripe_customer_id)
+                )
             
             conn.commit()
-            print(f"Updated plan for user {email} to {plan_type}")
+            print(f"Updated plan for user {email} to {plan_type} with Stripe customer ID: {stripe_customer_id}")
             return True
     except psycopg2.Error as e:
         conn.rollback()
@@ -169,7 +178,6 @@ def update_user_plan(stripe_customer_id, plan_type, duration_months=1):
         return False
     finally:
         conn.close()
-
 
 
 def lambda_handler(event, context):
@@ -209,7 +217,7 @@ def lambda_handler(event, context):
             }
         
         # Update user's plan in the database
-        db_success = update_user_plan(stripe_customer_id, plan_type)
+        db_success = update_user_plan(stripe_customer_id, plan_type, email)
         if not db_success:
             return {
                 'statusCode': 500,
