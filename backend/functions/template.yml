@@ -139,3 +139,45 @@ Resources:
               - ses:SendRawEmail
             Resource:
               - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/tripjourneyai@gmail.com"
+
+
+###### STRIPE ######
+  StripeUserWebhook:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "stripe_user_webhook_${STAGE}"
+      Handler: stripe_user_webhook.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64  
+      Description: Stripe webhook for user subscription
+      Environment:
+        Variables:
+          STRIPE_SECRET_KEY: !Ref STRIPESECRETKEY
+          STRIPE_WEBHOOK_SECRET: !Ref STRIPEWEBHOOKKEY
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+      Events:
+        StripeWebhook:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /stripe-webhook
+            Method: post
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
