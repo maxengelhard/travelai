@@ -1,14 +1,21 @@
 import stripe
+import json
+import string
+import random
 import os
 import psycopg2
 from psycopg2 import sql
 from datetime import datetime, timedelta
 import os
 import boto3
+from botocore.exceptions import ClientError
 
 stripe.api_key = os.environ['STRIPE_SECRET_KEY']
 cognito_client = boto3.client('cognito-idp')
+ses_client = boto3.client('ses')
 USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
+SES_SENDER_EMAIL = 'tripjourneyai@gmail.com'
+LOGIN_URL = 'appdev.tripjourney.co'  # URL where users can log in
 
 DB_PARAMS = {
     'dbname': os.getenv('DB_NAME'),
@@ -18,46 +25,79 @@ DB_PARAMS = {
     'port': 5432
 }
 
-def update_cognito_user_attributes(email, plan_type):
+
+def generate_temp_password(length=12):
+    """Generate a temporary password."""
+    characters = string.ascii_letters + string.digits + "!@#$%^&*()_+-="
+    return ''.join(random.choice(characters) for i in range(length))
+
+def send_login_email(email, temp_password):
+    """Send an email with login instructions."""
+    SUBJECT = "Your Account Has Been Created"
+    BODY_TEXT = (f"Welcome to our service!\r\n\n"
+                 f"Your account has been created with the following credentials:\r\n"
+                 f"Email: {email}\r\n"
+                 f"Temporary Password: {temp_password}\r\n\n"
+                 f"Please log in at {LOGIN_URL} and change your password as soon as possible.\r\n"
+                 "For security reasons, this temporary password will expire in 7 days.")
+    BODY_HTML = f"""<html>
+    <head></head>
+    <body>
+      <h1>Welcome to our service!</h1>
+      <p>Your account has been created with the following credentials:</p>
+      <ul>
+        <li>Email: {email}</li>
+        <li>Temporary Password: {temp_password}</li>
+      </ul>
+      <p>Please <a href="{LOGIN_URL}">log in</a> and change your password as soon as possible.</p>
+      <p>For security reasons, this temporary password will expire in 7 days.</p>
+    </body>
+    </html>
     """
-    Update user attributes in Cognito.
-    
-    :param email: User's email
-    :param plan_type: New plan type
-    """
+
     try:
-        # First, we need to get the user's Cognito username
-        user_response = cognito_client.list_users(
-            UserPoolId=USER_POOL_ID,
-            Filter=f'email = "{email}"'
-        )
-        
-        if not user_response['Users']:
-            print(f"No Cognito user found with email: {email}")
-            return False
-        
-        username = user_response['Users'][0]['Username']
-        
-        # Now update the user's attributes
-        cognito_client.admin_update_user_attributes(
-            UserPoolId=USER_POOL_ID,
-            Username=username,
-            UserAttributes=[
-                {
-                    'Name': 'custom:plan_type',
-                    'Value': plan_type
+        response = ses_client.send_email(
+            Destination={'ToAddresses': [email]},
+            Message={
+                'Body': {
+                    'Html': {'Charset': "UTF-8", 'Data': BODY_HTML},
+                    'Text': {'Charset': "UTF-8", 'Data': BODY_TEXT},
                 },
-                {
-                    'Name': 'custom:is_pro',
-                    'Value': str(plan_type != 'free').lower()
-                }
-            ]
+                'Subject': {'Charset': "UTF-8", 'Data': SUBJECT},
+            },
+            Source=SES_SENDER_EMAIL
         )
-        print(f"Updated Cognito attributes for user {email}")
-        return True
-    except Exception as e:
-        print(f"Error updating Cognito user attributes: {str(e)}")
+    except ClientError as e:
+        print(f"An error occurred: {e.response['Error']['Message']}")
         return False
+    else:
+        print(f"Email sent! Message ID: {response['MessageId']}")
+        return True
+
+def create_cognito_user(email, temp_password, plan_type):
+    """Create a user in Cognito with plan type."""
+    try:
+        response = cognito_client.admin_create_user(
+            UserPoolId=USER_POOL_ID,
+            Username=email,
+            UserAttributes=[
+                {'Name': 'email', 'Value': email},
+                {'Name': 'email_verified', 'Value': 'true'},
+                {'Name': 'custom:plan_type', 'Value': plan_type},
+                {'Name': 'custom:is_pro', 'Value': str(plan_type != 'free').lower()}
+            ],
+            TemporaryPassword=temp_password,
+            MessageAction='SUPPRESS'
+        )
+        print(f"Cognito user created for email: {email} with plan: {plan_type}")
+        return True
+    except cognito_client.exceptions.UsernameExistsException:
+        print(f"User already exists in Cognito: {email}")
+        return False
+    except Exception as e:
+        print(f"Error creating Cognito user: {str(e)}")
+        return False
+
 
 def get_db_connection():
     """Create a database connection."""
@@ -116,21 +156,54 @@ def update_user_plan(stripe_customer_id, plan_type, duration_months=1):
 
 
 def lambda_handler(event, context):
-    payload = event['body']
-    sig_header = event['headers']['Stripe-Signature']
-    
+    """Main Lambda handler function."""
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, os.environ['STRIPE_WEBHOOK_SECRET']
-        )
-    except ValueError as e:
-        return {'statusCode': 400, 'body': 'Invalid payload'}
-    except stripe.error.SignatureVerificationError as e:
-        return {'statusCode': 400, 'body': 'Invalid signature'}
+        # Parse the incoming JSON from API Gateway
+        body = json.loads(event['body'])
+        email = body.get('email')
+        initial_itinerary = body.get('initial_itinerary')
+        plan_type = body.get('plan_type', 'free')  # Default to 'free' if not provided
 
-    if event['type'] == 'customer.subscription.created':
-        customer_id = event['data']['object']['customer']
-        plan = event['data']['object']['plan']['nickname']
-        update_user_plan(customer_id, plan)
+        if not email:
+            return {
+                'statusCode': 400,
+                'body': json.dumps({'error': 'Email is required'})
+            }
 
-    return {'statusCode': 200, 'body': 'Webhook received'}
+        # Generate temporary password
+        temp_password = generate_temp_password()
+
+        # Create user in Cognito with plan type
+        cognito_success = create_cognito_user(email, temp_password, plan_type)
+        if not cognito_success:
+            return {
+                'statusCode': 400,
+                'body': json.dumps({'error': 'Failed to create user account or user already exists'})
+            }
+
+        # Add user to database with plan type
+        db_success = update_user_plan(email, plan_type, initial_itinerary)
+        if not db_success:
+            # TODO: Consider deleting the Cognito user if database insertion fails
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': 'Failed to add user to database'})
+            }
+
+        # Send login email
+        email_sent = send_login_email(email, temp_password)
+        if not email_sent:
+            # TODO: Consider how to handle this scenario (e.g., retry logic, manual intervention)
+            print(f"Warning: Failed to send login email to {email}")
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'message': 'User created successfully. Check your email for login instructions.'})
+        }
+
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': 'An unexpected error occurred'})
+        }

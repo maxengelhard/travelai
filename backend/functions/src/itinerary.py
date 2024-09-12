@@ -4,13 +4,9 @@ import os
 from openai import OpenAI
 from lambda_decorators import json_http_resp, cors_headers , load_json_body
 from trip_journey_email import send_itinerary_email
-import boto3
-
 
 # Set up OpenAI client
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
-
-cognito_client = boto3.client('cognito-idp')
 
 
 DB_PARAMS = {
@@ -25,33 +21,6 @@ def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def create_cognito_user(email):
-    """Create a user in Cognito."""
-    try:
-        response = cognito_client.admin_create_user(
-            UserPoolId=os.environ['COGNITO_USER_POOL_ID'],
-            Username=email,
-            UserAttributes=[
-                {
-                    'Name': 'email',
-                    'Value': email
-                },
-                {
-                    'Name': 'email_verified',
-                    'Value': 'true'
-                }
-            ],
-            MessageAction='SUPPRESS'  # This suppresses sending the welcome email
-        )
-        print(f"Cognito user created for email: {email}")
-        return True
-    except cognito_client.exceptions.UsernameExistsException:
-        print(f"Cognito user already exists for email: {email}")
-        return True
-    except Exception as e:
-        print(f"Error creating Cognito user: {str(e)}")
-        return False
-
 def check_and_add_email(email, initial_itinerary=None):
     """Check if email exists, add if it doesn't."""
     conn = get_db_connection()
@@ -61,11 +30,6 @@ def check_and_add_email(email, initial_itinerary=None):
             cur.execute("SELECT * FROM users WHERE email = %s", (email,))
             if cur.fetchone() is not None:
                 return {'success': False, 'message': 'Email already in the system'}
-
-            # If email doesn't exist, create Cognito user
-            cognito_success = create_cognito_user(email)
-            if not cognito_success:
-                return {'success': False, 'message': 'Failed to create user account'}
 
             # If email doesn't exist, insert it
             cur.execute(
