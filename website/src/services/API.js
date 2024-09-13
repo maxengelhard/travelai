@@ -2,9 +2,9 @@ import axios from 'axios';
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { fetchAuthSession as fetchCredentials } from '@aws-amplify/core';
-import config from '../aws-exports';
+import AwsConfig from './Config';
 
-Amplify.configure(config);
+Amplify.configure(AwsConfig);
 
 const getAuthTokens = async () => {
   try {

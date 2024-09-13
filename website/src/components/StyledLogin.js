@@ -75,12 +75,7 @@ const StyledLogin = () => {
       hideSignUp={true}
       loginMechanisms={['email']}
       signUpAttributes={['email']}>
-        {({ signOut, user }) => (
-          <main>
-            <h1>Hello {user.username}</h1>
-            <button onClick={signOut}>Sign out</button>
-          </main>
-        )}
+        {({ signOut, user }) => null}
       </Authenticator>
     </ThemeProvider>
   );

@@ -141,6 +141,46 @@ Resources:
             Resource:
               - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/tripjourneyai@gmail.com"
 
+  UserStatus:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "user_status_${STAGE}"
+      Handler: user_status.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64
+      Description: Check user status
+      Environment:
+        Variables:
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /user-status
+            Method: post
+            Auth:
+              AddDefaultAuthorizerToCorsPreflight: false
+              Authorizer: CognitoAuthorizer
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
 
 ###### STRIPE ######
   StripeUserWebhook:

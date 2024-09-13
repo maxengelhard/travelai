@@ -180,11 +180,14 @@ def lambda_handler(event,context):
                 sslmode='require') as conn:
 
                 with conn.cursor() as cur:
-                    query = "UPDATE users SET stripe_customer_id = %s WHERE email = %s"
-                    params = (stripe_customer,customer_email )
-                    cur.execute(query, params)
+                    # Add 1000 credits to the user's account
+                    query = """
+                    UPDATE users 
+                    SET stripe_customer_id = %s, credits = COALESCE(credits, 0) + 1000
+                    WHERE email = %s
+                    """
+                    cur.execute(query, (stripe_customer, customer_email,))
                     conn.commit()
-                    print('com')
 
 
         except (Exception, psycopg2.DatabaseError) as error:
