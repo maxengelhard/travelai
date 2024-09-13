@@ -243,7 +243,7 @@ def generate_temp_password(length=12):
     characters = string.ascii_letters + string.digits + "!@#$%^&*()_+-="
     return ''.join(random.choice(characters) for i in range(length))
 
-def create_or_update_cognito_user(email, plan_type):
+def create_or_update_cognito_user(email, plan_type,temp_password):
     """Create or update a user in Cognito with the given plan type."""
     try:
         # Check if the user already exists
@@ -264,7 +264,6 @@ def create_or_update_cognito_user(email, plan_type):
             print(f"Updated Cognito user attributes for {email}")
         except cognito_client.exceptions.UserNotFoundException:
             # User doesn't exist, create new user
-            temp_password = generate_temp_password()
             cognito_client.admin_create_user(
                 UserPoolId=USER_POOL_ID,
                 Username=email,
