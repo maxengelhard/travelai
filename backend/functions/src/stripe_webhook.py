@@ -176,7 +176,7 @@ def lambda_handler(event,context):
                 sslmode='require') as conn:
 
                 with conn.cursor() as cur:
-                    query = "UPDATE users SET customer_id = %s WHERE Email = %s"
+                    query = "UPDATE users SET stripe_customer_id = %s WHERE Email = %s"
                     params = (customer_email, stripe_customer)
                     cur.execute(query, params)
                     conn.commit()

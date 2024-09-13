@@ -46,7 +46,7 @@ const Pricing = () => {
         <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
           <PricingOption
             title="Pro"
-            price="20"
+            price="10"
             credits="1,000 credits / month"
             description="Ideal for any traveler. Enjoy more credits each month for comprehensive trip planning."
             isPopular={true}
@@ -65,7 +65,7 @@ const Pricing = () => {
             title="Jet Setter"
             price="100"
             credits="100,000 credits / month"
-            description="For the ultimate travel enthusiasts. Unlimited planning possibilities for multiple trips."
+            description="For the ultimate travel enthusiasts. Unlimited planning possibilities."
             monthly={true}
             stripeLink={process.env.REACT_APP_STRIPE_JET_SETTER_URL}
             features={[
