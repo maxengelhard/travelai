@@ -180,8 +180,8 @@ def lambda_handler(event,context):
                 sslmode='require') as conn:
 
                 with conn.cursor() as cur:
-                    query = "UPDATE users SET stripe_customer_id = %s WHERE Email = %s"
-                    params = (customer_email, stripe_customer)
+                    query = "UPDATE users SET stripe_customer_id = %s WHERE email = %s"
+                    params = (stripe_customer,customer_email )
                     cur.execute(query, params)
                     conn.commit()
                     print('com')
@@ -243,7 +243,7 @@ def generate_temp_password(length=12):
     characters = string.ascii_letters + string.digits + "!@#$%^&*()_+-="
     return ''.join(random.choice(characters) for i in range(length))
 
-def create_or_update_cognito_user(email, plan_type,temp_password):
+def create_or_update_cognito_user(email, plan_type):
     """Create or update a user in Cognito with the given plan type."""
     try:
         # Check if the user already exists
@@ -261,9 +261,10 @@ def create_or_update_cognito_user(email, plan_type,temp_password):
                     {'Name': 'custom:is_pro', 'Value': str(plan_type != 'free').lower()}
                 ]
             )
+            print(f"Updated Cognito user attributes for {email}")
         except cognito_client.exceptions.UserNotFoundException:
             # User doesn't exist, create new user
-            
+            temp_password = generate_temp_password()
             cognito_client.admin_create_user(
                 UserPoolId=USER_POOL_ID,
                 Username=email,
@@ -276,6 +277,7 @@ def create_or_update_cognito_user(email, plan_type,temp_password):
                 TemporaryPassword=temp_password,
                 MessageAction='SUPPRESS'
             )
+            print(f"Created new Cognito user for {email}")
             # Send login email with temporary password
             send_login_email(email, temp_password)
         
