@@ -27,8 +27,8 @@ function App() {
           data: { email: attributes.email },
           useCache: false
         });
-        console.log(response);
-        setUserInfo(response.data);
+        console.log(response.data);
+        setUserInfo(response.data.body);
       } catch (error) {
         console.error('Error fetching user info:', error);
       }

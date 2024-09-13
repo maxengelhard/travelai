@@ -6,13 +6,11 @@ const SideBar = ({ userInfo }) => (
           <div>Email: {userInfo.email}</div>
           <div>Plan: {userInfo.plan_type}</div>
           <div>Credits: {userInfo.credits}</div>
-          <div>Plan Start: {new Date(userInfo.plan_start_date).toLocaleDateString()}</div>
-          <div>Plan End: {new Date(userInfo.plan_end_date).toLocaleDateString()}</div>
         </div>
       </nav>
       <div className="mt-6">
         <h3 className="text-xl font-semibold mb-2">Initial Prompt</h3>
-        <p>{userInfo.initial_prompt}</p>
+        <p>{userInfo.initial_itinerary}</p>
       </div>
     </div>
   );
