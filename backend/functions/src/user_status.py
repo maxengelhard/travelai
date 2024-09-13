@@ -1,8 +1,8 @@
 import json
 import psycopg2
 import os
-from lambda_decorators import json_http_resp, cors_headers , load_json_body
-
+from lambda_decorators import json_http_resp, cors_headers, load_json_body
+from datetime import datetime
 
 DB_PARAMS = {
     'dbname': os.getenv('DB_NAME'),
@@ -15,6 +15,12 @@ DB_PARAMS = {
 def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
 
 @cors_headers
 @load_json_body
@@ -47,7 +53,7 @@ def lambda_handler(event, context):
                 user_dict = dict(zip(columns, user))
                 return {
                     'statusCode': 200,
-                    'body': json.dumps(user_dict),
+                    'body': json.dumps(user_dict, default=json_serial),
                     'headers': {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
@@ -74,5 +80,3 @@ def lambda_handler(event, context):
         }
     finally:
         conn.close()
-
-
