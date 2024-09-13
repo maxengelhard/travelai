@@ -51,9 +51,12 @@ def lambda_handler(event, context):
             user = cur.fetchone()
             if user:
                 user_dict = dict(zip(columns, user))
+                for key, value in user_dict.items():
+                    if isinstance(value, datetime):
+                        user_dict[key] = value.isoformat()
                 return {
                     'statusCode': 200,
-                    'body': json.dumps(user_dict, default=json_serial),
+                    'body': user_dict,
                     'headers': {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
