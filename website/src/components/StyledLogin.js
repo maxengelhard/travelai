@@ -24,10 +24,19 @@ const components = {
     return (
       <View textAlign="center" padding={tokens.space.large}>
         <Text color={tokens.colors.neutral[80]}>
-          &copy; {new Date().getFullYear()} Your Company Name. All rights reserved.
+          &copy; {new Date().getFullYear()} Ing Technologies LLC. All rights reserved.
         </Text>
       </View>
     );
+  },
+
+  SignUp: {
+    Header() {
+      return null; // This removes the "Create Account" header
+    },
+    Footer() {
+      return null; // This removes the "Have an account? Sign in" link
+    },
   },
 };
 
@@ -62,7 +71,10 @@ const StyledLogin = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Authenticator components={components}>
+      <Authenticator components={components}
+      hideSignUp={true}
+      loginMechanisms={['email']}
+      signUpAttributes={['email']}>
         {({ signOut, user }) => (
           <main>
             <h1>Hello {user.username}</h1>
