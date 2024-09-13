@@ -57,9 +57,14 @@ def lambda_handler(event,context):
         )
         total_details = retrieve_response['total_details']['breakdown']
         discounts = total_details.get('discounts',[])
-        discount = discounts[0]
-        promo_code_id = discount['discount']['promotion_code']
-
+        if len(discounts) > 0:
+            discount = discounts[0]
+            promo_code_id = discount['discount']['promotion_code']
+        else:
+            return {
+                'statusCode': 200,
+                'body': json.dumps('Done!')
+            }
         ## if there is already a connection you don't need to set it up
         metadata = payload_object['metadata']
         if 'account_id' in metadata:
