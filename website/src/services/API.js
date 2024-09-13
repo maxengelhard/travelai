@@ -32,7 +32,7 @@ const getClient = async (clientIdOverride, useCache) => {
     const { JWT, identityToken, cache } = await getAuthTokens();
 
     const options = {
-      baseURL: `https://${process.env.REACT_APP_DOMAIN_SUFFIX}.tripjourney.co/`,
+      baseURL: `https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/`,
       timeout: 900000,
       headers: {
         'Content-Type': 'application/json;charset=utf-8',

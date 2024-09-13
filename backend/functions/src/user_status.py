@@ -37,8 +37,7 @@ def lambda_handler(event, context):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT email, plan_type, is_pro, stripe_customer_id, credits, 
-                       plan_start_date, plan_end_date, initial_prompt
+                SELECT *
                 FROM users 
                 WHERE email = %s
             """, (email,))   
