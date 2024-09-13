@@ -5,10 +5,16 @@ import psycopg2
 import boto3
 import psycopg2.extras
 from botocore.exceptions import ClientError
+import string
+import random
 
 
 # Create a new SES client
-# ses_client = boto3.client('ses')
+cognito_client = boto3.client('cognito-idp')
+ses_client = boto3.client('ses')
+USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
+SES_SENDER_EMAIL = 'tripjourneyai@gmail.com'
+LOGIN_URL = 'appdev.tripjourney.co'  # URL where users can log in
 
 user = os.getenv('DB_USER')
 host = os.getenv('DB_HOST')
@@ -149,15 +155,12 @@ def lambda_handler(event,context):
 
         
     if payload['type'] == 'customer.created':
+        print(payload)
         session = payload['data']['object']
         customer_email = session['email']
         customer_name = session['name']
         stripe_customer = session['id']
         
-        # Generate an activation code
-        activation_code = os.urandom(16).hex()
-        # Store this activation code and email in your database.
-        # TODO implement SQL
         try:
             with psycopg2.connect(
                 host=host,
@@ -168,8 +171,8 @@ def lambda_handler(event,context):
                 sslmode='require') as conn:
 
                 with conn.cursor() as cur:
-                    query = "INSERT INTO ActivationCodes (Email, Code, Customer_ID) VALUES (%s, %s, %s)"
-                    params = (customer_email, activation_code, stripe_customer)
+                    query = "UPDATE users SET customer_id = %s WHERE Email = %s"
+                    params = (customer_email, stripe_customer)
                     cur.execute(query, params)
                     conn.commit()
                     print('com')
@@ -179,7 +182,9 @@ def lambda_handler(event,context):
             print(error)
 
         try:
-            send_email(recipient_email=customer_email,activation_code=activation_code,customer_name=customer_name)
+            temp_password = generate_temp_password()
+            create_or_update_cognito_user(customer_email, 'pro',temp_password)
+            send_login_email(customer_email, temp_password)
         except Exception as e:
             raise e
 
@@ -224,7 +229,12 @@ def lambda_handler(event,context):
     }
 
 
-def create_or_update_cognito_user(email, plan_type):
+def generate_temp_password(length=12):
+    """Generate a temporary password."""
+    characters = string.ascii_letters + string.digits + "!@#$%^&*()_+-="
+    return ''.join(random.choice(characters) for i in range(length))
+
+def create_or_update_cognito_user(email, plan_type,temp_password):
     """Create or update a user in Cognito with the given plan type."""
     try:
         # Check if the user already exists
@@ -244,7 +254,7 @@ def create_or_update_cognito_user(email, plan_type):
             )
         except cognito_client.exceptions.UserNotFoundException:
             # User doesn't exist, create new user
-            temp_password = generate_temp_password()
+            
             cognito_client.admin_create_user(
                 UserPoolId=USER_POOL_ID,
                 Username=email,
@@ -265,23 +275,46 @@ def create_or_update_cognito_user(email, plan_type):
         print(f"Error creating or updating Cognito user: {str(e)}")
         return False
 
+def send_login_email(email, temp_password):
+    """Send an email with login instructions."""
+    SUBJECT = "Your Account Has Been Created"
+    BODY_TEXT = (f"Welcome to our service!\r\n\n"
+                 f"Your account has been created with the following credentials:\r\n"
+                 f"Email: {email}\r\n"
+                 f"Temporary Password: {temp_password}\r\n\n"
+                 f"Please log in at {LOGIN_URL} and change your password as soon as possible.\r\n"
+                 "For security reasons, this temporary password will expire in 7 days.")
+    BODY_HTML = f"""<html>
+    <head></head>
+    <body>
+      <h1>Welcome to our service!</h1>
+      <p>Your account has been created with the following credentials:</p>
+      <ul>
+        <li>Email: {email}</li>
+        <li>Temporary Password: {temp_password}</li>
+      </ul>
+      <p>Please <a href="{LOGIN_URL}">log in</a> and change your password as soon as possible.</p>
+      <p>For security reasons, this temporary password will expire in 7 days.</p>
+    </body>
+    </html>
+    """
 
-def send_email(recipient_email,activation_code,customer_name):
-    sender_email = "noreply@betchime.com"
-    subject = "Your Activation Code"
-    body_html = html_mockup(activation_code=activation_code,customer_name=customer_name)
-
-    # Define the email parameters
-    message = Mail(
-    from_email=sender_email,
-    to_emails=recipient_email,
-    subject=subject,
-    html_content=body_html)
     try:
-        sg = SendGridAPIClient(os.environ.get('send_grid_key'))
-        response = sg.send(message)
-        print(response.status_code)
-        print(response.body)
-        print(response.headers)
-    except Exception as e:
-        print(e.message)
+        response = ses_client.send_email(
+            Destination={'ToAddresses': [email]},
+            Message={
+                'Body': {
+                    'Html': {'Charset': "UTF-8", 'Data': BODY_HTML},
+                    'Text': {'Charset': "UTF-8", 'Data': BODY_TEXT},
+                },
+                'Subject': {'Charset': "UTF-8", 'Data': SUBJECT},
+            },
+            Source=SES_SENDER_EMAIL
+        )
+    except ClientError as e:
+        print(f"An error occurred: {e.response['Error']['Message']}")
+        return False
+    else:
+        print(f"Email sent! Message ID: {response['MessageId']}")
+        return True
+

@@ -48,7 +48,7 @@ const Pricing = () => {
             title="Pro"
             price="20"
             credits="1,000 credits / month"
-            description="Ideal for any travelers. Enjoy more credits each month for comprehensive trip planning."
+            description="Ideal for any traveler. Enjoy more credits each month for comprehensive trip planning."
             isPopular={true}
             monthly={true}
             stripeLink={process.env.REACT_APP_STRIPE_PRO_URL}
