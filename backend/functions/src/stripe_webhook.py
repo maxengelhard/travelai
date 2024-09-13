@@ -7,6 +7,10 @@ import psycopg2.extras
 from botocore.exceptions import ClientError
 import string
 import random
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.header import Header
+import boto3
 
 
 # Create a new SES client
@@ -304,17 +308,24 @@ def send_login_email(email, temp_password):
     </html>
     """
 
+    message = MIMEMultipart('alternative')
+    message['Subject'] = Header(SUBJECT, 'utf-8')
+    message['From'] = SES_SENDER_EMAIL
+    message['To'] = email
+
+    part1 = MIMEText(BODY_TEXT, 'plain', 'utf-8')
+    part2 = MIMEText(BODY_HTML, 'html', 'utf-8')
+
+    message.attach(part1)
+    message.attach(part2)
+
     try:
-        response = ses_client.send_email(
-            Destination={'ToAddresses': [email]},
-            Message={
-                'Body': {
-                    'Html': {'Charset': "UTF-8", 'Data': BODY_HTML},
-                    'Text': {'Charset': "UTF-8", 'Data': BODY_TEXT},
-                },
-                'Subject': {'Charset': "UTF-8", 'Data': SUBJECT},
-            },
-            Source=SES_SENDER_EMAIL
+        response = ses_client.send_raw_email(
+            Source=SES_SENDER_EMAIL,
+            Destinations=[email],
+            RawMessage={
+                'Data': message.as_string(),
+            }
         )
     except ClientError as e:
         print(f"An error occurred: {e.response['Error']['Message']}")
