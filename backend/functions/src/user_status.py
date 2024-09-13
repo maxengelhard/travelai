@@ -41,11 +41,13 @@ def lambda_handler(event, context):
                 FROM users 
                 WHERE email = %s
             """, (email,))   
+            columns = [desc[0] for desc in cur.description]
             user = cur.fetchone()
             if user:
+                user_dict = dict(zip(columns, user))
                 return {
                     'statusCode': 200,
-                    'body': json.dumps(dict(user)),
+                    'body': json.dumps(user_dict),
                     'headers': {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
