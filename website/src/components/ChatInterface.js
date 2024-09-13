@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import StyledItinerary from './StyledItinerary';
 
 const ChatInterface = ({ initialItinerary }) => {
   const [messages, setMessages] = useState([]);
@@ -39,16 +40,24 @@ const ChatInterface = ({ initialItinerary }) => {
     setDates({ ...dates, [e.target.name]: e.target.value });
   };
 
+  if (!initialItinerary) {
+    return <div>No initial itinerary available</div>;
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-grow overflow-auto p-4">
         {messages.map((message, index) => (
           <div key={index} className={`mb-4 ${message.type === 'user' ? 'text-right' : ''}`}>
-            <div className={`inline-block p-2 rounded-lg ${
-              message.type === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-            }`}>
-              {message.content}
-            </div>
+            {message.type === 'ai' && index === 0 ? (
+              <StyledItinerary itinerary={message.content} />
+            ) : (
+              <div className={`inline-block p-2 rounded-lg ${
+                message.type === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+              }`}>
+                {message.content}
+              </div>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />

@@ -11,6 +11,7 @@ import API from './services/API';
 import StyledAuthenticator from './components/StyledAuthenticator';
 import SideBar from './components/SideBar';
 import MainContent from './components/MainContent';
+import LoadingSpinner from './components/LoadingSpinner';
 
 Amplify.configure(AwsConfig);
 
@@ -44,7 +45,7 @@ function App() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <LoadingSpinner />
   }
 
   if (error) {
