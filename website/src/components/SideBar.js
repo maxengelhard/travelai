@@ -8,10 +8,10 @@ const SideBar = ({ userInfo }) => (
           <div>Credits: {userInfo.credits}</div>
         </div>
       </nav>
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <h3 className="text-xl font-semibold mb-2">Initial Prompt</h3>
         <p>{userInfo.initial_itinerary}</p>
-      </div>
+      </div> */}
     </div>
   );
 

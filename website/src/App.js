@@ -16,10 +16,13 @@ Amplify.configure(AwsConfig);
 
 function App() {
   const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
+        setLoading(true);
         const user = await getCurrentUser();
         console.log(user);
         const attributes = await fetchUserAttributes();
@@ -31,11 +34,22 @@ function App() {
         setUserInfo(response.data.body);
       } catch (error) {
         console.error('Error fetching user info:', error);
+        setError('Failed to fetch user information');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUserInfo();
   }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <StyledAuthenticator>
@@ -55,7 +69,7 @@ function App() {
               </div>
             </header>
             <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200">
-              <MainContent />
+              <MainContent userInfo={userInfo} />
             </main>
           </div>
         </div>
