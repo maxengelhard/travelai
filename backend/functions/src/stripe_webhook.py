@@ -121,6 +121,49 @@ def lambda_handler(event,context):
         payload_object = payload['data']['object'] 
         invoice_id = payload_object['id']
 
+        # update the user table depending on the plan
+        # if the plan is pro, update the plan_type to pro
+        # if the plan is jet setter, update the plan_type to jet setter
+        customer_id = payload_object['customer']
+        # Extract the description from the first line item
+        description = payload_object['lines']['data'][0]['description'].lower()
+        
+        plan_type = None
+        is_pro = False
+        
+        if 'pro' in description:
+            plan_type = 'pro'
+            is_pro = True
+        elif 'jet setter' in description:
+            plan_type = 'jet setter'
+            is_pro = True
+        
+        if plan_type:
+            try:
+                with psycopg2.connect(
+                    host=host,
+                    database=database,
+                    user=user,
+                    password=password,
+                    port="5432",
+                    sslmode='require') as conn:
+
+                    with conn.cursor() as cur:
+                        # Update the user's plan type and is_pro status
+                        update_query = """
+                        UPDATE users 
+                        SET plan_type = %s, is_pro = %s
+                        WHERE stripe_customer_id = %s
+                        """
+                        cur.execute(update_query, (plan_type, is_pro, customer_id))
+                        conn.commit()
+
+                        print(f"Updated user plan to {plan_type} for customer {customer_id}")
+
+            except (Exception, psycopg2.DatabaseError) as error:
+                print(f"Error updating user plan: {error}")
+
+
         try:
             # Retrieve the invoice
             invoice = stripe.Invoice.retrieve(invoice_id)

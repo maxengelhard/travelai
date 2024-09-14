@@ -100,7 +100,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      FunctionName: !Sub "itinerary_${STAGE}"
+      FunctionName: !Sub "tripjourney_iitinerary_${STAGE}"
       Handler: itinerary.lambda_handler
       Runtime: python3.10
       Architectures: 
@@ -145,7 +145,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      FunctionName: !Sub "user_status_${STAGE}"
+      FunctionName: !Sub "tripjourney_user_status_${STAGE}"
       Handler: user_status.lambda_handler
       Runtime: python3.10
       Architectures: 
@@ -187,7 +187,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      FunctionName: !Sub "stripe_user_webhook_${STAGE}"
+      FunctionName: !Sub "tripjourney_stripe_user_webhook_${STAGE}"
       Handler: stripe_webhook.lambda_handler
       Runtime: python3.10
       Architectures: 
