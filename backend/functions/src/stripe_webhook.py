@@ -127,7 +127,10 @@ def lambda_handler(event,context):
         customer_id = payload_object['customer']
         # Extract the description from the first line item
         description = payload_object['lines']['data'][0]['description'].lower()
-        
+        print('customer id')
+        print(customer_id)
+        print('description')
+        print(description)
         plan_type = None
         is_pro = False
         
