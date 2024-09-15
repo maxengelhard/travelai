@@ -167,44 +167,44 @@ def lambda_handler(event,context):
                 print(f"Error updating user plan: {error}")
 
 
-        try:
-            # Retrieve the invoice
-            invoice = stripe.Invoice.retrieve(invoice_id)
-            subscription_id = invoice.get('subscription')
+        # try:
+        #     # Retrieve the invoice
+        #     invoice = stripe.Invoice.retrieve(invoice_id)
+        #     subscription_id = invoice.get('subscription')
 
-            if subscription_id:
-                # Database operation to find associated account
-                with psycopg2.connect(
-                    host=host,
-                    database=database,
-                    user=user,
-                    password=password,
-                    port="5432",
-                    sslmode='require') as conn:
+        #     if subscription_id:
+        #         # Database operation to find associated account
+        #         with psycopg2.connect(
+        #             host=host,
+        #             database=database,
+        #             user=user,
+        #             password=password,
+        #             port="5432",
+        #             sslmode='require') as conn:
 
-                    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                        # Query to find the associated account for this subscription
-                        query = "SELECT account_id FROM subscription_account_association WHERE subscription_id=%s"
-                        cur.execute(query, (subscription_id,))
-                        result = cur.fetchone()
+        #             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        #                 # Query to find the associated account for this subscription
+        #                 query = "SELECT account_id FROM subscription_account_association WHERE subscription_id=%s"
+        #                 cur.execute(query, (subscription_id,))
+        #                 result = cur.fetchone()
 
-                        if result:
-                            account_id = result.get('account_id')
-                            if invoice['billing_reason'] == 'subscription_cycle':
-                                # Check if this is the payment after the start
-                                # Calculate 20% of the payment
-                                amount_to_transfer = int(invoice['amount_paid'] * 0.30)
-                                if amount_to_transfer > 0:
-                                    # Create a transfer to the connected account
-                                    print('transfering to account')
-                                    stripe.Transfer.create(
-                                        amount=amount_to_transfer,
-                                        currency=invoice['currency'],
-                                        destination=account_id,
-                                        transfer_group=invoice_id,
-                                    )
-        except Exception as e:
-            print(f"Error: {e}")
+        #                 if result:
+        #                     account_id = result.get('account_id')
+        #                     if invoice['billing_reason'] == 'subscription_cycle':
+        #                         # Check if this is the payment after the start
+        #                         # Calculate 20% of the payment
+        #                         amount_to_transfer = int(invoice['amount_paid'] * 0.30)
+        #                         if amount_to_transfer > 0:
+        #                             # Create a transfer to the connected account
+        #                             print('transfering to account')
+        #                             stripe.Transfer.create(
+        #                                 amount=amount_to_transfer,
+        #                                 currency=invoice['currency'],
+        #                                 destination=account_id,
+        #                                 transfer_group=invoice_id,
+        #                             )
+        # except Exception as e:
+        #     print(f"Error: {e}")
 
         
 
