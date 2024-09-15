@@ -4,13 +4,16 @@ import StyledItinerary from './StyledItinerary';
 const ChatInterface = ({ initialItinerary }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [itinerary, setItinerary] = useState(null);
   const [categories, setCategories] = useState([]);
   const [dates, setDates] = useState({ start: '', end: '' });
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (initialItinerary) {
-      setMessages([{ type: 'ai', content: initialItinerary }]);
+      const parsedItinerary = parseItinerary(initialItinerary);
+      setItinerary(parsedItinerary);
+      setMessages([{ type: 'ai', content: parsedItinerary }]);
     }
   }, [initialItinerary]);
 
@@ -40,8 +43,26 @@ const ChatInterface = ({ initialItinerary }) => {
     setDates({ ...dates, [e.target.name]: e.target.value });
   };
 
-  if (!initialItinerary) {
-    return <div>No initial itinerary available</div>;
+  const parseItinerary = (rawItinerary) => {
+    const days = rawItinerary.split('Day').filter(day => day.trim() !== '');
+    return days.map(day => {
+      const [dayNumber, ...activities] = day.split('\n').filter(line => line.trim() !== '');
+      return {
+        day: dayNumber.trim(),
+        activities: activities.map(activity => activity.trim())
+      };
+    });
+  };
+
+  const handleUpdateItinerary = (updatedItinerary) => {
+    setItinerary(updatedItinerary);
+    setMessages(messages.map(msg => 
+      msg.type === 'ai' ? { ...msg, content: updatedItinerary } : msg
+    ));
+  };
+
+  if (!itinerary) {
+    return <div>Loading itinerary...</div>;
   }
 
   return (
@@ -98,7 +119,10 @@ const ChatInterface = ({ initialItinerary }) => {
           {messages.map((message, index) => (
             <div key={index} className={`mb-4 ${message.type === 'user' ? 'text-right' : ''}`}>
               {message.type === 'ai' && index === 0 ? (
-                <StyledItinerary itinerary={message.content} />
+                <StyledItinerary 
+                  itinerary={itinerary} 
+                  onUpdateItinerary={handleUpdateItinerary}
+                />
               ) : (
                 <div className={`inline-block p-3 rounded-lg ${
                   message.type === 'user' ? 'bg-purple-500 text-white' : 'bg-gray-200'
