@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Amplify } from 'aws-amplify';
-import { getCurrentUser, fetchUserAttributes } from '@aws-amplify/auth';
+import { getCurrentUser, fetchUserAttributes, signOut } from '@aws-amplify/auth';
 import '@aws-amplify/ui-react/styles.css';
 
 // services
@@ -19,6 +19,7 @@ function App() {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -33,9 +34,14 @@ function App() {
         });
         console.log(response.data);
         setUserInfo(response.data.body);
+        setIsAuthenticated(true);
       } catch (error) {
         console.error('Error fetching user info:', error);
         setError('Failed to fetch user information');
+        if (error.name === 'UserUnAuthenticatedException') {
+          console.log('User is not authenticated. Redirecting to login...');
+          await handleSignOut();
+        }
       } finally {
         setLoading(false);
       }
@@ -43,6 +49,21 @@ function App() {
 
     fetchUserInfo();
   }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setIsAuthenticated(false);
+      setUserInfo(null);
+    }
+  };
+
+  if (!isAuthenticated) {
+    return <StyledAuthenticator />;
+  }
 
   if (loading) {
     return <LoadingSpinner />
