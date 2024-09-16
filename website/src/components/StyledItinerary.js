@@ -3,7 +3,6 @@ import CategorySelector from './CategorySelector';
 
 const StyledItinerary = ({ itinerary, onUpdateItinerary }) => {
   const [selectedActivity, setSelectedActivity] = useState(null);
-  const [expandedDay, setExpandedDay] = useState(null);
 
   const handleActivityClick = (dayIndex, activityIndex) => {
     setSelectedActivity({ dayIndex, activityIndex });
@@ -12,65 +11,61 @@ const StyledItinerary = ({ itinerary, onUpdateItinerary }) => {
   const handleCategorySelect = async (category) => {
     if (selectedActivity) {
       const { dayIndex, activityIndex } = selectedActivity;
-      // Here, you would typically call your AI service to get a new suggestion
-      // For now, we'll just append the category to the activity
-      const updatedItinerary = itinerary.map((day, i) => {
-        if (i === dayIndex) {
-          const updatedActivities = day.activities.map((activity, j) => {
-            if (j === activityIndex) {
-              return `${activity} (Updated for ${category})`;
-            }
-            return activity;
-          });
-          return { ...day, activities: updatedActivities };
-        }
-        return day;
-      });
+      const updatedItinerary = {
+        ...itinerary,
+        days: itinerary.days.map((day, i) => {
+          if (i === dayIndex) {
+            return {
+              ...day,
+              activities: day.activities.map((activity, j) => {
+                if (j === activityIndex) {
+                  return `${activity} (Updated for ${category})`;
+                }
+                return activity;
+              })
+            };
+          }
+          return day;
+        })
+      };
       onUpdateItinerary(updatedItinerary);
     }
     setSelectedActivity(null);
   };
 
-  const toggleDay = (dayIndex) => {
-    setExpandedDay(expandedDay === dayIndex ? null : dayIndex);
-  };
-
   return (
-    <div className="space-y-2">
+    <div className="relative pl-8 space-y-8 before:absolute before:left-4 before:h-full before:w-0.5 before:bg-blue-200">
       {itinerary.days.map((day, dayIndex) => (
-        <div key={dayIndex} className="border rounded-md overflow-hidden">
-          <div 
-            className="bg-gray-100 p-2 cursor-pointer flex justify-between items-center"
-            onClick={() => toggleDay(dayIndex)}
-          >
-            <h3 className="text-md font-semibold">Day {day.day}</h3>
-            <span>{expandedDay === dayIndex ? '▲' : '▼'}</span>
+        <div key={dayIndex} className="relative">
+          <div className="absolute -left-8 top-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-xs font-bold">{day.day}</span>
           </div>
-          {expandedDay === dayIndex && (
-            <div className="p-2 space-y-1">
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <h3 className="text-lg font-semibold text-blue-700 mb-2">Day {day.day}</h3>
+            <div className="space-y-2">
               {day.activities.map((activity, activityIndex) => (
                 <div
                   key={activityIndex}
-                  className="text-sm p-1 rounded hover:bg-gray-100 cursor-pointer"
+                  className="pl-4 relative before:absolute before:left-0 before:top-2 before:w-2 before:h-2 before:bg-blue-300 before:rounded-full cursor-pointer hover:bg-blue-50 transition-colors duration-200"
                   onClick={() => handleActivityClick(dayIndex, activityIndex)}
                 >
-                  {activity}
+                  <p className="text-sm text-gray-700">{activity}</p>
                 </div>
               ))}
-              {day.costBreakdown && (
-                <div className="mt-2 pt-2 border-t text-sm">
-                  <h4 className="font-semibold">Day {day.day} Cost:</h4>
-                  <p>{day.costBreakdown}</p>
-                </div>
-              )}
             </div>
-          )}
+            {day.costBreakdown && (
+              <div className="mt-2 pt-2 border-t border-blue-100 text-sm">
+                <h4 className="font-semibold text-blue-600">Day {day.day} Cost:</h4>
+                <p className="text-gray-600">{day.costBreakdown}</p>
+              </div>
+            )}
+          </div>
         </div>
       ))}
       {itinerary.totalCostBreakdown && (
-        <div className="mt-4 pt-4 border-t">
-          <h3 className="text-lg font-semibold mb-2">Total Cost Breakdown:</h3>
-          <pre className="whitespace-pre-wrap text-sm">{itinerary.totalCostBreakdown}</pre>
+        <div className="bg-white rounded-lg shadow-md p-4 mt-4">
+          <h3 className="text-lg font-semibold text-blue-700 mb-2">Total Cost Breakdown:</h3>
+          <pre className="whitespace-pre-wrap text-sm text-gray-600">{itinerary.totalCostBreakdown}</pre>
         </div>
       )}
       {selectedActivity && (
