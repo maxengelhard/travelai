@@ -79,7 +79,7 @@ function App() {
     <StyledAuthenticator>
       {({ signOut }) => (
         <div className="flex flex-col h-screen">
-        <Header credits={userInfo?.credits || 0} /> {/* Use credits from userInfo */}
+        <Header credits={userInfo?.credits || 0}  userInfo={userInfo}/> {/* Use credits from userInfo */}
         <div className="flex flex-1 overflow-hidden">
           <SideBar 
             selectedCategories={selectedCategories} 
