@@ -322,12 +322,11 @@ def create_or_update_cognito_user(email, plan_type,temp_password):
                     {'Name': 'custom:plan_type', 'Value': plan_type},
                     {'Name': 'custom:is_pro', 'Value': str(plan_type != 'free').lower()}
                 ],
-                TemporaryPassword=temp_password,
-                MessageAction='SUPPRESS'
+                DesiredDeliveryMediums=['EMAIL']
             )
             print(f"Created new Cognito user for {email}")
             # Send login email with temporary password
-            send_login_email(email, temp_password)
+            # send_login_email(email, temp_password)
         
         return True
     except Exception as e:
