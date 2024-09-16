@@ -86,7 +86,7 @@ function App() {
             setDates={setDates}
           />
           <main className="flex-1 overflow-auto p-6">
-            <ItineraryGrid itinerary={userInfo?.initial_itinerary} />
+            <ItineraryGrid itinerary={userInfo?.itinerary} />
           </main>
         </div>
       </div>

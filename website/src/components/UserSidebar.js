@@ -1,7 +1,21 @@
 import React from 'react';
+import { signOut } from 'aws-amplify/auth';
+import { useNavigate } from 'react-router-dom';
 
 const UserSidebar = ({ isOpen, onClose, userInfo }) => {
+  const navigate = useNavigate();
+
   if (!isOpen) return null;
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      onClose(); // Close the sidebar
+      navigate('/login'); // Redirect to login page or home page
+    } catch (error) {
+      console.error('Error signing out: ', error);
+    }
+  };
 
   return (
     <div className="fixed inset-0 overflow-hidden z-50">
@@ -31,6 +45,13 @@ const UserSidebar = ({ isOpen, onClose, userInfo }) => {
                   <p><strong>Credits:</strong> {userInfo.credits}</p>
                   {/* Add more user information as needed */}
                 </div>
+                {/* Logout button */}
+                <button
+                  onClick={handleLogout}
+                  className="mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>
