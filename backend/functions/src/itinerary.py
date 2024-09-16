@@ -6,6 +6,7 @@ from lambda_decorators import json_http_resp, cors_headers , load_json_body
 from trip_journey_email import send_itinerary_email
 import re
 # Set up OpenAI client
+
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
 
@@ -64,11 +65,10 @@ def update_user_itinerary(email, itinerary):
         conn.close()
 
 
-def parse_raw_itinerary(raw_itinerary, days):
+def parse_itinerary(content, days):
     formatted_itinerary = {}
     for i in range(1, int(days) + 1):
-        day_key = f"Day {i}"
-        formatted_itinerary[day_key] = {
+        formatted_itinerary[f"Day {i}"] = {
             "Morning": "",
             "Lunch": "",
             "Afternoon": "",
@@ -76,9 +76,23 @@ def parse_raw_itinerary(raw_itinerary, days):
             "Evening": "",
             "Costs": ""
         }
-    
+
+    if isinstance(content, dict):
+        # If it's already a dictionary, use it directly
+        return content
+
+    # If it's a string, try to extract JSON from it
+    json_match = re.search(r'\{.*\}', content, re.DOTALL)
+    if json_match:
+        try:
+            json_content = json.loads(json_match.group())
+            return json_content
+        except json.JSONDecodeError:
+            pass  # If JSON parsing fails, continue with string parsing
+
+    # Parse the string content
     current_day = None
-    for line in raw_itinerary.split('\n'):
+    for line in content.split('\n'):
         day_match = re.match(r'Day (\d+):', line)
         if day_match:
             current_day = f"Day {day_match.group(1)}"
@@ -88,7 +102,7 @@ def parse_raw_itinerary(raw_itinerary, days):
             for key in formatted_itinerary[current_day]:
                 if line.lower().startswith(key.lower()):
                     formatted_itinerary[current_day][key] = line.split(':', 1)[1].strip()
-    
+
     return formatted_itinerary
 
 @cors_headers
@@ -145,22 +159,25 @@ def lambda_handler(event, context):
             max_tokens=1000,
             temperature=0.7,
         )
-        print(response.choices[0].message.content.strip())
-
-        raw_itinerary = response.choices[0].message.content.strip()
-        formatted_itinerary = parse_raw_itinerary(raw_itinerary, days or 3)
-        print(json.dumps(formatted_itinerary, indent=2))
-
-        update_user_itinerary(to_email, json.dumps(formatted_itinerary))
+        content = response.choices[0].message.content
+        print(content)
+        # # Check if content is already a dictionary
+        # if isinstance(content, dict):
+        #     formatted_itinerary = content
+        # else:
+        #     formatted_itinerary = parse_itinerary(content, days or 3)
+        
+        # print(json.dumps(formatted_itinerary, indent=2))
+        update_user_itinerary(to_email, content)
         # Send the email
-        email_sent = send_itinerary_email(to_email, formatted_itinerary, destination, days, budget)
+        email_sent = send_itinerary_email(to_email, content, destination, days, budget)
 
         if email_sent:
             return {
                 'statusCode': 200,
                 'body': json.dumps({
                     'message': 'Itinerary generated and sent to your email successfully!',
-                    'itinerary': formatted_itinerary
+                    'itinerary': content
                 }),
                 'headers': {
                     'Content-Type': 'application/json',
@@ -197,5 +214,5 @@ def lambda_handler(event, context):
 
 
 if __name__ == "__main__":
-    result = lambda_handler({"body": {"destination": "Paris", "days": "3", "budget": "1000"}}, None)
+    result = lambda_handler({"body": {"destination": "Paris", "days": "3", "budget": "1000","email":"maxvengelhard@gmail.com"}}, None)
     print(result)
