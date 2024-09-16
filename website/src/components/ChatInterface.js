@@ -141,7 +141,7 @@ const ChatInterface = ({ initialItinerary }) => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
+              placeholder="Edit your itinerary..."
               className="flex-grow mr-2 p-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm"
             />
             <button

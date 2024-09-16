@@ -1,38 +1,6 @@
-import React, { useState } from 'react';
-import CategorySelector from './CategorySelector';
+import React from 'react';
 
-const StyledItinerary = ({ itinerary, onUpdateItinerary }) => {
-  const [selectedActivity, setSelectedActivity] = useState(null);
-
-  const handleActivityClick = (dayIndex, activityIndex) => {
-    setSelectedActivity({ dayIndex, activityIndex });
-  };
-
-  const handleCategorySelect = async (category) => {
-    if (selectedActivity) {
-      const { dayIndex, activityIndex } = selectedActivity;
-      const updatedItinerary = {
-        ...itinerary,
-        days: itinerary.days.map((day, i) => {
-          if (i === dayIndex) {
-            return {
-              ...day,
-              activities: day.activities.map((activity, j) => {
-                if (j === activityIndex) {
-                  return `${activity} (Updated for ${category})`;
-                }
-                return activity;
-              })
-            };
-          }
-          return day;
-        })
-      };
-      onUpdateItinerary(updatedItinerary);
-    }
-    setSelectedActivity(null);
-  };
-
+const StyledItinerary = ({ itinerary }) => {
   return (
     <div className="relative pl-8 space-y-8 before:absolute before:left-4 before:h-full before:w-0.5 before:bg-blue-200">
       {itinerary.days.map((day, dayIndex) => (
@@ -46,8 +14,7 @@ const StyledItinerary = ({ itinerary, onUpdateItinerary }) => {
               {day.activities.map((activity, activityIndex) => (
                 <div
                   key={activityIndex}
-                  className="pl-4 relative before:absolute before:left-0 before:top-2 before:w-2 before:h-2 before:bg-blue-300 before:rounded-full cursor-pointer hover:bg-blue-50 transition-colors duration-200"
-                  onClick={() => handleActivityClick(dayIndex, activityIndex)}
+                  className="pl-4 relative before:absolute before:left-0 before:top-2 before:w-2 before:h-2 before:bg-blue-300 before:rounded-full"
                 >
                   <p className="text-sm text-gray-700">{activity}</p>
                 </div>
@@ -67,12 +34,6 @@ const StyledItinerary = ({ itinerary, onUpdateItinerary }) => {
           <h3 className="text-lg font-semibold text-blue-700 mb-2">Total Cost Breakdown:</h3>
           <pre className="whitespace-pre-wrap text-sm text-gray-600">{itinerary.totalCostBreakdown}</pre>
         </div>
-      )}
-      {selectedActivity && (
-        <CategorySelector
-          onSelect={handleCategorySelect}
-          onClose={() => setSelectedActivity(null)}
-        />
       )}
     </div>
   );

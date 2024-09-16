@@ -1,18 +1,53 @@
-const SideBar = ({ userInfo }) => (
-    <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
-      <h2 className="text-2xl font-semibold text-center">User Dashboard</h2>
-      <nav>
-        <div className="space-y-3">
-          <div>Email: {userInfo.email}</div>
-          <div>Plan: {userInfo.plan_type}</div>
-          <div>Credits: {userInfo.credits}</div>
-        </div>
-      </nav>
-      {/* <div className="mt-6">
-        <h3 className="text-xl font-semibold mb-2">Initial Prompt</h3>
-        <p>{userInfo.initial_itinerary}</p>
-      </div> */}
-    </div>
-  );
+import React from 'react';
 
-export default SideBar;
+const categories = ['Food', 'Culture', 'Nature', 'Adventure', 'Relaxation'];
+
+const Sidebar = ({ selectedCategories, setSelectedCategories, dates, setDates }) => {
+  const handleCategoryChange = (category) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  return (
+    <aside className="w-64 bg-gray-100 p-6 overflow-auto">
+      <h2 className="text-lg font-semibold mb-4">Categories</h2>
+      {categories.map(category => (
+        <label key={category} className="flex items-center mb-2">
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes(category)}
+            onChange={() => handleCategoryChange(category)}
+            className="mr-2"
+          />
+          {category}
+        </label>
+      ))}
+      <h2 className="text-lg font-semibold mt-6 mb-4">Dates</h2>
+      <div className="space-y-2">
+        <div>
+          <label className="block text-sm">Start Date</label>
+          <input
+            type="date"
+            value={dates.start}
+            onChange={(e) => setDates(prev => ({ ...prev, start: e.target.value }))}
+            className="w-full p-2 border rounded"
+          />
+        </div>
+        <div>
+          <label className="block text-sm">End Date</label>
+          <input
+            type="date"
+            value={dates.end}
+            onChange={(e) => setDates(prev => ({ ...prev, end: e.target.value }))}
+            className="w-full p-2 border rounded"
+          />
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+export default Sidebar;

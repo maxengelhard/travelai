@@ -9,9 +9,11 @@ import API from './services/API';
 
 // components
 import StyledAuthenticator from './components/StyledAuthenticator';
-import SideBar from './components/SideBar';
-import MainContent from './components/MainContent';
+// import MainContent from './components/MainContent';
 import LoadingSpinner from './components/LoadingSpinner';
+import Header from './components/Header';
+import ItineraryGrid from './components/ItineraryGrid';
+import SideBar from './components/SideBar';
 
 Amplify.configure(AwsConfig);
 
@@ -20,6 +22,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [dates, setDates] = useState({ start: '', end: '' });
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -74,25 +78,20 @@ function App() {
   return (
     <StyledAuthenticator>
       {({ signOut }) => (
-        <div className="flex h-screen bg-gray-100">
-          {userInfo && <SideBar userInfo={userInfo} />}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <header className="bg-white shadow-md">
-              <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900">TripJourney</h1>
-                <button
-                  onClick={signOut}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Sign out
-                </button>
-              </div>
-            </header>
-            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200">
-              <MainContent userInfo={userInfo} />
-            </main>
-          </div>
+        <div className="flex flex-col h-screen">
+        <Header credits={userInfo?.credits || 0} /> {/* Use credits from userInfo */}
+        <div className="flex flex-1 overflow-hidden">
+          <SideBar 
+            selectedCategories={selectedCategories} 
+            setSelectedCategories={setSelectedCategories}
+            dates={dates}
+            setDates={setDates}
+          />
+          <main className="flex-1 overflow-auto p-6">
+            <ItineraryGrid itinerary={userInfo?.initial_itinerary} />
+          </main>
         </div>
+      </div>
       )}
     </StyledAuthenticator>
   );
