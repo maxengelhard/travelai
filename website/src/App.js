@@ -25,14 +25,12 @@ function App() {
     const fetchUserInfo = async () => {
       try {
         setLoading(true);
-        const user = await getCurrentUser();
-        console.log(user);
+        await getCurrentUser();
         const attributes = await fetchUserAttributes();
         const response = await API.post('user-status', { 
           data: { email: attributes.email },
           useCache: false
         });
-        console.log(response.data);
         setUserInfo(response.data.body);
         setIsAuthenticated(true);
       } catch (error) {

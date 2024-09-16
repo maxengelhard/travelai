@@ -66,13 +66,12 @@ const ChatInterface = ({ initialItinerary }) => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-100 p-6">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-2xl font-bold mb-4 text-purple-700">Plan Your Trip</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="text-lg font-semibold mb-2 text-purple-600">Categories</h3>
-            <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col h-full bg-gray-100">
+      <div className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8">
+          <h2 className="text-lg font-semibold text-gray-900">Plan Your Trip</h2>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="flex items-center space-x-2">
               {['Food', 'Culture', 'Nature', 'Adventure'].map(category => (
                 <label key={category} className="inline-flex items-center">
                   <input
@@ -80,72 +79,53 @@ const ChatInterface = ({ initialItinerary }) => {
                     value={category}
                     checked={categories.includes(category)}
                     onChange={handleCategoryChange}
-                    className="form-checkbox text-purple-600"
+                    className="form-checkbox h-4 w-4 text-purple-600"
                   />
-                  <span className="ml-2">{category}</span>
+                  <span className="ml-1 text-sm">{category}</span>
                 </label>
               ))}
             </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold mb-2 text-purple-600">Travel Dates</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                <input
-                  type="date"
-                  name="start"
-                  value={dates.start}
-                  onChange={handleDateChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">End Date</label>
-                <input
-                  type="date"
-                  name="end"
-                  value={dates.end}
-                  onChange={handleDateChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
-                />
-              </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="date"
+                name="start"
+                value={dates.start}
+                onChange={handleDateChange}
+                className="form-input text-sm"
+              />
+              <span>to</span>
+              <input
+                type="date"
+                name="end"
+                value={dates.end}
+                onChange={handleDateChange}
+                className="form-input text-sm"
+              />
             </div>
           </div>
         </div>
       </div>
-      <div className="flex-grow bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
-        <div className="flex-grow overflow-auto p-6">
-          {messages.map((message, index) => (
-            <div key={index} className={`mb-4 ${message.type === 'user' ? 'text-right' : ''}`}>
-              {message.type === 'ai' && index === 0 ? (
-                <StyledItinerary 
-                  itinerary={itinerary} 
-                  onUpdateItinerary={handleUpdateItinerary}
-                />
-              ) : (
-                <div className={`inline-block p-3 rounded-lg ${
-                  message.type === 'user' ? 'bg-purple-500 text-white' : 'bg-gray-200'
-                }`}>
-                  {message.content}
-                </div>
-              )}
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+      <div className="flex-grow overflow-auto">
+        <div className="max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8">
+          <StyledItinerary 
+            itinerary={itinerary} 
+            onUpdateItinerary={handleUpdateItinerary}
+          />
         </div>
-        <div className="p-4 border-t">
-          <div className="flex">
+      </div>
+      <div className="bg-white border-t">
+        <div className="max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message..."
-              className="flex-grow mr-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="flex-grow mr-2 p-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm"
             />
             <button
               onClick={handleSend}
-              className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition duration-300"
+              className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition duration-300 text-sm"
             >
               Send
             </button>
