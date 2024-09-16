@@ -21,7 +21,7 @@ def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def check_and_add_email(email, initial_itinerary=None):
+def check_and_add_email(email, destination, days, budget, initial_itinerary=None):
     """Check if email exists, add if it doesn't."""
     conn = get_db_connection()
     try:
@@ -33,8 +33,8 @@ def check_and_add_email(email, initial_itinerary=None):
 
             # If email doesn't exist, insert it
             cur.execute(
-                "INSERT INTO users (email, status, initial_itinerary) VALUES (%s, %s, %s)",
-                (email, 'pre', initial_itinerary)
+                "INSERT INTO users (email, status, initial_itinerary, destination, days, budget) VALUES (%s, %s, %s, %s, %s, %s)",
+                (email, 'pre', initial_itinerary, destination, days, budget)
             )
             conn.commit()
             return {'success': True, 'message': 'Email added successfully'}
@@ -75,7 +75,7 @@ def lambda_handler(event, context):
     budget = body.get('budget', '')
     to_email = body.get('email')
 
-    psql_res = check_and_add_email(to_email)
+    psql_res = check_and_add_email(to_email, destination, days, budget)
 
     if not psql_res['success']:
         return {

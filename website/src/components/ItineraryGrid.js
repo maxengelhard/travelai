@@ -5,24 +5,34 @@ const ItineraryGrid = ({ itinerary }) => {
 
   // Parse the itinerary string into a structured format
   const parseItinerary = (rawItinerary) => {
-    const days = rawItinerary.split('Day').filter(day => day.trim() !== '');
-    return days.map(day => {
-      const [dayNumber, ...activities] = day.split('\n').filter(line => line.trim() !== '');
-      const combinedActivities = [];
-      for (let i = 0; i < activities.length; i += 2) {
-        if (i + 1 < activities.length) {
-          // Remove the colon from the label if it exists
-          const label = activities[i].trim().replace(/:\s*$/, '');
-          combinedActivities.push(`${label}: ${activities[i + 1].trim()}`);
-        } else {
-          combinedActivities.push(activities[i].trim());
-        }
-      }
-      return {
-        day: dayNumber.trim(),
-        activities: combinedActivities
-      };
-    });
+    const days = rawItinerary.split(/Day \d+:/)
+      .filter(day => day.trim() !== '')
+      .map((day, index) => {
+        const dayNumber = index + 1;
+        const activities = day.split('\n')
+          .filter(line => line.trim() !== '')
+
+        const parseActivities = (activityLines) => {
+          const combinedActivities = [];
+          for (let i = 0; i < activityLines.length; i += 2) {
+            if (i + 1 < activityLines.length) {
+              const label = activityLines[i].trim().replace(/:\s*$/, '');
+              combinedActivities.push(`${label}: ${activityLines[i + 1].trim()}`);
+            } else {
+              combinedActivities.push(activityLines[i].trim());
+            }
+          }
+          return combinedActivities;
+        };
+
+        return {
+          day: dayNumber,
+          activities: parseActivities(activities)
+        };
+      });
+
+    // Filter out any "days" that don't have activities (likely cost breakdown sections)
+    return days.filter(day => day.activities.length > 0);
   };
 
   const parsedItinerary = parseItinerary(itinerary);
