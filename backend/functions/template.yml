@@ -43,6 +43,8 @@ Parameters:
   #   Type: String
   OPENAIAPIKEY:
     Type: String
+  EMAILPASSWORD:
+    Type: String
   
 
 Conditions:

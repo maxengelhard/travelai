@@ -18,6 +18,12 @@ DB_PARAMS = {
     'port': 5432
 }
 
+sender_creds = {
+            'email': 'tripjourneyai@gmail.com',
+            'password': os.getenv('EMAIL_PASSWORD'),
+            'name': "Trip Journey AI"
+        }
+
 def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
@@ -170,7 +176,7 @@ def lambda_handler(event, context):
         # print(json.dumps(formatted_itinerary, indent=2))
         update_user_itinerary(to_email, content)
         # Send the email
-        email_sent = send_itinerary_email(to_email, content, destination, days, budget)
+        email_sent = send_itinerary_email(sender_creds, to_email, content, destination, days, budget)
 
         if email_sent:
             return {
