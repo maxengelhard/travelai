@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const popularDestinations = [
   "Paris", "Tokyo", "New York", "Rome", "London", "Barcelona", "Sydney", 
@@ -7,20 +7,36 @@ const popularDestinations = [
   "Cape Town", "Kyoto"
 ];
 
-function TravelForm({ onSubmit, isLoading, error }) {
+function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
   const [destination, setDestination] = useState('');
   const [days, setDays] = useState('');
   const [budget, setBudget] = useState('');
   const [email, setEmail] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (isGenerationComplete) {
+      setIsSubmitted(false);
+    }
+  }, [isGenerationComplete]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(destination, days, budget ? `$${budget}` : '', email);
+    setIsSubmitted(true);
+    // Convert budget to integer before submitting
+    const budgetInt = parseInt(budget, 10);
+    onSubmit(destination, days, budgetInt, email);
   };
 
   const handleRandomDestination = () => {
     const randomIndex = Math.floor(Math.random() * popularDestinations.length);
     setDestination(popularDestinations[randomIndex]);
+  };
+
+  const handleBudgetChange = (e) => {
+    // Only allow positive integers
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setBudget(value);
   };
 
   return (
@@ -68,11 +84,10 @@ function TravelForm({ onSubmit, isLoading, error }) {
                 <span className="text-gray-500 sm:text-sm">$</span>
               </div>
               <input
-                type="number"
+                type="text"
                 id="budget"
                 value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                min="0"
+                onChange={handleBudgetChange}
                 placeholder="e.g., 1000"
                 className="block w-full pl-8 pr-12 py-3 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 required
@@ -97,8 +112,8 @@ function TravelForm({ onSubmit, isLoading, error }) {
         </div>
         <button
           type="submit"
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
-          disabled={isLoading}
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoading || isSubmitted}
         >
           {isLoading ? 'Generating...' : 'Generate Itinerary'}
         </button>

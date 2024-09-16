@@ -95,6 +95,7 @@ function Home() {
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
   const [error, setError] = useState(null);
   const [isExistingUser, setIsExistingUser] = useState(false);
+  const [isGenerationComplete, setIsGenerationComplete] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -168,6 +169,7 @@ function Home() {
   const generateItinerary = async (destination, days, budget, email) => {
     setIsLoading(true);
     setError(null); // Clear any previous errors
+    setIsGenerationComplete(false);
     try {
       const response = await fetch(`https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/itinerary`, {
         method: 'POST',
@@ -183,6 +185,7 @@ function Home() {
       });
   
       const responseData = await response.json();
+      setIsGenerationComplete(true);
       console.log("Response:", responseData); // Log the full response for debugging
   
       if (!response.ok) {
@@ -258,7 +261,7 @@ function Home() {
             </div>
             <div className="w-full lg:w-2/5 bg-white bg-opacity-90 p-6 lg:p-8 rounded-lg shadow-lg">
             <h2 className="text-2xl lg:text-3xl font-bold mb-4 text-gray-800">Plan Your Trip</h2>
-            <TravelForm onSubmit={generateItinerary} />
+            <TravelForm onSubmit={generateItinerary} isGenerationComplete={isGenerationComplete} />
             {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
             {error && (
                 <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
