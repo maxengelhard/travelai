@@ -66,10 +66,9 @@ def update_user_itinerary(email, itinerary):
 
 def format_itinerary(raw_itinerary, days):
     formatted_itinerary = {}
-    day_sections = raw_itinerary.split("Day")
     for i in range(1, int(days) + 1):
-        day_content = day_sections[i] if i < len(day_sections) else ""
-        formatted_itinerary[f"Day {i}"] = {
+        day_key = f"Day {i}"
+        formatted_itinerary[day_key] = {
             "Morning": "",
             "Lunch": "",
             "Afternoon": "",
@@ -77,10 +76,11 @@ def format_itinerary(raw_itinerary, days):
             "Evening": "",
             "Costs": ""
         }
-        for line in day_content.split("\n"):
-            for key in formatted_itinerary[f"Day {i}"]:
-                if key.lower() in line.lower():
-                    formatted_itinerary[f"Day {i}"][key] = line.split(":", 1)[1].strip() if ":" in line else line.strip()
+        if day_key in raw_itinerary:
+            day_content = raw_itinerary[day_key]
+            for key in formatted_itinerary[day_key]:
+                if key in day_content:
+                    formatted_itinerary[day_key][key] = day_content[key]
     return formatted_itinerary
 
 @cors_headers
@@ -137,7 +137,6 @@ def lambda_handler(event, context):
             max_tokens=1000,
             temperature=0.7,
         )
-        itinerary = response.choices[0].message.content.strip()
 
         raw_itinerary = response.choices[0].message.content.strip()
         formatted_itinerary = format_itinerary(raw_itinerary, days or 3)
