@@ -33,7 +33,7 @@ def check_and_add_email(email, destination, days, budget, initial_itinerary=None
 
             # If email doesn't exist, insert it
             cur.execute(
-                "INSERT INTO users (email, status, initial_itinerary, destination, days, budget) VALUES (%s, %s, %s, %s, %s, %s)",
+                "INSERT INTO users (email, status, itinerary, destination, days, budget) VALUES (%s, %s, %s, %s, %s, %s)",
                 (email, 'pre', initial_itinerary, destination, days, budget)
             )
             conn.commit()
@@ -51,7 +51,7 @@ def update_user_itinerary(email, itinerary):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE users SET initial_itinerary = %s WHERE email = %s",
+                "UPDATE users SET itinerary = %s WHERE email = %s",
                 (itinerary, email)
             )
             conn.commit()
