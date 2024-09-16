@@ -4,7 +4,7 @@ import os
 from openai import OpenAI
 from lambda_decorators import json_http_resp, cors_headers , load_json_body
 from trip_journey_email import send_itinerary_email
-
+import re
 # Set up OpenAI client
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
@@ -64,7 +64,7 @@ def update_user_itinerary(email, itinerary):
         conn.close()
 
 
-def format_itinerary(raw_itinerary, days):
+def parse_raw_itinerary(raw_itinerary, days):
     formatted_itinerary = {}
     for i in range(1, int(days) + 1):
         day_key = f"Day {i}"
@@ -76,11 +76,19 @@ def format_itinerary(raw_itinerary, days):
             "Evening": "",
             "Costs": ""
         }
-        if day_key in raw_itinerary:
-            day_content = raw_itinerary[day_key]
-            for key in formatted_itinerary[day_key]:
-                if key in day_content:
-                    formatted_itinerary[day_key][key] = day_content[key]
+    
+    current_day = None
+    for line in raw_itinerary.split('\n'):
+        day_match = re.match(r'Day (\d+):', line)
+        if day_match:
+            current_day = f"Day {day_match.group(1)}"
+            continue
+        
+        if current_day and current_day in formatted_itinerary:
+            for key in formatted_itinerary[current_day]:
+                if line.lower().startswith(key.lower()):
+                    formatted_itinerary[current_day][key] = line.split(':', 1)[1].strip()
+    
     return formatted_itinerary
 
 @cors_headers
@@ -137,6 +145,7 @@ def lambda_handler(event, context):
             max_tokens=1000,
             temperature=0.7,
         )
+        print(response.choices[0].message.content.strip())
 
         raw_itinerary = response.choices[0].message.content.strip()
         formatted_itinerary = format_itinerary(raw_itinerary, days or 3)
