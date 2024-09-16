@@ -11,7 +11,7 @@ const UserSidebar = ({ isOpen, onClose, userInfo }) => {
     try {
       await signOut();
       onClose(); // Close the sidebar
-      navigate('/login'); // Redirect to login page or home page
+      navigate('/'); // Redirect to login page or home page
     } catch (error) {
       console.error('Error signing out: ', error);
     }
