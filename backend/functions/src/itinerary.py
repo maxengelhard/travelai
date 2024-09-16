@@ -148,7 +148,7 @@ def lambda_handler(event, context):
         print(response.choices[0].message.content.strip())
 
         raw_itinerary = response.choices[0].message.content.strip()
-        formatted_itinerary = format_itinerary(raw_itinerary, days or 3)
+        formatted_itinerary = parse_raw_itinerary(raw_itinerary, days or 3)
         print(json.dumps(formatted_itinerary, indent=2))
 
         update_user_itinerary(to_email, formatted_itinerary)
