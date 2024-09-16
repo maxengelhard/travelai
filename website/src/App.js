@@ -40,10 +40,8 @@ function App() {
       } catch (error) {
         console.error('Error fetching user info:', error);
         setError('Failed to fetch user information');
-        if (error.name === 'UserUnAuthenticatedException') {
-          console.log('User is not authenticated. Redirecting to login...');
-          await handleSignOut();
-        }
+        console.log('User is not authenticated. Redirecting to login...');
+        await handleSignOut();
       } finally {
         setLoading(false);
       }
