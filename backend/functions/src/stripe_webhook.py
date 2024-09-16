@@ -333,7 +333,7 @@ def create_or_update_cognito_user(email, plan_type,temp_password):
             )
             print(f"Created new Cognito user for {email}")
             # Send login email with temporary password
-            send_login_email(email, temp_password)
+            # send_login_email(email, temp_password)
         
         return True
     except Exception as e:
