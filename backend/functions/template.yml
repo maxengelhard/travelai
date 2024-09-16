@@ -116,6 +116,7 @@ Resources:
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
           COGNITO_USER_POOL_ID: !Ref USERPOOLID
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
       Events:
         ApiEvent:
           Type: Api
