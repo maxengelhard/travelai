@@ -151,7 +151,7 @@ def lambda_handler(event, context):
         formatted_itinerary = parse_raw_itinerary(raw_itinerary, days or 3)
         print(json.dumps(formatted_itinerary, indent=2))
 
-        update_user_itinerary(to_email, formatted_itinerary)
+        update_user_itinerary(to_email, json.dumps(formatted_itinerary))
         # Send the email
         email_sent = send_itinerary_email(to_email, formatted_itinerary, destination, days, budget)
 
