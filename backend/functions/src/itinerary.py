@@ -64,6 +64,25 @@ def update_user_itinerary(email, itinerary):
         conn.close()
 
 
+def format_itinerary(raw_itinerary, days):
+    formatted_itinerary = {}
+    day_sections = raw_itinerary.split("Day")
+    for i in range(1, int(days) + 1):
+        day_content = day_sections[i] if i < len(day_sections) else ""
+        formatted_itinerary[f"Day {i}"] = {
+            "Morning": "",
+            "Lunch": "",
+            "Afternoon": "",
+            "Dinner": "",
+            "Evening": "",
+            "Costs": ""
+        }
+        for line in day_content.split("\n"):
+            for key in formatted_itinerary[f"Day {i}"]:
+                if key.lower() in line.lower():
+                    formatted_itinerary[f"Day {i}"][key] = line.split(":", 1)[1].strip() if ":" in line else line.strip()
+    return formatted_itinerary
+
 @cors_headers
 @load_json_body
 @json_http_resp
@@ -99,27 +118,17 @@ def lambda_handler(event, context):
         prompt_parts.append(f"with a budget of {budget}")
     
     prompt = f"{' '.join(prompt_parts)}. " + """
-    Include the following for each day:
-    1. Morning activity
-    2. Lunch recommendation
-    3. Afternoon activity
-    4. Dinner recommendation
-    5. Evening activity (if applicable)
+    For each day, provide the following information in this exact format:
+    Day X:
+    Morning: [Morning activity]
+    Lunch: [Lunch recommendation]
+    Afternoon: [Afternoon activity]
+    Dinner: [Dinner recommendation]
+    Evening: [Evening activity or 'No specific evening activity planned']
+    Costs: [Estimated costs for the day, if applicable]
+
+    Please ensure each section is on a new line and follows this exact structure.
     """
-    
-    if budget:
-        prompt += "6. Estimated costs for activities and meals\n"
-    
-    prompt += """
-    Please format the itinerary in a clear, day-by-day structure.
-    """
-    
-    if not destination:
-        prompt += "If no specific destination is provided, suggest a popular travel destination and create an itinerary for it. "
-    if not days:
-        prompt += "If no specific duration is provided, create a 3-day itinerary. "
-    if not budget:
-        prompt += "If no budget is specified, assume a moderate budget. "
 
     try:
         response = client.chat.completions.create(
@@ -129,18 +138,21 @@ def lambda_handler(event, context):
             temperature=0.7,
         )
         itinerary = response.choices[0].message.content.strip()
-            
-        print(itinerary)
-        update_user_itinerary(to_email, itinerary)
+
+        raw_itinerary = response.choices[0].message.content.strip()
+        formatted_itinerary = format_itinerary(raw_itinerary, days or 3)
+        print(json.dumps(formatted_itinerary, indent=2))
+
+        update_user_itinerary(to_email, formatted_itinerary)
         # Send the email
-        email_sent = send_itinerary_email(to_email, itinerary, destination, days, budget)
+        email_sent = send_itinerary_email(to_email, formatted_itinerary, destination, days, budget)
 
         if email_sent:
             return {
                 'statusCode': 200,
                 'body': json.dumps({
                     'message': 'Itinerary generated and sent to your email successfully!',
-                    'itinerary': itinerary
+                    'itinerary': formatted_itinerary
                 }),
                 'headers': {
                     'Content-Type': 'application/json',
