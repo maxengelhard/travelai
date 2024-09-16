@@ -136,12 +136,7 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
-          - Effect: Allow
-            Action:
-              - ses:SendRawEmail
-            Resource:
-              - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/tripjourneyai@gmail.com"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
 
   UserStatus:
     Type: AWS::Serverless::Function
@@ -204,6 +199,7 @@ Resources:
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
           COGNITO_USER_POOL_ID: !Ref USERPOOLID
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
       Events:
         StripeWebhook:
           Type: Api
@@ -225,11 +221,6 @@ Resources:
               - logs:PutLogEvents
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
-          - Effect: Allow
-            Action:
-              - ses:SendRawEmail
-            Resource:
-              - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/tripjourneyai@gmail.com"
           - Effect: Allow
             Action:
               - cognito-idp:AdminCreateUser

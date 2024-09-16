@@ -7,10 +7,11 @@ import psycopg2.extras
 from botocore.exceptions import ClientError
 import string
 import random
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.header import Header
-import boto3
+from email.utils import formataddr
 
 
 # Create a new SES client
@@ -29,6 +30,11 @@ stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 endpoint_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
 
 
+sender_creds = {
+            'email': 'tripjourneyai@gmail.com',
+            'password': os.getenv('EMAIL_PASSWORD'),
+            'name': "Trip Journey AI",
+        }
 
 
 
@@ -242,7 +248,7 @@ def lambda_handler(event,context):
         try:
             temp_password = generate_temp_password()
             create_or_update_cognito_user(customer_email, 'pro',temp_password)
-            # send_login_email(customer_email, temp_password)
+            send_login_email(customer_email, temp_password)
         except Exception as e:
             raise e
 
@@ -322,11 +328,12 @@ def create_or_update_cognito_user(email, plan_type,temp_password):
                     {'Name': 'custom:plan_type', 'Value': plan_type},
                     {'Name': 'custom:is_pro', 'Value': str(plan_type != 'free').lower()}
                 ],
-                DesiredDeliveryMediums=['EMAIL']
+                TemporaryPassword=temp_password,
+                MessageAction='SUPPRESS'
             )
             print(f"Created new Cognito user for {email}")
             # Send login email with temporary password
-            # send_login_email(email, temp_password)
+            send_login_email(email, temp_password)
         
         return True
     except Exception as e:
@@ -359,7 +366,7 @@ def send_login_email(email, temp_password):
 
     message = MIMEMultipart('alternative')
     message['Subject'] = Header(SUBJECT, 'utf-8')
-    message['From'] = SES_SENDER_EMAIL
+    message["From"] = formataddr((sender_creds['name'], sender_creds['email'])) 
     message['To'] = email
 
     part1 = MIMEText(BODY_TEXT, 'plain', 'utf-8')
@@ -369,17 +376,19 @@ def send_login_email(email, temp_password):
     message.attach(part2)
 
     try:
-        response = ses_client.send_raw_email(
-            Source=SES_SENDER_EMAIL,
-            Destinations=[email],
-            RawMessage={
-                'Data': message.as_string(),
-            }
-        )
-    except ClientError as e:
-        print(f"An error occurred: {e.response['Error']['Message']}")
-        return False
-    else:
-        print(f"Email sent! Message ID: {response['MessageId']}")
+        with smtplib.SMTP("smtp.gmail.com", 587) as server: 
+            server.starttls()
+            server.login(sender_creds['email'], sender_creds['password'])
+            server.send_message(message)
+        print(f"Email sent successfully to {email}")
         return True
+    except smtplib.SMTPAuthenticationError:
+        print("SMTP Authentication Error: The username and/or password you entered is incorrect.")
+        return False
+    except smtplib.SMTPException as e:
+        print(f"SMTP error occurred: {str(e)}")
+        return False
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return False
 
