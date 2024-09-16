@@ -242,7 +242,7 @@ def lambda_handler(event,context):
         try:
             temp_password = generate_temp_password()
             create_or_update_cognito_user(customer_email, 'pro',temp_password)
-            send_login_email(customer_email, temp_password)
+            # send_login_email(customer_email, temp_password)
         except Exception as e:
             raise e
 
