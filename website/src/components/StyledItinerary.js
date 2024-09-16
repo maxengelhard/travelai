@@ -37,7 +37,7 @@ const StyledItinerary = ({ itinerary, onUpdateItinerary }) => {
 
   return (
     <div className="space-y-2">
-      {itinerary.map((day, dayIndex) => (
+      {itinerary.days.map((day, dayIndex) => (
         <div key={dayIndex} className="border rounded-md overflow-hidden">
           <div 
             className="bg-gray-100 p-2 cursor-pointer flex justify-between items-center"
@@ -57,10 +57,22 @@ const StyledItinerary = ({ itinerary, onUpdateItinerary }) => {
                   {activity}
                 </div>
               ))}
+              {day.costBreakdown && (
+                <div className="mt-2 pt-2 border-t text-sm">
+                  <h4 className="font-semibold">Day {day.day} Cost:</h4>
+                  <p>{day.costBreakdown}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
       ))}
+      {itinerary.totalCostBreakdown && (
+        <div className="mt-4 pt-4 border-t">
+          <h3 className="text-lg font-semibold mb-2">Total Cost Breakdown:</h3>
+          <pre className="whitespace-pre-wrap text-sm">{itinerary.totalCostBreakdown}</pre>
+        </div>
+      )}
       {selectedActivity && (
         <CategorySelector
           onSelect={handleCategorySelect}

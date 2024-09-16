@@ -44,14 +44,35 @@ const ChatInterface = ({ initialItinerary }) => {
   };
 
   const parseItinerary = (rawItinerary) => {
-    const days = rawItinerary.split('Day').filter(day => day.trim() !== '');
-    return days.map(day => {
-      const [dayNumber, ...activities] = day.split('\n').filter(line => line.trim() !== '');
+    const parts = rawItinerary.split('Overall estimated cost for activities and meals:');
+    const itineraryPart = parts[0];
+    const totalCostPart = parts[1] ? parts[1].trim() : '';
+
+    const days = itineraryPart.split('Day').filter(day => day.trim() !== '');
+    const parsedDays = days.map(day => {
+      const [dayNumber, ...content] = day.split('\n').filter(line => line.trim() !== '');
+      const activities = [];
+      let costBreakdown = '';
+
+      content.forEach(line => {
+        if (line.startsWith('$')) {
+          costBreakdown = line;
+        } else {
+          activities.push(line.trim());
+        }
+      });
+
       return {
         day: dayNumber.trim(),
-        activities: activities.map(activity => activity.trim())
+        activities,
+        costBreakdown
       };
     });
+
+    return {
+      days: parsedDays,
+      totalCostBreakdown: totalCostPart
+    };
   };
 
   const handleUpdateItinerary = (updatedItinerary) => {
