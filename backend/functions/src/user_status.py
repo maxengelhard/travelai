@@ -44,7 +44,7 @@ def lambda_handler(event, context):
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT *
-                FROM users 
+                FROM itinerarys 
                 WHERE email = %s
             """, (email,))   
             columns = [desc[0] for desc in cur.description]
