@@ -52,7 +52,9 @@ def lambda_handler(event, context):
                     i.itinerary_order,
                     i.themes,
                     i.prompt,
-                    i.created_at AS itinerary_created_at
+                    i.created_at AS itinerary_created_at,
+                    i.start_date,
+                    i.end_date
                 FROM itinerarys i
                 WHERE i.email = %s
                 ORDER BY i.created_at DESC
