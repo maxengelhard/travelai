@@ -43,14 +43,32 @@ def lambda_handler(event, context):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT *
-                FROM itinerarys 
-                WHERE email = %s
+                SELECT 
+                    u.id AS user_id,
+                    u.email AS user_email,
+                    u.status,
+                    u.credits,
+                    u.created_at AS user_created_at,
+                    u.plan_type,
+                    u.is_pro,
+                    u.stripe_customer_id,
+                    i.id AS itinerary_id,
+                    i.itinerary,
+                    i.destination,
+                    i.days,
+                    i.budget,
+                    i.itinerary_order,
+                    i.created_at AS itinerary_created_at
+                FROM users u
+                INNER JOIN itinerarys i ON u.email = i.email
+                WHERE u.email = %s
+                ORDER BY i.created_at DESC
+                LIMIT 1
             """, (email,))   
             columns = [desc[0] for desc in cur.description]
-            user = cur.fetchone()
-            if user:
-                user_dict = dict(zip(columns, user))
+            result = cur.fetchone()
+            if result:
+                user_dict = dict(zip(columns, result))
                 for key, value in user_dict.items():
                     if isinstance(value, datetime):
                         user_dict[key] = value.isoformat()
