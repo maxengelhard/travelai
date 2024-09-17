@@ -34,7 +34,10 @@ function App() {
       setLoading(true);
       await getCurrentUser();
       await fetchUserAttributes();
+      const cachedItineraryId = localStorage.getItem('selectedItineraryId');
+      
       const response = await API.get('user-status', { 
+        queryStringParameters: cachedItineraryId ? { itinerary_id: cachedItineraryId } : {},
         useCache: false
       });
       setUserInfo(response.data.body);

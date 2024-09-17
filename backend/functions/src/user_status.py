@@ -26,6 +26,8 @@ def json_serial(obj):
 @load_json_body
 @json_http_resp
 def lambda_handler(event, context):
+    print(event)
+    itinerary_id = event.get('queryStringParameters', {}).get('itinerary_id')
     if 'requestContext' in event and 'authorizer' in event['requestContext']:
         claims = event['requestContext']['authorizer']['claims']
         email = claims.get('email')
@@ -43,29 +45,47 @@ def lambda_handler(event, context):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            cur.execute("""
-                SELECT 
-                    u.id AS user_id,
-                    u.email AS email,
-                    u.status,
-                    u.credits,
-                    u.created_at AS user_created_at,
-                    u.plan_type,
-                    u.is_pro,
-                    u.stripe_customer_id,
-                    i.id AS itinerary_id,
-                    i.itinerary,
-                    i.destination,
-                    i.days,
-                    i.budget,
-                    i.itinerary_order,
-                    i.created_at AS itinerary_created_at
-                FROM users u
-                INNER JOIN itinerarys i ON u.email = i.email
-                WHERE u.email = %s
-                ORDER BY i.created_at DESC
-                LIMIT 1
-            """, (email,))   
+            if itinerary_id:
+                query = """
+                    SELECT 
+                        u.email,
+                        u.credits,
+                        i.id AS itinerary_id,
+                        i.destination,
+                        i.days,
+                        i.budget,
+                        i.itinerary_order,
+                        i.themes,
+                        i.prompt,
+                        i.created_at AS itinerary_created_at,
+                        i.itinerary
+                    FROM users u
+                    LEFT JOIN itinerarys i ON u.email = i.email
+                    WHERE u.email = %s AND i.id = %s
+                    LIMIT 1
+                """
+                cur.execute(query, (event['requestContext']['authorizer']['claims']['email'], itinerary_id))
+            else:
+                query = """
+                    SELECT 
+                        u.email,
+                        u.credits,
+                        i.id AS itinerary_id,
+                        i.destination,
+                        i.days,
+                        i.budget,
+                        i.itinerary_order,
+                        i.themes,
+                        i.prompt,
+                        i.created_at AS itinerary_created_at,
+                        i.itinerary
+                    FROM users u
+                    LEFT JOIN itinerarys i ON u.email = i.email
+                    WHERE u.email = %s
+                    ORDER BY i.created_at DESC
+                    LIMIT 1
+                """
+                cur.execute(query, (event['requestContext']['authorizer']['claims']['email'],))  
             columns = [desc[0] for desc in cur.description]
             result = cur.fetchone()
             if result:
