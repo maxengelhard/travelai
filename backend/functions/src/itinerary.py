@@ -5,6 +5,8 @@ from openai import OpenAI
 from lambda_decorators import json_http_resp, cors_headers , load_json_body
 from trip_journey_email import send_itinerary_email
 import re
+from datetime import datetime
+import pytz
 # Set up OpenAI client
 
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
@@ -28,7 +30,7 @@ def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def check_and_add_email(email, destination, days, budget, initial_itinerary=None):
+def check_and_add_email(email):
     """Check if email exists, add if it doesn't."""
     conn = get_db_connection()
     try:
@@ -40,8 +42,8 @@ def check_and_add_email(email, destination, days, budget, initial_itinerary=None
 
             # If email doesn't exist, insert it
             cur.execute(
-                "INSERT INTO users (email, status, itinerary, destination, days, budget) VALUES (%s, %s, %s, %s, %s, %s)",
-                (email, 'pre', initial_itinerary, destination, days, budget)
+                "INSERT INTO users (email, status) VALUES (%s, %s)",
+                (email, 'pre')
             )
             conn.commit()
             return {'success': True, 'message': 'Email added successfully'}
@@ -52,15 +54,15 @@ def check_and_add_email(email, destination, days, budget, initial_itinerary=None
     finally:
         conn.close()
 
-def update_user_itinerary(email, itinerary):
-    """Update the user's initial itinerary."""
+def add_itinerary_to_user(email, itinerary, destination, days, budget):
+    """Add the itinerary to the user's itinerary."""
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE users SET itinerary = %s WHERE email = %s",
-                (itinerary, email)
-            )
+                "INSERT INTO itinerarys (email, itinerary, destination, days, budget,itinerary_order,created_at) VALUES (%s, %s, %s, %s, %s,%s,%s)",
+                (email, itinerary, destination, days, budget,0,datetime.now(pytz.utc) ) 
+            )   
             conn.commit()
             return {'success': True, 'message': 'Itinerary updated successfully'}
     except psycopg2.Error as e:
@@ -122,7 +124,7 @@ def lambda_handler(event, context):
     budget = body.get('budget', '')
     to_email = body.get('email')
 
-    psql_res = check_and_add_email(to_email, destination, days, budget)
+    psql_res = check_and_add_email(to_email)
 
     if not psql_res['success']:
         return {
@@ -174,7 +176,7 @@ def lambda_handler(event, context):
         #     formatted_itinerary = parse_itinerary(content, days or 3)
         
         # print(json.dumps(formatted_itinerary, indent=2))
-        update_user_itinerary(to_email, content)
+        add_itinerary_to_user(to_email, content, destination, days, budget)
         # Send the email
         email_sent = send_itinerary_email(sender_creds, to_email, content, destination, days, budget)
 
