@@ -117,25 +117,24 @@ const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates })
           <p>Loading previous itineraries...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
-        ) : (
-          <div className="overflow-y-auto max-h-60">
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="text-left">Destination</th>
-                  <th className="text-left">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {previousItineraries.map((itinerary) => (
-                  <tr key={itinerary.id} className="hover:bg-gray-200">
-                    <td className="py-2">{itinerary.destination}</td>
-                    <td className="py-2">{new Date(itinerary.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        ) : previousItineraries.length > 0 ? (
+          <div className="space-y-4 max-h-60 overflow-y-auto">
+            {previousItineraries.map((itinerary) => (
+              <div key={itinerary.itinerary_id} className="bg-white p-4 rounded-lg shadow-sm">
+                <p><strong>Destination:</strong> {itinerary.destination}</p>
+                <p><strong>Days:</strong> {itinerary.days}</p>
+                <p><strong>Budget:</strong> ${itinerary.budget}</p>
+                {itinerary.themes && itinerary.themes.length > 0 && (
+                  <p><strong>Themes:</strong> {itinerary.themes.join(', ')}</p>
+                )}
+                {itinerary.prompt && (
+                  <p><strong>Prompt:</strong> {itinerary.prompt}</p>
+                )}
+              </div>
+            ))}
           </div>
+        ) : (
+          <p>No previous itineraries found.</p>
         )}
       </div>
     </aside>
