@@ -26,8 +26,9 @@ def json_serial(obj):
 @load_json_body
 @json_http_resp
 def lambda_handler(event, context):
-    body = event.get('body', {})
-    email = body.get('email')
+    if 'requestContext' in event and 'authorizer' in event['requestContext']:
+        claims = event['requestContext']['authorizer']['claims']
+        email = claims.get('email')
 
     if not email:
         return {

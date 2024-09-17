@@ -162,7 +162,7 @@ Resources:
             RestApiId:
               Ref: ApiGatewayBackend
             Path: /user-status
-            Method: post
+            Method: get
             Auth:
               AddDefaultAuthorizerToCorsPreflight: false
               Authorizer: CognitoAuthorizer
@@ -203,7 +203,7 @@ Resources:
             RestApiId:
               Ref: ApiGatewayBackend
             Path: /user-itineraries
-            Method: post
+            Method: get
             Auth:
               AddDefaultAuthorizerToCorsPreflight: false
               Authorizer: CognitoAuthorizer

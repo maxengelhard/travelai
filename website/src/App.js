@@ -30,18 +30,22 @@ function App() {
     try {
       setLoading(true);
       await getCurrentUser();
-      const attributes = await fetchUserAttributes();
-      const response = await API.post('user-status', { 
-        data: { email: attributes.email },
+      await fetchUserAttributes();
+      const response = await API.get('user-status', { 
         useCache: false
       });
       setUserInfo(response.data.body);
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Error fetching user info:', error);
-      setError('Failed to fetch user information');
-      console.log('User is not authenticated. Redirecting to login...');
-      await handleSignOut();
+      if (error.name === 'NotAuthorizedException' || error.name === 'UserNotFoundException') {
+        console.log('User is not authenticated. Redirecting to login...');
+        await handleSignOut();
+        setIsAuthenticated(false);
+      } else {
+        // Handle other types of errors without signing out
+        setError('Failed to fetch user information. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
