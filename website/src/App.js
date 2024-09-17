@@ -29,18 +29,24 @@ function App() {
   const [selectedItinerary, setSelectedItinerary] = useState(null);
   // const [additionalInput, setAdditionalInput] = useState('');
 
-  const fetchUserInfo = useCallback(async () => {
+  const fetchUserInfo = useCallback(async (itineraryId = null) => {
     try {
       setLoading(true);
       await getCurrentUser();
       await fetchUserAttributes();
       const cachedItineraryId = localStorage.getItem('selectedItineraryId');
-      
+      const queryParams = cachedItineraryId ? { itinerary_id: cachedItineraryId } : {};
       const response = await API.get('user-status', { 
-        queryStringParameters: cachedItineraryId ? { itinerary_id: cachedItineraryId } : {},
+        queryParams: queryParams,
         useCache: false
       });
       setUserInfo(response.data.body);
+      if (response.data.body.itinerary) {
+        setSelectedItinerary({
+          itinerary_id: response.data.body.itinerary_id,
+          ...response.data.body
+        });
+      }
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Error fetching user info:', error);
@@ -60,6 +66,10 @@ function App() {
   useEffect(() => {
     fetchUserInfo();
   }, [fetchUserInfo]);
+
+  const handleSelectItinerary = async (itineraryId) => {
+    await fetchUserInfo(itineraryId);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -98,12 +108,11 @@ function App() {
 
   const handleItineraryUpdate = (updatedItinerary) => {
     setUserInfo(prev => ({ ...prev, ...updatedItinerary }));
+    setSelectedItinerary(updatedItinerary);
+    localStorage.setItem('selectedItineraryId', updatedItinerary.itinerary_id);
     setOption(null);
   };
 
-  const handleSelectItinerary = (itinerary) => {
-    setSelectedItinerary(itinerary);
-  };
 
   if (!isAuthenticated) {
     return <StyledAuthenticator />;
@@ -123,7 +132,7 @@ function App() {
         <div className="flex flex-col h-screen">
           <Header credits={userInfo?.credits || 0} userInfo={userInfo}/>
           <div className="flex flex-1 overflow-hidden">
-            <SideBar 
+          <SideBar 
               onSelectItinerary={handleSelectItinerary}
               selectedItineraryId={selectedItinerary?.itinerary_id}
             />

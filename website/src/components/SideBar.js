@@ -38,6 +38,11 @@ const SideBar = ({ onSelectItinerary, selectedItineraryId }) => {
     fetchPreviousItineraries();
   }, []);
 
+  const handleItineraryClick = (itinerary) => {
+    localStorage.setItem('selectedItineraryId', itinerary.itinerary_id);
+    onSelectItinerary(itinerary.itinerary_id);
+  };
+
   return (
     <aside className="w-64 bg-gray-100 p-6 overflow-auto relative">
       {/* <Menu as="div" className="relative">
@@ -125,7 +130,7 @@ const SideBar = ({ onSelectItinerary, selectedItineraryId }) => {
               className={`bg-white p-4 rounded-lg shadow-sm cursor-pointer transition-colors duration-200 ${
                 selectedItineraryId === itinerary.itinerary_id ? 'bg-blue-100 border-2 border-blue-500' : 'hover:bg-gray-50'
               }`}
-              onClick={() => onSelectItinerary(itinerary)}
+              onClick={() => handleItineraryClick(itinerary)}
             >
                 <p><strong>Destination:</strong> {itinerary.destination}</p>
                 <p><strong>Days:</strong> {itinerary.days}</p>

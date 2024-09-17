@@ -27,7 +27,8 @@ def json_serial(obj):
 @json_http_resp
 def lambda_handler(event, context):
     print(event)
-    itinerary_id = event.get('queryStringParameters', {}).get('itinerary_id')
+    query_strings = event.get('queryStringParameters', {})
+    itinerary_id = query_strings.get('itinerary_id') if query_strings else None
     if 'requestContext' in event and 'authorizer' in event['requestContext']:
         claims = event['requestContext']['authorizer']['claims']
         email = claims.get('email')

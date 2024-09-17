@@ -119,9 +119,12 @@ const getClient = async (clientIdOverride, useCache) => {
 };
 
 const API = {
-  async get(url, { conf = {}, clientId = null, useCache = false } = {}) {
+  async get(url, { conf = {}, clientId = null, useCache = false, queryParams = {} } = {}) {
     const cli = await getClient(clientId, useCache);
-    return cli.get(url, conf)
+    const queryString = new URLSearchParams(queryParams).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    
+    return cli.get(fullUrl, conf)
       .then(response => Promise.resolve(response))
       .catch(error => Promise.reject(error));
   },
