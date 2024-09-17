@@ -1,24 +1,24 @@
 import React, { useState , useEffect} from 'react';
-import { Menu } from '@headlessui/react';
+// import { Menu } from '@headlessui/react';
 
 // services
 import API from '../services/API';
 
-const categories = ['Food', 'Culture', 'Nature', 'Adventure', 'Relaxation'];
+// const categories = ['Food', 'Culture', 'Nature', 'Adventure', 'Relaxation'];
 
 const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  // const [isOpen, setIsOpen] = useState(false);
   const [previousItineraries, setPreviousItineraries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleCategoryChange = (category) => {
-    setSelectedCategories(prev => 
-      prev.includes(category) 
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
+  // const handleCategoryChange = (category) => {
+  //   setSelectedCategories(prev => 
+  //     prev.includes(category) 
+  //       ? prev.filter(c => c !== category)
+  //       : [...prev, category]
+  //   );
+  // };
 
   useEffect(() => {
     const fetchPreviousItineraries = async () => {
@@ -40,7 +40,7 @@ const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates })
 
   return (
     <aside className="w-64 bg-gray-100 p-6 overflow-auto relative">
-      <Menu as="div" className="relative">
+      {/* <Menu as="div" className="relative">
         <Menu.Button 
           className="w-full text-left px-4 py-2 bg-white border rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-between"
           onClick={() => setIsOpen(!isOpen)}
@@ -88,9 +88,9 @@ const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates })
             </div>
           </Menu.Items>
         )}
-      </Menu>
+      </Menu> */}
 
-      <h2 className="text-lg font-semibold mt-6 mb-4">Dates</h2>
+      {/* <h2 className="text-lg font-semibold mt-6 mb-4">Dates</h2>
       <div className="space-y-2">
         <div>
           <label className="block text-sm">Start Date</label>
@@ -110,7 +110,7 @@ const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates })
             className="w-full p-2 border rounded"
           />
         </div>
-      </div>
+      </div> */}
       <div className="mt-auto">
         <h2 className="text-lg font-semibold mb-4">Previous Itineraries</h2>
         {isLoading ? (
