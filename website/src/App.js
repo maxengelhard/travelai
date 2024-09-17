@@ -38,7 +38,7 @@ function App() {
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Error fetching user info:', error);
-      if (error.name === 'NotAuthorizedException' || error.name === 'UserNotFoundException') {
+      if (error.name === 'UserUnAuthenticatedException' || error.name === 'NotAuthorizedException' || error.name === 'UserNotFoundException') {
         console.log('User is not authenticated. Redirecting to login...');
         await handleSignOut();
         setIsAuthenticated(false);

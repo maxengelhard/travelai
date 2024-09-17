@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import { Menu } from '@headlessui/react';
+
+// services
+import API from '../services/API';
 
 const categories = ['Food', 'Culture', 'Nature', 'Adventure', 'Relaxation'];
 
 const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [previousItineraries, setPreviousItineraries] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleCategoryChange = (category) => {
     setSelectedCategories(prev => 
@@ -13,6 +19,24 @@ const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates })
         : [...prev, category]
     );
   };
+
+  useEffect(() => {
+    const fetchPreviousItineraries = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await API.get('user-itineraries', { useCache: false });
+        setPreviousItineraries(response.data.body);
+      } catch (err) {
+        console.error('Error fetching previous itineraries:', err);
+        setError('Failed to load previous itineraries');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPreviousItineraries();
+  }, []);
 
   return (
     <aside className="w-64 bg-gray-100 p-6 overflow-auto relative">
@@ -86,6 +110,33 @@ const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates })
             className="w-full p-2 border rounded"
           />
         </div>
+      </div>
+      <div className="mt-auto">
+        <h2 className="text-lg font-semibold mb-4">Previous Itineraries</h2>
+        {isLoading ? (
+          <p>Loading previous itineraries...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : (
+          <div className="overflow-y-auto max-h-60">
+            <table className="w-full text-sm">
+              <thead>
+                <tr>
+                  <th className="text-left">Destination</th>
+                  <th className="text-left">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {previousItineraries.map((itinerary) => (
+                  <tr key={itinerary.id} className="hover:bg-gray-200">
+                    <td className="py-2">{itinerary.destination}</td>
+                    <td className="py-2">{new Date(itinerary.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </aside>
   );
