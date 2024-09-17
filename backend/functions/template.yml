@@ -180,6 +180,48 @@ Resources:
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
 
+  UserItineraries:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_user_itineraries_${STAGE}"
+      Handler: user_itineraries.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64
+      Description: Get user itineraries
+      Environment:
+        Variables:
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /user-itineraries
+            Method: post
+            Auth:
+              AddDefaultAuthorizerToCorsPreflight: false
+              Authorizer: CognitoAuthorizer
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+
+
 ###### STRIPE ######
   StripeUserWebhook:
     Type: AWS::Serverless::Function
