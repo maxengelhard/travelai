@@ -53,12 +53,16 @@ const Pricing = () => {
             monthly={true}
             stripeLink={process.env.REACT_APP_STRIPE_PRO_URL}
             features={[
-              "Personalized experiences tailoring",
-              "Flight information and suggestions",
-              "Hotel / Airbnb recommendations",
-              "Local events and festivals integration",
-              "Restaurant reservations assistance",
-              "Public transportation guidance"
+              // "Personalized experiences tailoring",
+              "Custom travel themes",
+              "Edit your itinerary",
+              "Create new itineraries",
+              "Cost breakdowns",
+              "Downloadable itineraries",
+              // "Hotel / Airbnb recommendations",
+              // "Local events and festivals integration",
+              // "Restaurant reservations assistance",
+              // "Public transportation guidance"
             ]}
           />
           <PricingOption
@@ -72,10 +76,11 @@ const Pricing = () => {
               "All Pro features",
               "Priority customer support",
               "VIP experiences access",
-              "Real-time itinerary adjustments",
               "Multi-city trip planning",
-              "Exclusive partner discounts",
-              "Travel insurance recommendations"
+              // "Real-time itinerary adjustments",
+              // "Multi-city trip planning",
+              // "Exclusive partner discounts",
+              // "Travel insurance recommendations"
             ]}
           />
         </div>

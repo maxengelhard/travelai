@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import API from '../services/API';
 
-const ItineraryOptions = ({ userInfo, onItineraryUpdate }) => {
-  const [option, setOption] = useState(null);
+const ItineraryOptions = ({ userInfo, onItineraryUpdate, option, setOption}) => {
   const [formData, setFormData] = useState({
     destination: '',
     days: '',
@@ -11,11 +10,14 @@ const ItineraryOptions = ({ userInfo, onItineraryUpdate }) => {
     prompt: '',
   });
 
-  const handleOptionSelect = (selectedOption) => {
-    setOption(selectedOption);
-    if (selectedOption === 'edit' && userInfo.themes) {
+  useEffect(() => {
+    if (option === 'edit' && userInfo?.themes) {
       setFormData(prev => ({ ...prev, themes: userInfo.themes }));
     }
+  }, [option, userInfo]);
+
+  const handleOptionSelect = (selectedOption) => {
+    setOption(selectedOption);
   };
 
   const handleClose = () => {
@@ -69,16 +71,16 @@ const ItineraryOptions = ({ userInfo, onItineraryUpdate }) => {
 
   if (!option) {
     return (
-      <div className="flex justify-center space-x-4 mt-8">
+      <div className="flex w-full">
         <button
           onClick={() => handleOptionSelect('new')}
-          className="px-8 py-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 shadow-lg text-lg font-semibold"
+          className="flex-1 py-4 bg-blue-500 text-white hover:bg-blue-600 transition duration-300 text-lg font-semibold"
         >
           Create New Itinerary
         </button>
         <button
           onClick={() => handleOptionSelect('edit')}
-          className="px-8 py-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 shadow-lg text-lg font-semibold"
+          className="flex-1 py-4 bg-green-500 text-white hover:bg-green-600 transition duration-300 text-lg font-semibold"
         >
           Edit Existing Itinerary
         </button>
@@ -87,20 +89,40 @@ const ItineraryOptions = ({ userInfo, onItineraryUpdate }) => {
   }
 
   return (
-    <div className="mt-8 bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
-          {option === 'new' ? 'Create New Itinerary' : 'Edit Existing Itinerary'}
-        </h2>
+    <>
+      <div className="flex w-full">
         <button
-          onClick={handleClose}
-          className="text-gray-500 hover:text-gray-700 transition duration-300"
+          onClick={() => handleOptionSelect('new')}
+          className={`flex-1 py-4 text-white transition duration-300 text-lg font-semibold ${
+            option === 'new' ? 'bg-blue-600' : 'bg-blue-500 hover:bg-blue-600'
+          }`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          Create New Itinerary
+        </button>
+        <button
+          onClick={() => handleOptionSelect('edit')}
+          className={`flex-1 py-4 text-white transition duration-300 text-lg font-semibold ${
+            option === 'edit' ? 'bg-green-600' : 'bg-green-500 hover:bg-green-600'
+          }`}
+        >
+          Edit Existing Itinerary
         </button>
       </div>
+      {option && (
+        <div className="mt-4 bg-white rounded-lg shadow-lg p-4 mx-auto w-full max-w-2xl max-h-96 overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800">
+              {option === 'new' ? 'Create New Itinerary' : 'Edit Existing Itinerary'}
+            </h2>
+            <button
+              onClick={handleClose}
+              className="text-gray-500 hover:text-gray-700 transition duration-300"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         {option === 'new' && (
           <>
@@ -174,7 +196,8 @@ const ItineraryOptions = ({ userInfo, onItineraryUpdate }) => {
         </button>
       </form>
     </div>
-  );
+  )};
+  </>)
 };
 
 export default ItineraryOptions;

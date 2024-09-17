@@ -25,6 +25,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [dates, setDates] = useState({ start: '', end: '' });
+  const [option, setOption] = useState(null);
   // const [additionalInput, setAdditionalInput] = useState('');
 
   const fetchUserInfo = useCallback(async () => {
@@ -93,6 +94,7 @@ function App() {
 
   const handleItineraryUpdate = (updatedItinerary) => {
     setUserInfo(prev => ({ ...prev, ...updatedItinerary }));
+    setOption(null);
   };
 
   if (!isAuthenticated) {
@@ -119,14 +121,20 @@ function App() {
               dates={dates}
               setDates={setDates}
             />
-            <main className="flex-1 overflow-auto p-6">
-              <ItineraryOptions 
-                userInfo={userInfo}
-                onItineraryUpdate={handleItineraryUpdate}
-              />
-              {userInfo?.itinerary && (
-                <ItineraryGrid itinerary={userInfo.itinerary} />
-              )}
+            <main className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-shrink-0">
+                <ItineraryOptions 
+                  userInfo={userInfo}
+                  onItineraryUpdate={handleItineraryUpdate}
+                  option={option}
+                  setOption={setOption}
+                />
+              </div>
+              <div className="flex-1 overflow-auto p-4">
+                {userInfo?.itinerary && (
+                  <ItineraryGrid itinerary={userInfo.itinerary} />
+                )}
+              </div>
             </main>
           </div>
         </div>
