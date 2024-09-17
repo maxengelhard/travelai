@@ -45,7 +45,7 @@ def lambda_handler(event, context):
             cur.execute("""
                 SELECT 
                     u.id AS user_id,
-                    u.email AS user_email,
+                    u.email AS email,
                     u.status,
                     u.credits,
                     u.created_at AS user_created_at,
