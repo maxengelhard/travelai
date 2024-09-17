@@ -154,7 +154,7 @@ def lambda_handler(event, context):
     Lunch: [Lunch recommendation]
     Afternoon: [Afternoon activity]
     Dinner: [Dinner recommendation]
-    Evening: [Evening activity or 'No specific evening activity planned']
+    Evening: [Evening activity]
     Costs: [Estimated costs for the day, if applicable]
 
     Please ensure each section is on a new line and follows this exact structure.
