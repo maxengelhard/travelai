@@ -6,7 +6,7 @@ import API from '../services/API';
 
 // const categories = ['Food', 'Culture', 'Nature', 'Adventure', 'Relaxation'];
 
-const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates }) => {
+const SideBar = ({ onSelectItinerary, selectedItineraryId }) => {
   // const [isOpen, setIsOpen] = useState(false);
   const [previousItineraries, setPreviousItineraries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -120,7 +120,13 @@ const SideBar = ({ selectedCategories, setSelectedCategories, dates, setDates })
         ) : previousItineraries.length > 0 ? (
           <div className="space-y-4 max-h-60 overflow-y-auto">
             {previousItineraries.map((itinerary) => (
-              <div key={itinerary.itinerary_id} className="bg-white p-4 rounded-lg shadow-sm">
+              <div
+              key={itinerary.itinerary_id}
+              className={`bg-white p-4 rounded-lg shadow-sm cursor-pointer transition-colors duration-200 ${
+                selectedItineraryId === itinerary.itinerary_id ? 'bg-blue-100 border-2 border-blue-500' : 'hover:bg-gray-50'
+              }`}
+              onClick={() => onSelectItinerary(itinerary)}
+            >
                 <p><strong>Destination:</strong> {itinerary.destination}</p>
                 <p><strong>Days:</strong> {itinerary.days}</p>
                 <p><strong>Budget:</strong> ${itinerary.budget}</p>

@@ -23,9 +23,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [dates, setDates] = useState({ start: '', end: '' });
+  // const [selectedCategories, setSelectedCategories] = useState([]);
+  // const [dates, setDates] = useState({ start: '', end: '' });
   const [option, setOption] = useState(null);
+  const [selectedItinerary, setSelectedItinerary] = useState(null);
   // const [additionalInput, setAdditionalInput] = useState('');
 
   const fetchUserInfo = useCallback(async () => {
@@ -97,6 +98,10 @@ function App() {
     setOption(null);
   };
 
+  const handleSelectItinerary = (itinerary) => {
+    setSelectedItinerary(itinerary);
+  };
+
   if (!isAuthenticated) {
     return <StyledAuthenticator />;
   }
@@ -116,10 +121,8 @@ function App() {
           <Header credits={userInfo?.credits || 0} userInfo={userInfo}/>
           <div className="flex flex-1 overflow-hidden">
             <SideBar 
-              selectedCategories={selectedCategories} 
-              setSelectedCategories={setSelectedCategories}
-              dates={dates}
-              setDates={setDates}
+              onSelectItinerary={handleSelectItinerary}
+              selectedItineraryId={selectedItinerary?.itinerary_id}
             />
             <main className="flex-1 flex flex-col overflow-hidden">
               <div className="flex-shrink-0">
