@@ -66,9 +66,28 @@ function App() {
     }
   },[]);
 
+  // fetch previous itineraries
+  const fetchPreviousItineraries = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await API.get('user-itineraries', { useCache: false });
+      setPreviousItineraries(response.data.body);
+    } catch (err) {
+      console.error('Error fetching previous itineraries:', err);
+      setError('Failed to load previous itineraries');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    fetchUserInfo();
-  }, [fetchUserInfo]);
+    if (isAuthenticated) {
+      fetchUserInfo();
+      fetchPreviousItineraries();
+    }
+  }, [isAuthenticated, fetchUserInfo, fetchPreviousItineraries]);
+
 
   // const handleCategoryChange = (category) => {
   //   setSelectedCategories(prev => 
@@ -78,23 +97,7 @@ function App() {
   //   );
   // };
 
-  useEffect(() => {
-    const fetchPreviousItineraries = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await API.get('user-itineraries', { useCache: false });
-        setPreviousItineraries(response.data.body);
-      } catch (err) {
-        console.error('Error fetching previous itineraries:', err);
-        setError('Failed to load previous itineraries');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPreviousItineraries();
-  }, []);
+  
 
   const handleSelectItinerary = async (itineraryId) => {
     localStorage.setItem('selectedItineraryId', itineraryId);
@@ -114,7 +117,12 @@ function App() {
 
   const handleAuthStateChange = (state) => {
     if (state === 'signedIn') {
-      fetchUserInfo();
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+      setUserInfo(null);
+      setSelectedItinerary(null);
+      setPreviousItineraries([]);
     }
   };
 
