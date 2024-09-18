@@ -137,6 +137,11 @@ function App() {
               selectedItineraryId={selectedItinerary?.itinerary_id}
             />
             <main className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-auto p-4">
+                {userInfo?.itinerary && (
+                  <ItineraryGrid itinerary={userInfo.itinerary} />
+                )}
+              </div>
               <div className="flex-shrink-0">
                 <ItineraryOptions 
                   userInfo={userInfo}
@@ -144,11 +149,6 @@ function App() {
                   option={option}
                   setOption={setOption}
                 />
-              </div>
-              <div className="flex-1 overflow-auto p-4">
-                {userInfo?.itinerary && (
-                  <ItineraryGrid itinerary={userInfo.itinerary} />
-                )}
               </div>
             </main>
           </div>
