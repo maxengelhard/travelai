@@ -46,7 +46,7 @@ def lambda_handler(event, context):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            if itinerary_id:
+            if itinerary_id and itinerary_id.lower() != 'undefined' and itinerary_id.isdigit():
                 query = """
                     SELECT 
                         u.email,

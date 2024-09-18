@@ -152,12 +152,15 @@ function App() {
   //   }
   // };
 
-  const handleItineraryUpdate = (updatedItinerary) => {
-    setUserInfo(prev => ({ ...prev, ...updatedItinerary }));
-    setSelectedItinerary(updatedItinerary);
-    localStorage.setItem('selectedItineraryId', updatedItinerary.itinerary_id);
+  const handleItineraryUpdate = useCallback(({ userStatus, userItineraries }) => {
+    setUserInfo(userStatus);
+    setPreviousItineraries(userItineraries);
+    setSelectedItinerary(userStatus.itinerary ? {
+      itinerary_id: userStatus.itinerary_id,
+      ...userStatus
+    } : null);
     setOption(null);
-  };
+  }, []);
 
 
 

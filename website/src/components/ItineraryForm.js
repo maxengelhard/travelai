@@ -45,7 +45,16 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
     try {
       const endpoint = option === 'create' ? 'create-new-itinerary' : 'update-itinerary';
       const response = await API.post(endpoint, { data: formData });
-      onItineraryUpdate(response.data.body);
+      console.log(response)
+      // Fetch updated user status
+      const userStatusResponse = await API.get('user-status');
+      
+      // Fetch updated user itineraries
+      const userItinerariesResponse = await API.get('user-itineraries');
+      onItineraryUpdate({
+        userStatus: userStatusResponse.data.body,
+        userItineraries: userItinerariesResponse.data.body
+      });
       onClose();
     } catch (error) {
       console.error('Error submitting itinerary:', error);
