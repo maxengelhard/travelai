@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { FaBars, FaTimes, FaUser } from 'react-icons/fa';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
-const BurgerMenu = ({ userInfo, previousItineraries, onSelectItinerary, selectedItineraryId, onUserButtonClick }) => {
+const BurgerMenu = ({ userInfo, previousItineraries, onSelectItinerary, selectedItineraryId }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -14,24 +14,16 @@ const BurgerMenu = ({ userInfo, previousItineraries, onSelectItinerary, selected
 
   return (
     <div className="md:hidden">
-      <button onClick={toggleMenu} className="fixed top-4 right-4 z-50">
+      <button 
+        onClick={toggleMenu} 
+        className="fixed top-4 right-4 z-50 w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-full"
+      >
         {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
       </button>
       {isOpen && (
         <div className="fixed inset-0 bg-white z-40 overflow-y-auto">
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">User Info</h2>
-              <button 
-                onClick={() => {
-                  onUserButtonClick();
-                  toggleMenu();
-                }}
-                className="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full"
-              >
-                <FaUser />
-              </button>
-            </div>
+          <div className="p-4 pt-16"> {/* Added pt-16 to give space for the close button */}
+            <h2 className="text-2xl font-bold mb-4">User Info</h2>
             <p><strong>Email:</strong> {userInfo.email}</p>
             <p><strong>Credits:</strong> {userInfo.credits}</p>
             
