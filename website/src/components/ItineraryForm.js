@@ -43,7 +43,7 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const endpoint = option === 'create' ? 'create-itinerary' : 'update-itinerary';
+      const endpoint = option === 'create' ? 'create-new-itinerary' : 'update-itinerary';
       const response = await API.post(endpoint, { data: formData });
       onItineraryUpdate(response.data.body);
       onClose();

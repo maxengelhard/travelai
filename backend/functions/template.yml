@@ -166,6 +166,9 @@ Resources:
               Ref: ApiGatewayBackend
             Path: /create-new-itinerary
             Method: post
+            Auth:
+              AddDefaultAuthorizerToCorsPreflight: false
+              Authorizer: CognitoAuthorizer
       Policies:
         Statement:
           - Effect: Allow
