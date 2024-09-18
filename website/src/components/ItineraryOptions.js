@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
-import ItineraryForm from './ItineraryForm'; // Assume this is your form component
+import ItineraryForm from './ItineraryForm';
 
-const ItineraryOptions = ({ userInfo, onItineraryUpdate, option, setOption }) => {
+const ItineraryOptions = ({ userInfo, onItineraryUpdate, option, setOption, currentItinerary }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOptionClick = (selectedOption) => {
@@ -36,6 +36,7 @@ const ItineraryOptions = ({ userInfo, onItineraryUpdate, option, setOption }) =>
           onItineraryUpdate={onItineraryUpdate}
           option={option}
           onClose={handleCloseModal}
+          currentItinerary={currentItinerary}
         />
       </Modal>
     </div>

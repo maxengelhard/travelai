@@ -196,6 +196,7 @@ function App() {
                   onItineraryUpdate={handleItineraryUpdate}
                   option={option}
                   setOption={setOption}
+                  currentItinerary={selectedItinerary}
                 />
               </div>
               <div className="flex-1 overflow-auto p-4">

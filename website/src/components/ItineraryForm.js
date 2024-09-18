@@ -5,7 +5,7 @@ const availableThemes = [
   'Adventure', 'Relaxation', 'Cultural', 'Foodie', 'Nature', 'Urban', 'Beach', 'Historical'
 ];
 
-const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose }) => {
+const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentItinerary }) => {
   const [formData, setFormData] = useState({
     destination: '',
     days: '',
@@ -15,16 +15,16 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose }) => {
   });
 
   useEffect(() => {
-    if (option === 'edit' && userInfo.itinerary) {
+    if (option === 'edit' && currentItinerary) {
       setFormData({
-        destination: userInfo.itinerary.destination || '',
-        days: userInfo.itinerary.days || '',
-        budget: userInfo.itinerary.budget || '',
-        themes: userInfo.itinerary.themes || [],
-        prompts: userInfo.itinerary.prompts || ''
+        destination: currentItinerary.destination || '',
+        days: currentItinerary.days || '',
+        budget: currentItinerary.budget || '',
+        themes: currentItinerary.themes || [],
+        prompts: ''
       });
     }
-  }, [option, userInfo]);
+  }, [option, currentItinerary]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
