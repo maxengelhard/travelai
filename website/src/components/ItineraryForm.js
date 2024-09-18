@@ -46,6 +46,9 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
       const endpoint = option === 'create' ? 'create-new-itinerary' : 'update-itinerary';
       const response = await API.post(endpoint, { data: formData });
       console.log(response)
+      if (option === 'create' && response.data.body && response.data.body.itinerary_id) {
+        localStorage.setItem('selectedItineraryId', response.data.body.itinerary_id.toString());
+      }
       // Fetch updated user status
       const userStatusResponse = await API.get('user-status');
       
