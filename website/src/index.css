@@ -33,3 +33,9 @@
 .animate-slide {
   animation: slide 60s linear infinite;
 }
+
+@media (max-width: 768px) {
+  body.menu-open {
+    overflow: hidden;
+  }
+}

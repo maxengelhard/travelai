@@ -9,12 +9,13 @@ import API from './services/API';
 
 // components
 import StyledAuthenticator from './components/StyledAuthenticator';
-// import MainContent from './components/MainContent';
+import BurgerMenu from './components/BurgerMenu';
 import LoadingSpinner from './components/LoadingSpinner';
 import Header from './components/Header';
 import ItineraryGrid from './components/ItineraryGrid';
 import SideBar from './components/SideBar';
 import ItineraryOptions from './components/ItineraryOptions';
+import UserSidebar from './components/UserSidebar';
 
 Amplify.configure(AwsConfig);
 
@@ -27,6 +28,8 @@ function App() {
   // const [dates, setDates] = useState({ start: '', end: '' });
   const [option, setOption] = useState(null);
   const [selectedItinerary, setSelectedItinerary] = useState(null);
+  const [previousItineraries, setPreviousItineraries] = useState([]);
+  const [isUserSidebarOpen, setIsUserSidebarOpen] = useState(false);
   // const [additionalInput, setAdditionalInput] = useState('');
 
   const fetchUserInfo = useCallback(async (itineraryId = null) => {
@@ -67,7 +70,34 @@ function App() {
     fetchUserInfo();
   }, [fetchUserInfo]);
 
+  // const handleCategoryChange = (category) => {
+  //   setSelectedCategories(prev => 
+  //     prev.includes(category) 
+  //       ? prev.filter(c => c !== category)
+  //       : [...prev, category]
+  //   );
+  // };
+
+  useEffect(() => {
+    const fetchPreviousItineraries = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await API.get('user-itineraries', { useCache: false });
+        setPreviousItineraries(response.data.body);
+      } catch (err) {
+        console.error('Error fetching previous itineraries:', err);
+        setError('Failed to load previous itineraries');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreviousItineraries();
+  }, []);
+
   const handleSelectItinerary = async (itineraryId) => {
+    localStorage.setItem('selectedItineraryId', itineraryId);
     await fetchUserInfo(itineraryId);
   };
 
@@ -86,6 +116,14 @@ function App() {
     if (state === 'signedIn') {
       fetchUserInfo();
     }
+  };
+
+  const handleUserButtonClick = () => {
+    setIsUserSidebarOpen(true);
+  };
+
+  const handleCloseUserSidebar = () => {
+    setIsUserSidebarOpen(false);
   };
 
   // const handleAdditionalInputChange = (event) => {
@@ -114,6 +152,7 @@ function App() {
   };
 
 
+
   if (!isAuthenticated) {
     return <StyledAuthenticator />;
   }
@@ -130,18 +169,27 @@ function App() {
     <StyledAuthenticator onStateChange={handleAuthStateChange}>
       {({ signOut }) => (
         <div className="flex flex-col h-screen">
-          <Header credits={userInfo?.credits || 0} userInfo={userInfo}/>
+          <Header 
+            credits={userInfo?.credits || 0} 
+            userInfo={userInfo}
+            onUserButtonClick={handleUserButtonClick}
+          />
           <div className="flex flex-1 overflow-hidden">
-          <SideBar 
+            <div className="hidden md:block">
+              <SideBar 
+                onSelectItinerary={handleSelectItinerary}
+                selectedItineraryId={selectedItinerary?.itinerary_id}
+                previousItineraries={previousItineraries}
+              />
+            </div>
+            <BurgerMenu 
+              userInfo={userInfo}
+              previousItineraries={previousItineraries}
               onSelectItinerary={handleSelectItinerary}
               selectedItineraryId={selectedItinerary?.itinerary_id}
+              onUserButtonClick={handleUserButtonClick}
             />
             <main className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-auto p-4">
-                {userInfo?.itinerary && (
-                  <ItineraryGrid itinerary={userInfo.itinerary} />
-                )}
-              </div>
               <div className="flex-shrink-0">
                 <ItineraryOptions 
                   userInfo={userInfo}
@@ -150,7 +198,17 @@ function App() {
                   setOption={setOption}
                 />
               </div>
+              <div className="flex-1 overflow-auto p-4">
+                {selectedItinerary && (
+                  <ItineraryGrid itinerary={selectedItinerary.itinerary} />
+                )}
+              </div>
             </main>
+            <UserSidebar 
+              isOpen={isUserSidebarOpen}
+              onClose={handleCloseUserSidebar}
+              userInfo={userInfo}
+            />
           </div>
         </div>
       )}
