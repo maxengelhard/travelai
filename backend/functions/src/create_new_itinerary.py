@@ -3,8 +3,6 @@ import psycopg2
 import os
 from openai import OpenAI
 from lambda_decorators import json_http_resp, cors_headers , load_json_body
-from trip_journey_email import send_itinerary_email
-import re
 from datetime import datetime
 import pytz
 # Set up OpenAI client
@@ -19,12 +17,6 @@ DB_PARAMS = {
     'host': os.getenv('DB_HOST'),
     'port': 5432
 }
-
-sender_creds = {
-            'email': 'tripjourneyai@gmail.com',
-            'password': os.getenv('EMAIL_PASSWORD'),
-            'name': "Trip Journey AI"
-        }
 
 def get_db_connection():
     """Create a database connection."""
@@ -82,19 +74,11 @@ def lambda_handler(event, context):
     destination = body.get('destination', '')
     days = body.get('days', '')
     budget = body.get('budget', '')
-    to_email = body.get('email')
-
-    psql_res = check_and_add_email(to_email)
-
-    if not psql_res['success']:
-        return {
-            'statusCode': 400,
-            'body': json.dumps({'error': psql_res['message']}),
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            }
-        }
+    themes = body.get('themes')
+    print(event)
+    if 'requestContext' in event and 'authorizer' in event['requestContext']:
+        claims = event['requestContext']['authorizer']['claims']
+        to_email = claims.get('email')
 
     prompt_parts = ["Create a detailed itinerary for a trip"]
     
@@ -132,39 +116,15 @@ def lambda_handler(event, context):
         
         # print(json.dumps(formatted_itinerary, indent=2))
         add_itinerary_to_user(to_email, content, destination, days, budget)
-        # Send the email
-        email_sent = send_itinerary_email(sender_creds, to_email, content, destination, days, budget)
-
-        if email_sent:
-            return {
-                'statusCode': 200,
-                'body': json.dumps({
-                    'message': 'Itinerary generated and sent to your email successfully!',
-                    'itinerary': content
-                }),
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                }
+       
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'itinerary': content}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'  # Allow CORS for all origins
             }
-        else:
-            return {
-                'statusCode': 500,
-                'body': json.dumps({'error': 'Failed to send email. Please try again.'}),
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                }
-            }
-
-        # return {
-        #     'statusCode': 200,
-        #     'body': json.dumps({'itinerary': itinerary}),
-        #     'headers': {
-        #         'Content-Type': 'application/json',
-        #         'Access-Control-Allow-Origin': '*'  # Allow CORS for all origins
-        #     }
-        # }
+        }
     except Exception as e:
         return {
             'statusCode': 500,
