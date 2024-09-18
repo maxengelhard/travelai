@@ -22,38 +22,24 @@ def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def check_and_add_email(email):
-    """Check if email exists, add if it doesn't."""
-    conn = get_db_connection()
-    try:
-        with conn.cursor() as cur:
-            # Check if email exists
-            cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-            if cur.fetchone() is not None:
-                return {'success': False, 'message': 'Email already in the system'}
 
-            # If email doesn't exist, insert it
-            cur.execute(
-                "INSERT INTO users (email, status) VALUES (%s, %s)",
-                (email, 'pre')
-            )
-            conn.commit()
-            return {'success': True, 'message': 'Email added successfully'}
-    except psycopg2.Error as e:
-        conn.rollback()
-        print(f"Database error: {e}")
-        return {'success': False, 'message': 'An error occurred'}
-    finally:
-        conn.close()
-
-def add_itinerary_to_user(email, itinerary, destination, days, budget):
+def add_itinerary_to_user(email, itinerary, destination, days, budget,themes):
     """Add the itinerary to the user's itinerary."""
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
+
             cur.execute(
-                "INSERT INTO itinerarys (email, itinerary, destination, days, budget,itinerary_order,created_at) VALUES (%s, %s, %s, %s, %s,%s,%s)",
-                (email, itinerary, destination, days, budget,0,datetime.now(pytz.utc) ) 
+                "SELECT MAX(itinerary_order) FROM itinerarys WHERE email = %s",
+                (email,)
+            )
+            max_order = cur.fetchone()[0]
+            
+            # If there are no existing itineraries, set the order to 0, otherwise increment
+            new_order = 0 if max_order is None else max_order + 1
+            cur.execute(
+                "INSERT INTO itinerarys (email, itinerary, destination, days, budget,itinerary_order,created_at,themes) VALUES (%s, %s, %s, %s, %s,%s,%s,%s)",
+                (email, itinerary, destination, days, budget,new_order,datetime.now(pytz.utc),themes ) 
             )   
             conn.commit()
             return {'success': True, 'message': 'Itinerary updated successfully'}
@@ -69,13 +55,14 @@ def add_itinerary_to_user(email, itinerary, destination, days, budget):
 @load_json_body
 @json_http_resp
 def lambda_handler(event, context):
+    print(event)
     # Parse the incoming JSON from API Gateway
     body = event.get('body', {})
     destination = body.get('destination', '')
     days = body.get('days', '')
     budget = body.get('budget', '')
-    themes = body.get('themes')
-    print(event)
+    themes = body.get('themes', [])
+    
     if 'requestContext' in event and 'authorizer' in event['requestContext']:
         claims = event['requestContext']['authorizer']['claims']
         to_email = claims.get('email')
@@ -90,6 +77,10 @@ def lambda_handler(event, context):
     
     if budget:
         prompt_parts.append(f"with a budget of {budget}")
+
+    if themes:
+        themes_str = ", ".join(themes)
+        prompt_parts.append(f"focusing on the following themes: {themes_str}")
     
     prompt = f"{' '.join(prompt_parts)}. " + """
     For each day, provide the following information in this exact format:
@@ -115,7 +106,7 @@ def lambda_handler(event, context):
         print(content)
         
         # print(json.dumps(formatted_itinerary, indent=2))
-        add_itinerary_to_user(to_email, content, destination, days, budget)
+        add_itinerary_to_user(to_email, content, destination, days, budget,themes)
        
         return {
             'statusCode': 200,

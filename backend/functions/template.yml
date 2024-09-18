@@ -139,6 +139,47 @@ Resources:
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
 
+  CreateNewItinerary:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_create_new_itinerary_${STAGE}"
+      Handler: create_new_itinerary.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64
+      Description: Create a new itinerary
+      Environment:
+        Variables:
+          OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+          COGNITO_USER_POOL_ID: !Ref USERPOOLID
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /create-new-itinerary
+            Method: post
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+
   UserStatus:
     Type: AWS::Serverless::Function
     Properties:
