@@ -91,25 +91,20 @@ def lambda_handler(event, context):
     destination = itinerary['destination']
     days = itinerary['days']
     budget = itinerary['budget']
-    itinerary = itinerary['itinerary']
+    current_itinerary = itinerary['itinerary']
 
-    prompt_parts = ["Edit this current itinerary: " + itinerary + " with the following prompt: " + edit_prompt]
-    
-    if destination:
-        prompt_parts.append(f"to {destination}")
-    
-    if days:
-        prompt_parts.append(f"for {days} days")
-    
-    if budget:
-        prompt_parts.append(f"with a budget of {budget}")
+    prompt = f"""
+    Current itinerary:
+    {current_itinerary}
 
+    Update the itinerary for a trip to {destination} for {days} days with a budget of {budget}.
+    """
     if themes:
-        themes_str = ", ".join(themes)
-        prompt_parts.append(f"focusing on the following themes: {themes_str}")
+        prompt += f"The themes for this trip are: {', '.join(themes)}. "
+    prompt += f"Please incorporate the following changes: {edit_prompt}"
+    prompt += """
     
-    prompt = f"{' '.join(prompt_parts)}. " + """
-    For each day, provide the following information in this exact format:
+    Please provide the updated itinerary in the following format:
     Day X:
     Morning: [Morning activity]
     Lunch: [Lunch recommendation]
@@ -118,7 +113,7 @@ def lambda_handler(event, context):
     Evening: [Evening activity]
     Costs: [Estimated costs for the day, if applicable]
 
-    Please ensure each section is on a new line and follows this exact structure.
+    Ensure each section is on a new line and follows this exact structure for each day.
     """
 
     try:
