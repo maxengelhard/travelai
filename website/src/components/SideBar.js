@@ -3,6 +3,9 @@ import React from 'react';
 
 // const categories = ['Food', 'Culture', 'Nature', 'Adventure', 'Relaxation'];
 
+// utils
+import { capitalizeWords } from '../utils/capitalizeWords';
+
 const SideBar = ({onSelectItinerary,selectedItineraryId, previousItineraries }) => {
   // const [isOpen, setIsOpen] = useState(false);
   const handleItineraryClick = (itinerary) => {
@@ -95,7 +98,7 @@ const SideBar = ({onSelectItinerary,selectedItineraryId, previousItineraries }) 
               }`}
               onClick={() => handleItineraryClick(itinerary)}
             >
-                <p><strong>Destination:</strong> {itinerary.destination}</p>
+                <p><strong>Destination:</strong> {capitalizeWords(itinerary.destination)}</p>
                 <p><strong>Days:</strong> {itinerary.days}</p>
                 <p><strong>Budget:</strong> ${itinerary.budget}</p>
                 {itinerary.themes && itinerary.themes.length > 0 && (
