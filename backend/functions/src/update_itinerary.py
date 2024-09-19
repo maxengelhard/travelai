@@ -55,7 +55,7 @@ def select_itinerary_by_id(itinerary_id,email):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT * FROM itinerarys WHERE id = %s AND email = %s", (itinerary_id,email))
+            cur.execute("SELECT * FROM itinerarys WHERE itinerary_order = %s AND email = %s", (itinerary_id,email))
             columns = [desc[0] for desc in cur.description]
             result = cur.fetchone()
             if result:
