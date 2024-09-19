@@ -114,6 +114,7 @@ def lambda_handler(event, context):
     Costs: [Estimated costs for the day, if applicable]
 
     Ensure each section is on a new line and follows this exact structure for each day.
+    IMPORTANT: Make sure that no activities or restaurants repeat across the entire itinerary. Each activity and meal should be unique throughout the trip.
     """
 
     try:
