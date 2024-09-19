@@ -45,11 +45,11 @@ def lambda_handler(event, context):
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT 
-                    i.id AS itinerary_id,
+                    i.id,
                     i.destination,
                     i.days,
                     i.budget,
-                    i.itinerary_order,
+                    i.itinerary_order AS itinerary_id,
                     i.themes,
                     i.prompt,
                     i.created_at AS itinerary_created_at,
