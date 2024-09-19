@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import API from '../services/API';
 import LoadingOverlay from './LoadingOverlay';
 
@@ -42,6 +42,12 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
     }));
   };
 
+  const creditCost = useMemo(() => {
+    const baseCost = 10;
+    const themeCost = formData.themes.length === 0 ? 0 : formData.themes.length === 1 ? 4 : 6;
+    return baseCost + themeCost;
+  }, [formData.themes]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -64,13 +70,20 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
       const userItinerariesResponse = await API.get('user-itineraries');
       
       onItineraryUpdate({
-        userStatus: userStatusResponse.data.body,
-        userItineraries: userItinerariesResponse.data.body
+        userStatus: {
+          ...userStatusResponse.data.body,
+          credits: response.data.body.remaining_credits
+        },
+        userItineraries: userItinerariesResponse.data.body,
+        creditsUsed: response.data.body.credits_used
       });
       
       onClose();
     } catch (error) {
       console.error('Error submitting itinerary:', error);
+      if (error.response && error.response.data && error.response.data.error === 'Insufficient credits') {
+        alert('You do not have enough credits to perform this action.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -164,12 +177,18 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
           Cancel
         </button>
         <button 
-          type="submit" 
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {option === 'create' ? 'Create Itinerary' : 'Update Itinerary'}
-        </button>
+            type="submit" 
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={userInfo.credits < creditCost}
+          >
+            {option === 'create' ? 'Create Itinerary' : 'Update Itinerary'} ({creditCost} credits)
+          </button>
       </div>
+      {userInfo.credits < creditCost && (
+          <p className="text-red-500 text-sm mt-2">
+            You don't have enough credits for this action. You need {creditCost} credits, but you only have {userInfo.credits}.
+          </p>
+        )}
     </form>
     </>
   );
