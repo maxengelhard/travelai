@@ -62,7 +62,7 @@ def lambda_handler(event, context):
                         i.itinerary
                     FROM users u
                     LEFT JOIN itinerarys i ON u.email = i.email
-                    WHERE u.email = %s AND i.id = %s
+                    WHERE u.email = %s AND i.itinerary_order = %s
                     LIMIT 1
                 """
                 cur.execute(query, (event['requestContext']['authorizer']['claims']['email'], itinerary_id))
