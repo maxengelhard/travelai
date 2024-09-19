@@ -79,7 +79,7 @@ def lambda_handler(event, context):
     # Parse the incoming JSON from API Gateway
     body = event.get('body', {})
     themes = body.get('themes', [])
-    prompt = body.get('prompt', '')
+    edit_prompt = body.get('prompt', '')
     itinerary_id = body.get('itinerary_id', '')
     
     if 'requestContext' in event and 'authorizer' in event['requestContext']:
@@ -93,7 +93,7 @@ def lambda_handler(event, context):
     budget = itinerary['budget']
     itinerary = itinerary['itinerary']
 
-    prompt_parts = ["Edit this current itinerary: " + itinerary + " with the following prompt: " + prompt]
+    prompt_parts = ["Edit this current itinerary: " + itinerary + " with the following prompt: " + edit_prompt]
     
     if destination:
         prompt_parts.append(f"to {destination}")
@@ -132,7 +132,7 @@ def lambda_handler(event, context):
         print(content)
         
         # print(json.dumps(formatted_itinerary, indent=2))
-        add_itinerary_to_user(to_email, content, destination, days, budget,themes,prompt)
+        add_itinerary_to_user(to_email, content, destination, days, budget,themes,edit_prompt)
        
         return {
             'statusCode': 200,

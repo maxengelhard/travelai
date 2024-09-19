@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import API from '../services/API';
 import LoadingOverlay from './LoadingOverlay';
 
-
 const availableThemes = [
   'Adventure', 'Relaxation', 'Cultural', 'Foodie', 'Nature', 'Urban', 'Beach', 'Historical'
 ];
@@ -45,23 +44,30 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const endpoint = option === 'create' ? 'create-new-itinerary' : 'update-itinerary';
-      const response = await API.post(endpoint, { data: formData });
+      const payload = {
+        ...formData,
+        itinerary_id: option === 'edit' ? currentItinerary.itinerary_id : undefined
+      };
+      const response = await API.post(endpoint, { data: payload });
       console.log(response)
       if (option === 'create' && response.data.body && response.data.body.itinerary_id) {
         localStorage.setItem('selectedItineraryId', response.data.body.itinerary_id.toString());
       }
+      
       // Fetch updated user status
       const userStatusResponse = await API.get('user-status');
       
       // Fetch updated user itineraries
       const userItinerariesResponse = await API.get('user-itineraries');
+      
       onItineraryUpdate({
         userStatus: userStatusResponse.data.body,
         userItineraries: userItinerariesResponse.data.body
       });
+      
       onClose();
     } catch (error) {
       console.error('Error submitting itinerary:', error);
@@ -85,8 +91,11 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
           name="destination"
           value={formData.destination}
           onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            option === 'edit' ? 'bg-gray-100' : ''
+          }`}
           required
+          readOnly={option === 'edit'}
         />
       </div>
       <div>
