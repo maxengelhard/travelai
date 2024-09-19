@@ -71,6 +71,34 @@ def select_itinerary_by_id(itinerary_id,email):
         return None
 
 
+def get_user_credits(email):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT credits FROM users WHERE email = %s", (email,))
+            result = cur.fetchone()
+            return result[0] if result else 0
+    except psycopg2.Error as e:
+        print(f"Database error: {e}")
+        return 0
+    finally:
+        conn.close()
+
+def update_user_credits(email, new_credit_amount):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET credits = %s WHERE email = %s",
+                (new_credit_amount, email)
+            )
+            conn.commit()
+    except psycopg2.Error as e:
+        conn.rollback()
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
+
 @cors_headers
 @load_json_body
 @json_http_resp
@@ -85,6 +113,23 @@ def lambda_handler(event, context):
     if 'requestContext' in event and 'authorizer' in event['requestContext']:
         claims = event['requestContext']['authorizer']['claims']
         to_email = claims.get('email')
+
+    base_cost = 10
+    theme_cost = 4 if themes else 0
+    if len(themes) > 1:
+        theme_cost = 6
+    total_cost = base_cost + theme_cost
+
+    user_credits = get_user_credits(to_email)
+    if user_credits < total_cost:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error': 'Insufficient credits'}),
+            'headers': {    
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
 
     itinerary = select_itinerary_by_id(itinerary_id,to_email)
     
@@ -129,6 +174,8 @@ def lambda_handler(event, context):
         
         # print(json.dumps(formatted_itinerary, indent=2))
         add_itinerary_to_user(to_email, content, destination, days, budget,themes,edit_prompt)
+
+        update_user_credits(to_email, user_credits - total_cost)
        
         return {
             'statusCode': 200,
