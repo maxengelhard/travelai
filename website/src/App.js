@@ -158,14 +158,12 @@ function App() {
       const updatedUserInfo = {
         ...prevUserInfo,
         ...userStatus,
-        credits: userStatus.credits // Ensure credits are updated
       };
       console.log('Updated User Info:', updatedUserInfo);
       return updatedUserInfo;
     });
     setPreviousItineraries(userItineraries);
     setSelectedItinerary(userStatus.itinerary ? {
-      itinerary_id: userStatus.itinerary_id,
       ...userStatus
     } : null);
     setOption(null);

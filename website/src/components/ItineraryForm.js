@@ -71,8 +71,7 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
       
       onItineraryUpdate({
         userStatus: {
-          ...userStatusResponse.data.body,
-          credits: response.data.body.credits
+          ...userStatusResponse.data.body
         },
         userItineraries: userItinerariesResponse.data.body,
       });
