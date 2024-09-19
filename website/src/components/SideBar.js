@@ -107,6 +107,7 @@ const SideBar = ({onSelectItinerary,selectedItineraryId, previousItineraries }) 
                 {itinerary.prompt && (
                   <p><strong>Prompt:</strong> {itinerary.prompt}</p>
                 )}
+                {console.log(itinerary)}
               </div>
             ))}
           </div>
