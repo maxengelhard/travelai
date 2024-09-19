@@ -311,34 +311,34 @@ Resources:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
 
 
-  UpdateCredits:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/
-      FunctionName: !Sub "tripjourney_update_credits_${STAGE}"
-      Handler: update_credits.lambda_handler
-      Runtime: python3.10
-      Architectures: 
-        - x86_64  
-      Description: Update user credits
-      Environment:
-        Variables:
-          DB_USER: !Ref DBUSER
-          DB_HOST: !Ref DBHOST
-          DB_NAME: !Ref DBNAME
-          DB_PASSWORD: !Ref DBPASSWORD
-      Events:
-        ScheduleEvent:
-          Type: Schedule
-          Properties:
-            Schedule: rate(1 month)
-      Policies:
-        Statement:
-          - Effect: Allow
-            Action: 
-              - logs:CreateLogGroup
-            Resource: 
-              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*" 
+  # UpdateCredits:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: src/
+  #     FunctionName: !Sub "tripjourney_update_credits_${STAGE}"
+  #     Handler: update_credits.lambda_handler
+  #     Runtime: python3.10
+  #     Architectures: 
+  #       - x86_64  
+  #     Description: Update user credits
+  #     Environment:
+  #       Variables:
+  #         DB_USER: !Ref DBUSER
+  #         DB_HOST: !Ref DBHOST
+  #         DB_NAME: !Ref DBNAME
+  #         DB_PASSWORD: !Ref DBPASSWORD
+  #     Events:
+  #       ScheduleEvent:
+  #         Type: Schedule
+  #         Properties:
+  #           Schedule: rate(1 month)
+  #     Policies:
+  #       Statement:
+  #         - Effect: Allow
+  #           Action: 
+  #             - logs:CreateLogGroup
+  #           Resource: 
+  #             - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*" 
 
 ###### STRIPE ######
   StripeUserWebhook:
