@@ -65,17 +65,16 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
       
       // Fetch updated user status
       const userStatusResponse = await API.get('user-status');
-      
+      console.log('User Status Response:', userStatusResponse);
       // Fetch updated user itineraries
       const userItinerariesResponse = await API.get('user-itineraries');
       
       onItineraryUpdate({
         userStatus: {
           ...userStatusResponse.data.body,
-          credits: response.data.body.remaining_credits
+          credits: response.data.body.credits
         },
         userItineraries: userItinerariesResponse.data.body,
-        creditsUsed: response.data.body.credits_used
       });
       
       onClose();

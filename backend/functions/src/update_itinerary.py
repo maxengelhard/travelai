@@ -42,7 +42,7 @@ def add_itinerary_to_user(email, itinerary, destination, days, budget,themes,pro
                 (email, itinerary, destination, days, budget,new_order,datetime.now(pytz.utc),themes,prompt ) 
             )   
             conn.commit()
-            return {'success': True, 'message': 'Itinerary updated successfully'}
+            return {'success': True, 'message': 'Itinerary updated successfully','itinerary_id':new_order}
     except psycopg2.Error as e:
         conn.rollback()
         print(f"Database error: {e}")
@@ -173,13 +173,13 @@ def lambda_handler(event, context):
         print(content)
         
         # print(json.dumps(formatted_itinerary, indent=2))
-        add_itinerary_to_user(to_email, content, destination, days, budget,themes,edit_prompt)
+        added_response = add_itinerary_to_user(to_email, content, destination, days, budget,themes,edit_prompt)
 
         update_user_credits(to_email, user_credits - total_cost)
        
         return {
             'statusCode': 200,
-            'body': json.dumps({'itinerary': content}),
+            'body': {'itinerary': content,'itinerary_id':added_response['itinerary_id']},
             'headers': {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'  # Allow CORS for all origins

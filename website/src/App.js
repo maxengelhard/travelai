@@ -152,8 +152,17 @@ function App() {
   //   }
   // };
 
-  const handleItineraryUpdate = useCallback(({ userStatus, userItineraries }) => {
-    setUserInfo(userStatus);
+  const handleItineraryUpdate = useCallback(({ userStatus, userItineraries, creditsUsed }) => {
+    console.log('Handling Itinerary Update. User Status:', userStatus);
+    setUserInfo(prevUserInfo => {
+      const updatedUserInfo = {
+        ...prevUserInfo,
+        ...userStatus,
+        credits: userStatus.credits // Ensure credits are updated
+      };
+      console.log('Updated User Info:', updatedUserInfo);
+      return updatedUserInfo;
+    });
     setPreviousItineraries(userItineraries);
     setSelectedItinerary(userStatus.itinerary ? {
       itinerary_id: userStatus.itinerary_id,
@@ -161,6 +170,10 @@ function App() {
     } : null);
     setOption(null);
   }, []);
+
+  useEffect(() => {
+    console.log('User Info Updated:', userInfo);
+  }, [userInfo]);
 
 
 
