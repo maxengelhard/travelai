@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/API';
+import LoadingOverlay from './LoadingOverlay';
+
 
 const availableThemes = [
   'Adventure', 'Relaxation', 'Cultural', 'Foodie', 'Nature', 'Urban', 'Beach', 'Historical'
@@ -13,6 +15,7 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
     themes: [],
     prompts: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (option === 'edit' && currentItinerary) {
@@ -43,6 +46,7 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setIsLoading(true);
       const endpoint = option === 'create' ? 'create-new-itinerary' : 'update-itinerary';
       const response = await API.post(endpoint, { data: formData });
       console.log(response)
@@ -61,12 +65,16 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
       onClose();
     } catch (error) {
       console.error('Error submitting itinerary:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-2xl font-bold mb-4 text-center">
+    <>
+      {isLoading && <LoadingOverlay />}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <h2 className="text-2xl font-bold mb-4 text-center">
         {option === 'create' ? 'Create New Itinerary' : 'Edit Existing Itinerary'}
       </h2>
       <div>
@@ -154,6 +162,7 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
         </button>
       </div>
     </form>
+    </>
   );
 };
 
