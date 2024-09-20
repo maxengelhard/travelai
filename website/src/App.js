@@ -153,13 +153,13 @@ function App() {
   // };
 
   const handleItineraryUpdate = useCallback(({ userStatus, userItineraries, creditsUsed }) => {
-    console.log('Handling Itinerary Update. User Status:', userStatus);
+    // console.log('Handling Itinerary Update. User Status:', userStatus);
     setUserInfo(prevUserInfo => {
       const updatedUserInfo = {
         ...prevUserInfo,
         ...userStatus,
       };
-      console.log('Updated User Info:', updatedUserInfo);
+      // console.log('Updated User Info:', updatedUserInfo);
       return updatedUserInfo;
     });
     setPreviousItineraries(userItineraries);
@@ -169,9 +169,9 @@ function App() {
     setOption(null);
   }, []);
 
-  useEffect(() => {
-    console.log('User Info Updated:', userInfo);
-  }, [userInfo]);
+  // useEffect(() => {
+  //   console.log('User Info Updated:', userInfo);
+  // }, [userInfo]);
 
 
 

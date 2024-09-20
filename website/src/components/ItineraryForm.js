@@ -58,7 +58,7 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
         itinerary_id: option === 'edit' ? currentItinerary.itinerary_id : undefined
       };
       const response = await API.post(endpoint, { data: payload });
-      console.log(response)
+    //   console.log(response)
       if (option === 'create' && response.data.body && response.data.body.itinerary_id) {
         localStorage.setItem('selectedItineraryId', response.data.body.itinerary_id.toString());
       }

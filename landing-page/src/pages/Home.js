@@ -186,7 +186,7 @@ function Home() {
   
       const responseData = await response.json();
       setIsGenerationComplete(true);
-      console.log("Response:", responseData); // Log the full response for debugging
+      // console.log("Response:", responseData); // Log the full response for debugging
   
       if (!response.ok) {
         // Parse the nested error message

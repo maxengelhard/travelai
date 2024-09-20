@@ -1,7 +1,7 @@
 import json
 import psycopg2
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 DB_PARAMS = {
@@ -16,32 +16,46 @@ def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def add_monthly_credits():
+def update_credits():
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            # Add 1,000 credits to Pro plan users
-            cur.execute("""
-                UPDATE users
-                SET credits = credits + 1000
-                WHERE plan_type = 'pro'
-            """)
-            pro_users_updated = cur.rowcount
+            today = datetime.now(pytz.utc)
+            
+            # Handle the case for the last day of the month
+            if today.day == today.replace(day=1) + timedelta(days=32) - timedelta(days=1).day:
+                # It's the last day of the month
+                cur.execute("""
+                    UPDATE users
+                    SET credits = CASE
+                        WHEN plan_type = 'pro' THEN credits + 1000
+                        WHEN plan_type = 'jet_setter' THEN credits + 100000
+                        ELSE credits
+                    END,
+                    last_credit_update = %s
+                    WHERE (EXTRACT(DAY FROM created_at) >= 29 OR EXTRACT(DAY FROM created_at) = 1)
+                    AND (last_credit_update IS NULL OR last_credit_update < %s)
+                """, (today, today.replace(day=1)))
+            else:
+                # Regular day of the month
+                cur.execute("""
+                    UPDATE users
+                    SET credits = CASE
+                        WHEN plan_type = 'pro' THEN credits + 1000
+                        WHEN plan_type = 'jet_setter' THEN credits + 100000
+                        ELSE credits
+                    END,
+                    last_credit_update = %s
+                    WHERE EXTRACT(DAY FROM created_at) = %s
+                    AND (last_credit_update IS NULL OR last_credit_update < %s)
+                """, (today, today.day, today.replace(day=1)))
 
-            # Add 100,000 credits to Jet Setter plan users
-            cur.execute("""
-                UPDATE users
-                SET credits = credits + 100000
-                WHERE plan_type = 'jet_setter'
-            """)
-            jet_setter_users_updated = cur.rowcount
-
+            users_updated = cur.rowcount
             conn.commit()
 
             return {
-                'pro_users_updated': pro_users_updated,
-                'jet_setter_users_updated': jet_setter_users_updated,
-                'timestamp': datetime.now(pytz.utc).isoformat()
+                'users_updated': users_updated,
+                'timestamp': today.isoformat()
             }
     except psycopg2.Error as e:
         conn.rollback()
@@ -51,7 +65,7 @@ def add_monthly_credits():
         conn.close()
 
 def lambda_handler(event, context):
-    result = add_monthly_credits()
+    result = update_credits()
     
     return {
         'statusCode': 200 if 'error' not in result else 500,
