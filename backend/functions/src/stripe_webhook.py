@@ -263,26 +263,29 @@ def lambda_handler(event,context):
                 password=password,
                 port="5432",
                 sslmode='require') as conn:
-
+                
                 with conn.cursor() as cur:
-                    # First, query the activated_codes table to get the email and activation code
-                    query = "SELECT code FROM ActivationCodes WHERE customer_id = %s"
-                    params = (stripe_customer,)
-                    cur.execute(query, params)
-                    activation_code = cur.fetchone()
-                    if activation_code:
-
-                        # Delete from activated_codes based on customer_id
-                        query = "DELETE FROM ActivationCodes WHERE customer_id = %s"
-                        params = (stripe_customer,)
-                        cur.execute(query, params)
-
-                        # Delete from activated_users based on the fetched email or activation code
-                        query = "DELETE FROM ActivatedUsers WHERE customer_id = %s"
-                        params = (activation_code,)
-                        cur.execute(query, params)
-
+                    # First, retrieve the email
+                    select_query = "SELECT email FROM users WHERE stripe_customer_id = %s"
+                    cur.execute(select_query, (stripe_customer,))
+                    result = cur.fetchone()
+                    
+                    if result:
+                        email = result[0]
+                        
+                        # Now delete from users table
+                        delete_query = "DELETE FROM users WHERE stripe_customer_id = %s"
+                        cur.execute(delete_query, (stripe_customer,))
+                        
+                        # Delete from the other table using the email
+                        other_table_delete_query = "DELETE FROM other_table_name WHERE email = %s"
+                        cur.execute(other_table_delete_query, (email,))
+                        
                         conn.commit()
+                        
+                        print(f"Deleted user with email {email} from users and other_table_name")
+                    else:
+                        print(f"No user found with stripe_customer_id {stripe_customer}")
 
         except (Exception, psycopg2.DatabaseError) as error:
             print(error)
