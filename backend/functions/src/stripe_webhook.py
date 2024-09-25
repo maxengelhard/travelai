@@ -154,9 +154,9 @@ def lambda_handler(event,context):
                     with conn.cursor() as cur:
                         # Check if user exists
                         cur.execute("SELECT * FROM users WHERE stripe_customer_id = %s", (customer_id,))
-                        user = cur.fetchone()
+                        update_user = cur.fetchone()
                         
-                        if user is None:
+                        if update_user is None:
                             # Fetch customer details from Stripe
                             stripe_customer = stripe.Customer.retrieve(customer_id)
                             email = stripe_customer.get('email', '')
@@ -245,9 +245,9 @@ def lambda_handler(event,context):
                 with conn.cursor() as cur:
                     # Check if user exists
                     cur.execute("SELECT * FROM users WHERE email = %s", (customer_email,))
-                    user = cur.fetchone()
+                    update_user = cur.fetchone()
                     
-                    if user is None:
+                    if update_user is None:
                         # Insert new user
                         insert_query = """
                         INSERT INTO users (email, status, stripe_customer_id, name, credits)
@@ -343,7 +343,7 @@ def create_or_update_cognito_user(email, plan_type,temp_password):
     try:
         # Check if the user already exists
         try:
-            user = cognito_client.admin_get_user(
+            cognito_user = cognito_client.admin_get_user(
                 UserPoolId=USER_POOL_ID,
                 Username=email
             )
