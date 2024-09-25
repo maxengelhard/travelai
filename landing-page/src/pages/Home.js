@@ -10,6 +10,9 @@ import ItineraryExamples from '../components/ItineraryExamples';
 import ExitIntentModal from '../components/ExitIntentModal';
 import HowItWorks from '../components/HowItWorks';
 
+// Import pricing
+import Pricing from './Pricing';
+
 const backgroundImages = [
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination1.jpg',
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination2.jpg',
@@ -31,12 +34,11 @@ const backgroundImages = [
 
 const styles = `
   .netflix-background {
-    position: absolute;
-    top: -10%;
-    left: -10%;
-    right: -10%;
-    bottom: -10%;
-    transform: rotate(10deg) scale(1.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow: hidden;
     background-color: black;
   }
@@ -53,12 +55,16 @@ const styles = `
    
   .netflix-scroll {
     display: flex;
-    animation: scroll 60s linear infinite;
+    animation: scroll 120s linear infinite;
+    width: 300vw;
+    height: 200vh;
+    transform: rotate(-5deg) translateY(-10%);
   }
 
   .netflix-scroll-content {
     display: flex;
     flex-wrap: wrap;
+    height: 100%;
   }
 
   .netflix-thumbnail {
@@ -68,7 +74,7 @@ const styles = `
     background-position: center;
     margin: 5px;
     border-radius: 10px;
-    opacity: 1;
+    opacity: 0.9;
     transition: opacity 0.3s ease;
   }
 
@@ -78,17 +84,21 @@ const styles = `
 
   @keyframes scroll {
     0% {
-      transform: translateX(0);
+      transform: rotate(5deg) translateY(-10%) translateX(0);
     }
     100% {
-      transform: translateX(-50%);
+      transform: rotate(5deg) translateY(-10%) translateX(-50%);
     }
   }
 
-    @media (max-width: 768px) {
+  @media (max-width: 768px) {
     .netflix-thumbnail {
       width: 100px;
       height: 100px;
+    }
+    .netflix-scroll {
+      width: 400vw;
+      height: 300vh;
     }
   }
 `;
@@ -312,6 +322,12 @@ function Home() {
         </div>
         <ExitIntentModal />
       </div>
+      <div className="z-20 relative w-full bg-gray-100 py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">Our Pricing Plans</h2>
+            <Pricing />
+          </div>
+        </div>
     </>
   );
 }
