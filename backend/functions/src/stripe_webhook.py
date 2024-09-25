@@ -126,17 +126,11 @@ def lambda_handler(event,context):
     if payload['type'] == 'invoice.payment_succeeded':
         payload_object = payload['data']['object'] 
         invoice_id = payload_object['id']
-
-        # update the user table depending on the plan
-        # if the plan is pro, update the plan_type to pro
-        # if the plan is jet setter, update the plan_type to jet setter
         customer_id = payload_object['customer']
-        # Extract the description from the first line item
         description = payload_object['lines']['data'][0]['description'].lower()
-        print('customer id')
-        print(customer_id)
-        print('description')
-        print(description)
+        print('customer id:', customer_id)
+        print('description:', description)
+        
         plan_type = None
         is_pro = False
         
@@ -174,6 +168,7 @@ def lambda_handler(event,context):
                             VALUES (%s, 'pre', %s, %s, %s, %s)
                             """
                             cur.execute(insert_query, (email, customer_id, name, plan_type, is_pro))
+                            print(f"Inserted new user with plan {plan_type} for customer {customer_id}")
                         else:
                             # Update existing user
                             update_query = """
@@ -182,14 +177,12 @@ def lambda_handler(event,context):
                             WHERE stripe_customer_id = %s
                             """
                             cur.execute(update_query, (plan_type, is_pro, customer_id))
+                            print(f"Updated user plan to {plan_type} for customer {customer_id}")
                         
                         conn.commit()
 
-                        print(f"Updated user plan to {plan_type} for customer {customer_id}")
-
             except (Exception, psycopg2.DatabaseError) as error:
                 print(f"Error updating user plan: {error}")
-
 
         # try:
         #     # Retrieve the invoice
@@ -261,6 +254,7 @@ def lambda_handler(event,context):
                         VALUES (%s, 'pre', %s, %s, 1000)
                         """
                         cur.execute(insert_query, (customer_email, stripe_customer, customer_name))
+                        print(f"Inserted new user data for email {customer_email}")
                     else:
                         # Update existing user
                         update_query = """
@@ -269,13 +263,12 @@ def lambda_handler(event,context):
                         WHERE email = %s
                         """
                         cur.execute(update_query, (stripe_customer, customer_email))
+                        print(f"Updated user data for email {customer_email}")
                     
                     conn.commit()
-                    print(f"Updated/Inserted user data for email {customer_email}")
-
 
         except (Exception, psycopg2.DatabaseError) as error:
-            print(error)
+            print(f"Error updating user data: {error}")
 
         try:
             temp_password = generate_temp_password()
