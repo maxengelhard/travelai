@@ -69,7 +69,6 @@ const ExitIntentModal = () => {
                   "Real-time updates and adjustments to your itinerary",
                   "Access to exclusive deals and discounts",
                   "24/7 AI-powered travel assistant",
-                  "Seamless integration with local transportation and booking systems",
                   "Customizable itineraries for any travel style",
                   "Reduce travel stress with expertly planned schedules"
                 ].map((benefit, index) => (

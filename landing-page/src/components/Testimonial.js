@@ -32,6 +32,42 @@ const Testimonial = () => {
       location: "Singapore",
       quote: "TripJourney helps me balance work and exploration effortlessly. It creates perfect itineraries for my business trips with leisure time included.",
       image: "https://randomuser.me/api/portraits/women/26.jpg"
+    },
+    {
+      name: "Carlos Rodriguez",
+      location: "Barcelona, Spain",
+      quote: "As a foodie, I was amazed by the local culinary experiences TripJourney recommended. It truly understands my taste!",
+      image: "https://randomuser.me/api/portraits/men/45.jpg"
+    },
+    {
+      name: "Brandie Thomas",
+      location: "Chicago, USA",
+      quote: "The cultural insights provided by TripJourney made my solo trip to Japan unforgettable. I felt like a local everywhere I went!",
+      image: "https://randomuser.me/api/portraits/women/74.jpg"
+    },
+    {
+      name: "John King",
+      location: "Sydney, Australia",
+      quote: "TripJourney's real-time adjustments saved our family vacation when unexpected weather hit. It quickly suggested great indoor alternatives!",
+      image: "https://randomuser.me/api/portraits/men/22.jpg"
+    },
+    {
+      name: "Maria Gonzalez",
+      location: "Mexico City, Mexico",
+      quote: "I love how TripJourney balances popular attractions with hidden gems. It made my Paris trip unique and Instagram-worthy!",
+      image: "https://randomuser.me/api/portraits/women/90.jpg"
+    },
+    {
+      name: "Kevin Johnson",
+      location: "Austin, USA",
+      quote: "As a budget traveler, I appreciate how TripJourney optimizes costs without compromising on experiences. It's perfect for backpackers!",
+      image: "https://randomuser.me/api/portraits/men/55.jpg"
+    },
+    {
+      name: "Sophie Dubois",
+      location: "Montreal, Canada",
+      quote: "TripJourney's suggestions for eco-friendly travel options aligned perfectly with my values. It made sustainable travel planning so easy!",
+      image: "https://randomuser.me/api/portraits/women/39.jpg"
     }
   ];
 

@@ -8,6 +8,7 @@ import Navigation from '../components/Navigation';
 import Testimonial from '../components/Testimonial';
 import ItineraryExamples from '../components/ItineraryExamples';
 import ExitIntentModal from '../components/ExitIntentModal';
+import HowItWorks from '../components/HowItWorks';
 
 const backgroundImages = [
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination1.jpg',
@@ -262,10 +263,10 @@ function Home() {
                 Save time and money by using our AI travel planner instead of hiring an expensive travel agent!
               </p>
             </div>
-            <div className="w-full lg:w-2/5 bg-white bg-opacity-90 p-6 lg:p-8 rounded-lg shadow-lg">
-            <h2 className="text-2xl lg:text-3xl font-bold mb-4 text-gray-800">Plan Your Trip</h2>
-            <TravelForm onSubmit={generateItinerary} isGenerationComplete={isGenerationComplete} />
-            {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
+            <div className="w-full lg:w-2/5 bg-blue-600 p-6 lg:p-8 rounded-lg shadow-2xl">
+              <h2 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-100 text-center">Plan Your Dream Trip</h2>
+              <TravelForm onSubmit={generateItinerary} isGenerationComplete={isGenerationComplete} />
+              {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
             {error && (
                 <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
                 <p>{error}</p>
@@ -305,6 +306,9 @@ function Home() {
         </div>
         <div className="z-20 relative w-full bg-black bg-opacity-75 py-16">
           <Testimonial />
+        </div>
+        <div className="z-20 relative w-full">
+          <HowItWorks />
         </div>
         <ExitIntentModal />
       </div>
