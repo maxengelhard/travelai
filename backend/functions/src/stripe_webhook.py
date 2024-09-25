@@ -158,13 +158,31 @@ def lambda_handler(event,context):
                     sslmode='require') as conn:
 
                     with conn.cursor() as cur:
-                        # Update the user's plan type and is_pro status
-                        update_query = """
-                        UPDATE users 
-                        SET plan_type = %s, is_pro = %s
-                        WHERE stripe_customer_id = %s
-                        """
-                        cur.execute(update_query, (plan_type, is_pro, customer_id))
+                        # Check if user exists
+                        cur.execute("SELECT * FROM users WHERE stripe_customer_id = %s", (customer_id,))
+                        user = cur.fetchone()
+                        
+                        if user is None:
+                            # Fetch customer details from Stripe
+                            stripe_customer = stripe.Customer.retrieve(customer_id)
+                            email = stripe_customer.get('email', '')
+                            name = stripe_customer.get('name', '')
+                            
+                            # Insert new user
+                            insert_query = """
+                            INSERT INTO users (email, status, stripe_customer_id, name, plan_type, is_pro)
+                            VALUES (%s, 'pre', %s, %s, %s, %s)
+                            """
+                            cur.execute(insert_query, (email, customer_id, name, plan_type, is_pro))
+                        else:
+                            # Update existing user
+                            update_query = """
+                            UPDATE users 
+                            SET plan_type = %s, is_pro = %s
+                            WHERE stripe_customer_id = %s
+                            """
+                            cur.execute(update_query, (plan_type, is_pro, customer_id))
+                        
                         conn.commit()
 
                         print(f"Updated user plan to {plan_type} for customer {customer_id}")
@@ -232,14 +250,28 @@ def lambda_handler(event,context):
                 sslmode='require') as conn:
 
                 with conn.cursor() as cur:
-                    # Add 1000 credits to the user's account
-                    query = """
-                    UPDATE users 
-                    SET stripe_customer_id = %s, credits = COALESCE(credits, 0) + 1000
-                    WHERE email = %s
-                    """
-                    cur.execute(query, (stripe_customer, customer_email,))
+                    # Check if user exists
+                    cur.execute("SELECT * FROM users WHERE email = %s", (customer_email,))
+                    user = cur.fetchone()
+                    
+                    if user is None:
+                        # Insert new user
+                        insert_query = """
+                        INSERT INTO users (email, status, stripe_customer_id, name, credits)
+                        VALUES (%s, 'pre', %s, %s, 1000)
+                        """
+                        cur.execute(insert_query, (customer_email, stripe_customer, customer_name))
+                    else:
+                        # Update existing user
+                        update_query = """
+                        UPDATE users 
+                        SET stripe_customer_id = %s, credits = COALESCE(credits, 0) + 1000
+                        WHERE email = %s
+                        """
+                        cur.execute(update_query, (stripe_customer, customer_email))
+                    
                     conn.commit()
+                    print(f"Updated/Inserted user data for email {customer_email}")
 
 
         except (Exception, psycopg2.DatabaseError) as error:
