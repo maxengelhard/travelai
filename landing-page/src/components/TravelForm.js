@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const popularDestinations = [
   "Paris", "Tokyo", "New York", "Rome", "London", "Barcelona", "Sydney", 
@@ -7,24 +7,25 @@ const popularDestinations = [
   "Cape Town", "Kyoto"
 ];
 
-function TravelForm({ onSubmit }) {
+function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
   const [destination, setDestination] = useState('');
   const [days, setDays] = useState('');
   const [budget, setBudget] = useState('');
   const [email, setEmail] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (isGenerationComplete) {
+      setIsSubmitted(false);
+    }
+  }, [isGenerationComplete]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!email) {
-      alert('Please enter your email address');
-      return;
-    }
-    onSubmit(
-      destination || 'any destination',
-      days || 'flexible duration',
-      budget ? `$${budget}` : 'flexible budget',
-      email
-    );
+    setIsSubmitted(true);
+    // Convert budget to integer before submitting
+    const budgetInt = parseInt(budget, 10);
+    onSubmit(destination, days, budgetInt, email);
   };
 
   const handleRandomDestination = () => {
@@ -32,79 +33,103 @@ function TravelForm({ onSubmit }) {
     setDestination(popularDestinations[randomIndex]);
   };
 
+  const handleBudgetChange = (e) => {
+    // Only allow positive integers
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setBudget(value);
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-1">Destination (optional)</label>
-        <div className="mt-1 flex rounded-md shadow-sm">
-          <input
-            type="text"
-            id="destination"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            placeholder="e.g., Paris, Tokyo, New York"
-            className="flex-grow min-w-0 block w-full px-3 py-2 rounded-l-md border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-          <button
-            type="button"
-            onClick={handleRandomDestination}
-            className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-gray-500 text-sm hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
-          >
-            Random
-          </button>
-        </div>
-      </div>
-      <div>
-        <label htmlFor="days" className="block text-sm font-medium text-gray-700 mb-1">Number of Days (optional)</label>
-        <input
-          type="number"
-          id="days"
-          value={days}
-          onChange={(e) => setDays(e.target.value)}
-          min="1"
-          placeholder="e.g., 7"
-          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
-        />
-      </div>
-      <div>
-        <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-1">Budget (USD, optional)</label>
-        <div className="mt-1 relative rounded-md shadow-sm">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-gray-500 sm:text-sm">$</span>
-          </div>
-          <input
-            type="number"
-            id="budget"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            min="0"
-            placeholder="e.g., 1000"
-            className="block w-full pl-7 pr-12 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <span className="text-gray-500 sm:text-sm">USD</span>
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-1">Destination</label>
+          <div className="flex rounded-md shadow-sm">
+            <input
+              type="text"
+              id="destination"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              placeholder="e.g., Paris, Tokyo, New York"
+              className="flex-grow min-w-0 block w-full px-4 py-3 rounded-l-md border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              required
+            />
+            <button
+              type="button"
+              onClick={handleRandomDestination}
+              className="inline-flex items-center px-4 py-3 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-gray-500 text-sm hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
+            >
+              Random
+            </button>
           </div>
         </div>
-      </div>
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <label htmlFor="email" className="block text-sm font-medium text-blue-700 mb-1">Email (required)</label>
-        <input
-          type="email"
-          id="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="mt-1 block w-full border-blue-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="your@email.com"
-        />
-      </div>
-      <button
-        type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:-translate-y-1 hover:scale-105"
-      >
-        Generate Itinerary
-      </button>
-    </form>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="days" className="block text-sm font-medium text-gray-700 mb-1">Number of Days</label>
+            <input
+              type="number"
+              id="days"
+              value={days}
+              onChange={(e) => setDays(e.target.value)}
+              min="1"
+              placeholder="e.g., 7"
+              className="block w-full px-4 py-3 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-1">Budget (USD)</label>
+            <div className="relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <span className="text-gray-500 sm:text-sm">$</span>
+              </div>
+              <input
+                type="text"
+                id="budget"
+                value={budget}
+                onChange={handleBudgetChange}
+                placeholder="e.g., 1000"
+                className="block w-full pl-8 pr-12 py-3 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                required
+              />
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <span className="text-gray-500 sm:text-sm">USD</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="block w-full px-4 py-3 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="your@email.com"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoading || isSubmitted}
+        >
+          {isLoading ? 'Generating...' : 'Generate Itinerary'}
+        </button>
+      </form>
+      {isLoading && (
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+          <p className="mt-2 text-sm text-gray-600">Generating your itinerary...</p>
+        </div>
+      )}
+      {error && (
+        <div className="text-red-600 text-sm mt-2">
+          {error}
+        </div>
+      )}
+    </div>
   );
 }
 

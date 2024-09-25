@@ -3,8 +3,6 @@ import psycopg2
 import os
 from openai import OpenAI
 from lambda_decorators import json_http_resp, cors_headers , load_json_body
-from trip_journey_email import send_itinerary_email
-import re
 from datetime import datetime
 import pytz
 # Set up OpenAI client
@@ -20,51 +18,31 @@ DB_PARAMS = {
     'port': 5432
 }
 
-sender_creds = {
-            'email': 'tripjourneyai@gmail.com',
-            'password': os.getenv('EMAIL_PASSWORD'),
-            'name': "Trip Journey AI"
-        }
-
 def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def check_and_add_email(email):
-    """Check if email exists, add if it doesn't."""
-    conn = get_db_connection()
-    try:
-        with conn.cursor() as cur:
-            # Check if email exists
-            cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-            if cur.fetchone() is not None:
-                return {'success': False, 'message': 'Email already in the system'}
 
-            # If email doesn't exist, insert it
-            cur.execute(
-                "INSERT INTO users (email, status) VALUES (%s, %s)",
-                (email, 'pre')
-            )
-            conn.commit()
-            return {'success': True, 'message': 'Email added successfully'}
-    except psycopg2.Error as e:
-        conn.rollback()
-        print(f"Database error: {e}")
-        return {'success': False, 'message': 'An error occurred'}
-    finally:
-        conn.close()
-
-def add_itinerary_to_user(email, itinerary, destination, days, budget):
+def add_itinerary_to_user(email, itinerary, destination, days, budget,themes):
     """Add the itinerary to the user's itinerary."""
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
+
             cur.execute(
-                "INSERT INTO itinerarys (email, itinerary, destination, days, budget,itinerary_order,created_at) VALUES (%s, %s, %s, %s, %s,%s,%s)",
-                (email, itinerary, destination, days, budget,0,datetime.now(pytz.utc) ) 
+                "SELECT MAX(itinerary_order) FROM itinerarys WHERE email = %s",
+                (email,)
+            )
+            max_order = cur.fetchone()[0]
+            
+            # If there are no existing itineraries, set the order to 0, otherwise increment
+            new_order = 0 if max_order is None else max_order + 1
+            cur.execute(
+                "INSERT INTO itinerarys (email, itinerary, destination, days, budget,itinerary_order,created_at,themes) VALUES (%s, %s, %s, %s, %s,%s,%s,%s)",
+                (email, itinerary, destination, days, budget,new_order,datetime.now(pytz.utc),themes ) 
             )   
             conn.commit()
-            return {'success': True, 'message': 'Itinerary updated successfully'}
+            return {'success': True, 'message': 'Itinerary updated successfully','itinerary_id':new_order}
     except psycopg2.Error as e:
         conn.rollback()
         print(f"Database error: {e}")
@@ -72,29 +50,69 @@ def add_itinerary_to_user(email, itinerary, destination, days, budget):
     finally:
         conn.close()
 
+
+def get_user_credits(email):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT credits FROM users WHERE email = %s", (email,))
+            result = cur.fetchone()
+            return result[0] if result else 0
+    except psycopg2.Error as e:
+        print(f"Database error: {e}")
+        return 0
+    finally:
+        conn.close()
+
+def update_user_credits(email, new_credit_amount):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET credits = %s WHERE email = %s",
+                (new_credit_amount, email)
+            )
+            conn.commit()
+    except psycopg2.Error as e:
+        conn.rollback()
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 @cors_headers
 @load_json_body
 @json_http_resp
 def lambda_handler(event, context):
+    print(event)
     # Parse the incoming JSON from API Gateway
     body = event.get('body', {})
     destination = body.get('destination', '')
     days = body.get('days', '')
     budget = body.get('budget', '')
-    to_email = body.get('email')
+    themes = body.get('themes', [])
+    
+    if 'requestContext' in event and 'authorizer' in event['requestContext']:
+        claims = event['requestContext']['authorizer']['claims']
+        to_email = claims.get('email')
 
-    psql_res = check_and_add_email(to_email)
+    base_cost = 10
+    theme_cost = 4 if themes else 0
+    if len(themes) > 1:
+        theme_cost = 6
+    total_cost = base_cost + theme_cost
 
-    if not psql_res['success']:
+    # Check if user has enough credits
+    user_credits = get_user_credits(to_email)
+    if user_credits < total_cost:
         return {
             'statusCode': 400,
-            'body': json.dumps({'error': psql_res['message']}),
-            'headers': {
+            'body': json.dumps({'error': 'Insufficient credits'}),
+            'headers': {    
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             }
         }
+
 
     prompt_parts = ["Create a detailed itinerary for a trip"]
     
@@ -106,6 +124,10 @@ def lambda_handler(event, context):
     
     if budget:
         prompt_parts.append(f"with a budget of {budget}")
+
+    if themes:
+        themes_str = ", ".join(themes)
+        prompt_parts.append(f"focusing on the following themes: {themes_str}")
     
     prompt = f"{' '.join(prompt_parts)}. " + """
     For each day, provide the following information in this exact format:
@@ -132,40 +154,18 @@ def lambda_handler(event, context):
         print(content)
         
         # print(json.dumps(formatted_itinerary, indent=2))
-        add_itinerary_to_user(to_email, content, destination, days, budget)
-        # Send the email
-        email_sent = send_itinerary_email(sender_creds, to_email, content, destination, days, budget)
+        added_response = add_itinerary_to_user(to_email, content, destination, days, budget,themes)
 
-        if email_sent:
-            return {
-                'statusCode': 200,
-                'body': json.dumps({
-                    'message': 'Itinerary generated and sent to your email successfully!',
-                    'itinerary': content
-                }),
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                }
+        update_user_credits(to_email, user_credits - total_cost)
+       
+        return {
+            'statusCode': 200,
+            'body': {'itinerary': content,'itinerary_id':added_response['itinerary_id']},
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'  # Allow CORS for all origins
             }
-        else:
-            return {
-                'statusCode': 500,
-                'body': json.dumps({'error': 'Failed to send email. Please try again.'}),
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                }
-            }
-
-        # return {
-        #     'statusCode': 200,
-        #     'body': json.dumps({'itinerary': itinerary}),
-        #     'headers': {
-        #         'Content-Type': 'application/json',
-        #         'Access-Control-Allow-Origin': '*'  # Allow CORS for all origins
-        #     }
-        # }
+        }
     except Exception as e:
         return {
             'statusCode': 500,

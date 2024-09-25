@@ -2,9 +2,9 @@ import axios from 'axios';
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { fetchAuthSession as fetchCredentials } from '@aws-amplify/core';
-import config from '../aws-exports';
+import AwsConfig from './Config';
 
-Amplify.configure(config);
+Amplify.configure(AwsConfig);
 
 const getAuthTokens = async () => {
   try {
@@ -32,7 +32,7 @@ const getClient = async (clientIdOverride, useCache) => {
     const { JWT, identityToken, cache } = await getAuthTokens();
 
     const options = {
-      baseURL: `https://${process.env.REACT_APP_DOMAIN_SUFFIX}.tripjourney.co/`,
+      baseURL: `https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/`,
       timeout: 900000,
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
@@ -119,9 +119,12 @@ const getClient = async (clientIdOverride, useCache) => {
 };
 
 const API = {
-  async get(url, { conf = {}, clientId = null, useCache = false } = {}) {
+  async get(url, { conf = {}, clientId = null, useCache = false, queryParams = {} } = {}) {
     const cli = await getClient(clientId, useCache);
-    return cli.get(url, conf)
+    const queryString = new URLSearchParams(queryParams).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    
+    return cli.get(fullUrl, conf)
       .then(response => Promise.resolve(response))
       .catch(error => Promise.reject(error));
   },

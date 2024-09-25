@@ -1,14 +1,17 @@
-import json
-import boto3
-from botocore.exceptions import ClientError
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formataddr
+import os
+import json
 
-def send_itinerary_email(recipient_email, itinerary, destination, days, budget):
-    # AWS SES configuration
-    SENDER = "Trip Journey AI <tripjourneyai@gmail.com>"  # Replace with your verified SES email
-    AWS_REGION = "us-east-1"  # Replace with your AWS region
-
+def send_itinerary_email(sender_creds, recipient_email, itinerary, destination, days, budget):
+    # Email configuration
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    sender_email = sender_creds['email']  # email
+    sender_password = sender_creds['password']
+    sender_name = sender_creds['name']    
     # Parse the ChatGPT response
     # Prepare email content
     destination = destination if destination else "Your chosen destination"
@@ -76,31 +79,26 @@ def send_itinerary_email(recipient_email, itinerary, destination, days, budget):
     # Create a multipart message and set headers
     message = MIMEMultipart('alternative')
     message['Subject'] = f"Your Personalized {destination} Itinerary"
-    message['From'] = SENDER
+    message["From"] = formataddr((sender_name, sender_email)) 
     message['To'] = recipient_email
 
     # Add HTML content to the email
     part = MIMEText(html_content, 'html')
     message.attach(part)
 
-    # Create SES client
-    client = boto3.client('ses', region_name=AWS_REGION)
 
     # Try to send the email
+    # Create a secure SSL/TLS connection
     try:
-        response = client.send_raw_email(
-            Source=SENDER,
-            Destinations=[recipient_email],
-            RawMessage={
-                'Data': message.as_string(),
-            }
-        )
-    except ClientError as e:
-        print(f"Error sending email: {e.response['Error']['Message']}")
-        return False
-    else:
-        print(f"Email sent! Message ID: {response['MessageId']}")
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(message)
+        print("Email sent successfully")
         return True
+    except Exception as e:
+        print(f"Failed to send email: {str(e)}")
+        return False
 
 
 if __name__ == '__main__':
@@ -111,6 +109,6 @@ if __name__ == '__main__':
     destination = "Paris"
     days = "3"
     budget = "1000"
-    email = "traveler@example.com"
+    email = "travelemail@gmail.com"
 
-    send_itinerary_email(email, chatgpt_response, destination, days, budget)
+    send_itinerary_email(email, json.loads(chatgpt_response['body'])['body'], destination, days, budget)

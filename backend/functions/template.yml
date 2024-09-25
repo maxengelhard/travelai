@@ -31,10 +31,10 @@ Parameters:
     Type: String
   DBPASSWORD:
     Type: String
-  # STRIPESECRETKEY:
-  #   Type: String
-  # STRIPEWEBHOOKKEY:
-  #   Type: String
+  STRIPESECRETKEY:
+    Type: String
+  STRIPEWEBHOOKKEY:
+    Type: String
   # STRIPECONNECTWEBHOOKKEY:
   #   Type: String
   # STRIPEPRODUCTID:
@@ -42,6 +42,8 @@ Parameters:
   # STRIPECOUPON:
   #   Type: String
   OPENAIAPIKEY:
+    Type: String
+  EMAILPASSWORD:
     Type: String
   
 
@@ -100,7 +102,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      FunctionName: !Sub "itinerary_${STAGE}"
+      FunctionName: !Sub "tripjourney_iitinerary_${STAGE}"
       Handler: itinerary.lambda_handler
       Runtime: python3.10
       Architectures: 
@@ -113,6 +115,8 @@ Resources:
           DB_HOST: !Ref DBHOST
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
+          COGNITO_USER_POOL_ID: !Ref USERPOOLID
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
       Events:
         ApiEvent:
           Type: Api
@@ -133,9 +137,257 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+
+  CreateNewItinerary:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_create_new_itinerary_${STAGE}"
+      Handler: create_new_itinerary.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64
+      Description: Create a new itinerary
+      Environment:
+        Variables:
+          OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+          COGNITO_USER_POOL_ID: !Ref USERPOOLID
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /create-new-itinerary
+            Method: post
+            Auth:
+              AddDefaultAuthorizerToCorsPreflight: false
+              Authorizer: CognitoAuthorizer
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+
+
+  UpdateItinerary:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_update_itinerary_${STAGE}"
+      Handler: update_itinerary.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64  
+      Description: Update an existing itinerary
+      Environment:
+        Variables:
+          OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+          COGNITO_USER_POOL_ID: !Ref USERPOOLID 
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /update-itinerary
+            Method: post
+            Auth: 
+              AddDefaultAuthorizerToCorsPreflight: false
+              Authorizer: CognitoAuthorizer
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+
+
+  UserStatus:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_user_status_${STAGE}"
+      Handler: user_status.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64
+      Description: Check user status
+      Environment:
+        Variables:
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /user-status
+            Method: get
+            Auth:
+              AddDefaultAuthorizerToCorsPreflight: false
+              Authorizer: CognitoAuthorizer
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+
+  UserItineraries:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_user_itineraries_${STAGE}"
+      Handler: user_itineraries.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64
+      Description: Get user itineraries
+      Environment:
+        Variables:
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /user-itineraries
+            Method: get
+            Auth:
+              AddDefaultAuthorizerToCorsPreflight: false
+              Authorizer: CognitoAuthorizer
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+
+
+  UpdateCredits:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_update_credits_${STAGE}"
+      Handler: update_credits.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64  
+      Description: Update user credits
+      Environment:
+        Variables:
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+      Events:
+        MidnightTrigger:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 0 * * ? *)
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*" 
+
+###### STRIPE ######
+  StripeUserWebhook:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_stripe_user_webhook_${STAGE}"
+      Handler: stripe_webhook.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64  
+      Description: Stripe webhook for user subscription
+      Environment:
+        Variables:
+          STRIPE_SECRET_KEY: !Ref STRIPESECRETKEY
+          STRIPE_WEBHOOK_SECRET: !Ref STRIPEWEBHOOKKEY
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+          COGNITO_USER_POOL_ID: !Ref USERPOOLID
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
+      Events:
+        StripeWebhook:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /stripe-webhook
+            Method: post
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
           - Effect: Allow
             Action:
-              - ses:SendRawEmail
+              - cognito-idp:AdminCreateUser
+              - cognito-idp:AdminUpdateUserAttributes
+              - cognito-idp:AdminInitiateAuth
+              - cognito-idp:AdminRespondToAuthChallenge
+              - cognito-idp:AdminGetUser
             Resource:
-              - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/tripjourneyai@gmail.com"
+              - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${USERPOOLID}"
