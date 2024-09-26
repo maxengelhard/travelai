@@ -250,10 +250,10 @@ def lambda_handler(event,context):
                     if update_user is None:
                         # Insert new user
                         insert_query = """
-                        INSERT INTO users (email, status, stripe_customer_id, name, credits)
+                        INSERT INTO users (email, status, stripe_customer_id, credits)
                         VALUES (%s, 'pre', %s, %s, 1000)
                         """
-                        cur.execute(insert_query, (customer_email, stripe_customer, customer_name))
+                        cur.execute(insert_query, (customer_email, stripe_customer))
                         print(f"Inserted new user data for email {customer_email}")
                     else:
                         # Update existing user
