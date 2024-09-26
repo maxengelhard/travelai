@@ -3,7 +3,7 @@ import API from '../services/API';
 import LoadingOverlay from './LoadingOverlay';
 
 const availableThemes = [
-  'Adventure', 'Relaxation', 'Cultural', 'Foodie', 'Nature', 'Urban', 'Beach', 'Historical'
+  'Adventure', 'Social', 'Relaxation', 'Cultural', 'Foodie', 'Nightlife','Nature', 'Urban', 'Beach', 'Historical', 'Shopping'
 ];
 
 const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentItinerary }) => {
