@@ -27,6 +27,8 @@ const BurgerMenu = ({ userInfo, previousItineraries, onSelectItinerary, selected
     }
   };
 
+  const manageSubscriptionUrl = process.env.REACT_APP_STRIPE_MANAGE_URL;
+
   return (
     <div className="md:hidden">
       <button 
@@ -68,6 +70,16 @@ const BurgerMenu = ({ userInfo, previousItineraries, onSelectItinerary, selected
                   </div>
                 ))}
               </div>
+              {manageSubscriptionUrl && (
+                <a
+                  href={manageSubscriptionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200 text-center"
+                >
+                  Manage Subscription
+                </a>
+              )}
               <button
                 onClick={() => setIsUpdatePasswordModalOpen(true)}
                 className="mt-4 py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200"

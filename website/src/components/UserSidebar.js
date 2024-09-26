@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { signOut } from 'aws-amplify/auth';
 import UpdatePasswordModal from './UpdatePasswordModal';
-// import { useAuthenticator } from '@aws-amplify/ui-react';
 
 const UserSidebar = ({ isOpen, onClose, userInfo }) => {
   const [isUpdatePasswordModalOpen, setIsUpdatePasswordModalOpen] = useState(false);
-  // const { user } = useAuthenticator((context) => [context.user]);
 
   if (!isOpen) return null;
 
@@ -17,6 +15,8 @@ const UserSidebar = ({ isOpen, onClose, userInfo }) => {
       console.error('Error signing out: ', error);
     }
   };
+
+  const manageSubscriptionUrl = process.env.REACT_APP_STRIPE_MANAGE_URL;
 
   return (
     <>
@@ -47,6 +47,18 @@ const UserSidebar = ({ isOpen, onClose, userInfo }) => {
                     <p><strong>Credits:</strong> {userInfo.credits}</p>
                     {/* Add more user information as needed */}
                   </div>
+                  
+                  {/* Manage Subscription Link */}
+                  {manageSubscriptionUrl && (
+                    <a
+                      href={manageSubscriptionUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-6 block w-full text-center bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Manage Subscription
+                    </a>
+                  )}
                   
                   {/* Update Password Button */}
                   <button
