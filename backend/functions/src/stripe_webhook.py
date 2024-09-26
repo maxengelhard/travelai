@@ -163,8 +163,8 @@ def lambda_handler(event,context):
                             
                             # Insert new user
                             insert_query = """
-                            INSERT INTO users (email, status, stripe_customer_id, plan_type, is_pro)
-                            VALUES (%s, 'pre', %s, %s, %s)
+                            INSERT INTO users (email, status, stripe_customer_id, plan_type, is_pro, credits)
+                            VALUES (%s, 'pre', %s, %s, %s, 1000)
                             """
                             cur.execute(insert_query, (email, customer_id, plan_type, is_pro))
                             print(f"Inserted new user with plan {plan_type} for customer {customer_id}")
