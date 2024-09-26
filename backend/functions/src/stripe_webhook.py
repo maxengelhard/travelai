@@ -160,14 +160,13 @@ def lambda_handler(event,context):
                             # Fetch customer details from Stripe
                             stripe_customer = stripe.Customer.retrieve(customer_id)
                             email = stripe_customer.get('email', '')
-                            name = stripe_customer.get('name', '')
                             
                             # Insert new user
                             insert_query = """
-                            INSERT INTO users (email, status, stripe_customer_id, name, plan_type, is_pro)
+                            INSERT INTO users (email, status, stripe_customer_id, plan_type, is_pro)
                             VALUES (%s, 'pre', %s, %s, %s, %s)
                             """
-                            cur.execute(insert_query, (email, customer_id, name, plan_type, is_pro))
+                            cur.execute(insert_query, (email, customer_id, plan_type, is_pro))
                             print(f"Inserted new user with plan {plan_type} for customer {customer_id}")
                         else:
                             # Update existing user
