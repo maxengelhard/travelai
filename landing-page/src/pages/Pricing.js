@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const PricingOption = ({ title, price, credits, description, features, isPopular, monthly, stripeLink }) => (
+const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description, features, isPopular, stripeLink, isYearly }) => (
   <div className={`bg-gray-800 rounded-lg shadow-lg p-8 ${isPopular ? 'border-2 border-blue-400 relative' : ''}`}>
     {isPopular && (
       <span className="bg-blue-400 text-gray-900 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide absolute -top-3 right-3">
@@ -9,7 +9,13 @@ const PricingOption = ({ title, price, credits, description, features, isPopular
     )}
     <h3 className="text-2xl font-semibold mb-4 text-white">{title}</h3>
     <p className="text-5xl font-bold mb-6 text-blue-400">
-      ${price} <span className="text-sm font-normal text-gray-300">{monthly ? '/ month' : 'flat fee'}</span>
+      ${isYearly ? yearlyPrice : (monthlyPrice * 12)} 
+      <span className="text-sm font-normal text-gray-300">/ year</span>
+      {isYearly ? (
+        <span className="text-xl font-normal text-gray-500 line-through ml-2">${monthlyPrice * 12} / year</span>
+      ) : (
+        <span className="text-xl font-normal text-gray-300 ml-2">(${monthlyPrice} / month)</span>
+      )}
     </p>
     <p className="mb-4 text-lg text-gray-300">{credits}</p>
     <p className="mb-6 text-gray-400">{description}</p>
@@ -35,6 +41,12 @@ const PricingOption = ({ title, price, credits, description, features, isPopular
 );
 
 const Pricing = () => {
+  const [isYearly, setIsYearly] = useState(true);
+
+  const togglePricing = () => {
+    setIsYearly(!isYearly);
+  };
+
   return (
     <div className="bg-gray-900 min-h-screen py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -43,45 +55,53 @@ const Pricing = () => {
           Unlock the power of AI-driven travel planning with our flexible pricing options. 
           Whether you're an occasional traveler or a globetrotter, we have a plan for you.
         </p>
+        <div className="flex justify-center mb-8">
+          <button
+            onClick={togglePricing}
+            className={`px-4 py-2 rounded-l-lg ${isYearly ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'}`}
+          >
+            Yearly
+          </button>
+          <button
+            onClick={togglePricing}
+            className={`px-4 py-2 rounded-r-lg ${!isYearly ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'}`}
+          >
+            Monthly
+          </button>
+        </div>
         <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
           <PricingOption
             title="Pro"
-            price="10"
-            credits="1,000 credits / month"
-            description="Ideal for any traveler. Enjoy more credits each month for comprehensive trip planning."
+            yearlyPrice={60}
+            monthlyPrice={10}
+            credits={isYearly ? "12,000 credits / year" : "1,000 credits / month"}
+            description="Ideal for any traveler. Enjoy more credits each year for comprehensive trip planning."
             isPopular={true}
-            monthly={true}
-            stripeLink={process.env.REACT_APP_STRIPE_PRO_URL}
+            stripeLink={isYearly ? process.env.REACT_APP_STRIPE_PRO_YEARLY_URL : process.env.REACT_APP_STRIPE_PRO_URL}
             features={[
-              // "Personalized experiences tailoring",
               "Custom travel themes",
               "Edit your itinerary",
               "Create new itineraries",
               "Cost breakdowns",
               "Downloadable itineraries",
-              // "Hotel / Airbnb recommendations",
-              // "Local events and festivals integration",
-              // "Restaurant reservations assistance",
-              // "Public transportation guidance"
             ]}
+            isYearly={isYearly}
           />
           <PricingOption
             title="Jet Setter"
-            price="100"
-            credits="100,000 credits / month"
+            yearlyPrice={600}
+            monthlyPrice={100}
+            credits={isYearly ? "1,200,000 credits / year" : "100,000 credits / month"}
             description="For the ultimate travel enthusiasts. Unlimited planning possibilities."
-            monthly={true}
-            stripeLink={process.env.REACT_APP_STRIPE_JET_SETTER_URL}
+            isPopular={false}
+            stripeLink={isYearly ? process.env.REACT_APP_STRIPE_JETSETTER_YEARLY_URL : process.env.REACT_APP_STRIPE_JET_SETTER_URL}
             features={[
               "All Pro features",
               "Priority customer support",
               "VIP experiences access",
               "Multi-city trip planning",
-              // "Real-time itinerary adjustments",
-              // "Multi-city trip planning",
-              // "Exclusive partner discounts",
-              // "Travel insurance recommendations"
             ]}
+            isYearly={isYearly}
           />
         </div>
       </div>
