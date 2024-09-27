@@ -133,6 +133,7 @@ def lambda_handler(event,context):
         
         plan_type = None
         is_pro = False
+        is_yearly = False
         
         if 'pro' in description:
             plan_type = 'pro'
@@ -141,6 +142,16 @@ def lambda_handler(event,context):
             plan_type = 'jet setter'
             is_pro = True
         
+        if 'yearly' in description:
+            is_yearly = True
+
+        credits = 1000
+        if plan_type == 'jet setter':
+            credits = 20000
+
+        if is_yearly:
+            credits *= 12
+
         if plan_type:
             try:
                 with psycopg2.connect(
@@ -163,19 +174,19 @@ def lambda_handler(event,context):
                             
                             # Insert new user
                             insert_query = """
-                            INSERT INTO users (email, status, stripe_customer_id, plan_type, is_pro, credits)
-                            VALUES (%s, 'pre', %s, %s, %s, 1000)
+                            INSERT INTO users (email, status, stripe_customer_id, plan_type, is_pro, credits, is_yearly)
+                            VALUES (%s, 'pre', %s, %s, %s, %s, %s)
                             """
-                            cur.execute(insert_query, (email, customer_id, plan_type, is_pro))
+                            cur.execute(insert_query, (email, customer_id, plan_type, is_pro, credits, is_yearly))
                             print(f"Inserted new user with plan {plan_type} for customer {customer_id}")
                         else:
                             # Update existing user
                             update_query = """
                             UPDATE users 
-                            SET plan_type = %s, is_pro = %s
+                            SET plan_type = %s, is_pro = %s, credits = %s, is_yearly = %s
                             WHERE stripe_customer_id = %s
                             """
-                            cur.execute(update_query, (plan_type, is_pro, customer_id))
+                            cur.execute(update_query, (plan_type, is_pro, credits, is_yearly, customer_id))
                             print(f"Updated user plan to {plan_type} for customer {customer_id}")
                         
                         conn.commit()

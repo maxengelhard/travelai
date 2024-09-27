@@ -134,7 +134,7 @@ const Pricing = () => {
             title="Jet Setter"
             yearlyPrice={499}
             monthlyPrice={83.33}
-            credits={isYearly ? "1,200,000 credits / year" : "100,000 credits / month"}
+            credits={isYearly ? "240,000 credits / year" : "20,000 credits / month"}
             description="For the ultimate travel enthusiasts. Unlimited planning possibilities."
             isPopular={false}
             yearlyStripeLink={stripeLinks.jetSetterYearly}
