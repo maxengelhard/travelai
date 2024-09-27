@@ -269,7 +269,7 @@ def lambda_handler(event,context):
                         # Update existing user
                         update_query = """
                         UPDATE users 
-                        SET stripe_customer_id = %s, credits = COALESCE(credits, 0) + 1000
+                        SET stripe_customer_id = %s
                         WHERE email = %s
                         """
                         cur.execute(update_query, (stripe_customer, customer_email))
