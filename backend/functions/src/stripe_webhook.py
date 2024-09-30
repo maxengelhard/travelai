@@ -315,12 +315,12 @@ def lambda_handler(event,context):
                         cur.execute(delete_query, (stripe_customer,))
                         
                         # Delete from the other table using the email
-                        other_table_delete_query = "DELETE FROM itineraries WHERE email = %s"
+                        other_table_delete_query = "DELETE FROM itinerarys WHERE email = %s"
                         cur.execute(other_table_delete_query, (email,))
                         
                         conn.commit()
                         
-                        print(f"Deleted user with email {email} from users and itineraries")
+                        print(f"Deleted user with email {email} from users and itinerarys")
                         # Delete user from Cognito
                         try:
                             cognito_client.admin_delete_user(
