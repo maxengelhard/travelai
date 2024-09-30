@@ -53,7 +53,16 @@ function App() {
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Error fetching user info:', error);
-      if (error.name === 'UserUnAuthenticatedException' || error.name === 'NotAuthorizedException' || error.name === 'UserNotFoundException') {
+      let errorMessage;
+      if (error.body) {
+        try {
+          const errorBody = JSON.parse(error.body);
+          errorMessage = errorBody.error;
+        } catch (e) {
+          console.error('Error parsing error body:', e);
+        }
+      }
+      if (error.name === 'UserUnAuthenticatedException' || error.name === 'NotAuthorizedException' || error.name === 'UserNotFoundException' || errorMessage === 'User not found') {
         console.log('User is not authenticated. Redirecting to login...');
         await handleSignOut();
         setIsAuthenticated(false);
