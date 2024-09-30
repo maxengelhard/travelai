@@ -321,23 +321,27 @@ def lambda_handler(event,context):
                         conn.commit()
                         
                         print(f"Deleted user with email {email} from users and itinerarys")
-                        # Delete user from Cognito
-                        try:
-                            cognito_client.admin_delete_user(
-                                UserPoolId=USER_POOL_ID,
-                                Username=email
-                            )
-                            print(f"Deleted user {email} from Cognito user pool")
-                        except cognito_client.exceptions.UserNotFoundException:
-                            print(f"User {email} not found in Cognito user pool")
-                        except Exception as e:
-                            print(f"Error deleting user from Cognito: {str(e)}")
+                        
 
                     else:
                         print(f"No user found with stripe_customer_id {stripe_customer}")
-
+        
         except (Exception, psycopg2.DatabaseError) as error:
             print(error)
+        
+        # Delete user from Cognito
+        try:
+            cognito_client.admin_delete_user(
+                UserPoolId=USER_POOL_ID,
+                Username=email
+            )
+            print(f"Deleted user {email} from Cognito user pool")
+        except cognito_client.exceptions.UserNotFoundException:
+            print(f"User {email} not found in Cognito user pool")
+        except Exception as e:
+            print(f"Error deleting user from Cognito: {str(e)}")
+
+        
         
     return {
         'statusCode': 200,
