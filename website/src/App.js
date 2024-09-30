@@ -127,6 +127,8 @@ function App() {
   const handleAuthStateChange = (state) => {
     if (state === 'signedIn') {
       setIsAuthenticated(true);
+      fetchUserInfo();
+      fetchPreviousItineraries();
     } else {
       setIsAuthenticated(false);
       setUserInfo(null);
