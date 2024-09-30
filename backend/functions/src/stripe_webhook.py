@@ -288,6 +288,8 @@ def lambda_handler(event,context):
             raise e
 
     if payload['type'] == 'customer.subscription.deleted':
+        print('customer.subscription.deleted')
+        print(payload)
         stripe_customer = payload['data']['object']['customer']
 
         try:
