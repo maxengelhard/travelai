@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { signOut } from 'aws-amplify/auth';
 import UpdatePasswordModal from './UpdatePasswordModal';
 
-const UserSidebar = ({ isOpen, onClose, userInfo }) => {
+const UserSidebar = ({ isOpen, onClose, userInfo, onSignOut }) => {
   const [isUpdatePasswordModalOpen, setIsUpdatePasswordModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
   const handleLogout = async () => {
     try {
-      await signOut();
-      localStorage.removeItem('selectedItineraryId');
+      await onSignOut();
       onClose(); // Close the sidebar
     } catch (error) {
       console.error('Error signing out: ', error);
