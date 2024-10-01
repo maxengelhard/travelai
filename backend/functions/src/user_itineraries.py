@@ -61,34 +61,27 @@ def lambda_handler(event, context):
             """, (email,))   
             columns = [desc[0] for desc in cur.description]
             results = cur.fetchall()
+            
+            itineraries = []
             if results:
-                itineraries = []
                 for result in results:
                     itinerary = dict(zip(columns, result))
-                    for key, value in itinerary.items():
-                        if isinstance(value, datetime):
-                            itinerary[key] = value.isoformat()
-                        elif key == 'themes' and value is not None:
-                            itinerary[key] = list(value)  # Convert array to list
-                    itineraries.append(itinerary)
-                
-                return {
-                    'statusCode': 200,
-                    'body': itineraries,
-                    'headers': {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    }
+                for key, value in itinerary.items():
+                    if isinstance(value, datetime):
+                        itinerary[key] = value.isoformat()
+                    elif key == 'themes' and value is not None:
+                        itinerary[key] = list(value)  # Convert array to list
+                itineraries.append(itinerary)
+            
+            return {
+                'statusCode': 200,
+                'body': itineraries,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
                 }
-            else:
-                return {
-                    'statusCode': 404,
-                    'body': json.dumps({'error': 'No itineraries found for this user'}),
-                    'headers': {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    }
-                }
+            }
+            
     except psycopg2.Error as e:
         print(f"Database error: {e}")
         return {

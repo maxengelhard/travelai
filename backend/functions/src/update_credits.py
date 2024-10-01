@@ -22,39 +22,46 @@ def update_credits():
         with conn.cursor() as cur:
             today = datetime.now(pytz.utc)
             
-            # Handle the case for the last day of the month
-            if today.day == today.replace(day=1) + timedelta(days=32) - timedelta(days=1).day:
-                # It's the last day of the month
-                cur.execute("""
-                    UPDATE users
-                    SET credits = CASE
-                        WHEN plan_type = 'pro' THEN credits + 1000
-                        WHEN plan_type = 'jet_setter' THEN credits + 100000
-                        ELSE credits
-                    END,
-                    last_credit_update = %s
-                    WHERE (EXTRACT(DAY FROM created_at) >= 29 OR EXTRACT(DAY FROM created_at) = 1)
-                    AND (last_credit_update IS NULL OR last_credit_update < %s)
-                """, (today, today.replace(day=1)))
-            else:
-                # Regular day of the month
-                cur.execute("""
-                    UPDATE users
-                    SET credits = CASE
-                        WHEN plan_type = 'pro' THEN credits + 1000
-                        WHEN plan_type = 'jet_setter' THEN credits + 100000
-                        ELSE credits
-                    END,
-                    last_credit_update = %s
-                    WHERE EXTRACT(DAY FROM created_at) = %s
-                    AND (last_credit_update IS NULL OR last_credit_update < %s)
-                """, (today, today.day, today.replace(day=1)))
+            # Update monthly subscribers
+            cur.execute("""
+                UPDATE users
+                SET credits = CASE
+                    WHEN plan_type = 'pro' THEN credits + 1000
+                    WHEN plan_type = 'jet_setter' THEN credits + 20000
+                    ELSE credits
+                END,
+                last_credit_update = %s
+                WHERE NOT is_yearly
+                AND (
+                    (EXTRACT(DAY FROM created_at) = %s)
+                    OR (EXTRACT(DAY FROM created_at) >= 29 AND %s = 1)
+                )
+                AND (last_credit_update IS NULL OR last_credit_update < %s)
+            """, (today, today.day, today.day, today.replace(day=1)))
 
-            users_updated = cur.rowcount
+            monthly_users_updated = cur.rowcount
+
+            # Update yearly subscribers
+            cur.execute("""
+                UPDATE users
+                SET credits = CASE
+                    WHEN plan_type = 'pro' THEN credits + 12000
+                    WHEN plan_type = 'jet_setter' THEN credits + 240000
+                    ELSE credits
+                END,
+                last_credit_update = %s
+                WHERE is_yearly
+                AND EXTRACT(DOY FROM created_at) = EXTRACT(DOY FROM %s)
+                AND (last_credit_update IS NULL OR last_credit_update < %s - INTERVAL '1 year')
+            """, (today, today, today))
+
+            yearly_users_updated = cur.rowcount
+
             conn.commit()
 
             return {
-                'users_updated': users_updated,
+                'monthly_users_updated': monthly_users_updated,
+                'yearly_users_updated': yearly_users_updated,
                 'timestamp': today.isoformat()
             }
     except psycopg2.Error as e:

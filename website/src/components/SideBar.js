@@ -86,7 +86,7 @@ const SideBar = ({onSelectItinerary,selectedItineraryId, previousItineraries }) 
       //     />
       //   </div>
       // </div> */}
-      <aside className="w-64 bg-gray-100 p-6 overflow-auto relative">
+      <aside className="w-64 bg-gray-100 h-screen p-6 overflow-auto relative">
       <h2 className="text-lg font-semibold mb-4">Previous Itineraries</h2>
       {previousItineraries.length > 0 ? (
         <div className="space-y-4">

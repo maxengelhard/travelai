@@ -1,21 +1,25 @@
 import React, { useState } from 'react';
-import { signOut } from 'aws-amplify/auth';
 import UpdatePasswordModal from './UpdatePasswordModal';
-// import { useAuthenticator } from '@aws-amplify/ui-react';
 
-const UserSidebar = ({ isOpen, onClose, userInfo }) => {
+const UserSidebar = ({ isOpen, onClose, userInfo, onSignOut }) => {
   const [isUpdatePasswordModalOpen, setIsUpdatePasswordModalOpen] = useState(false);
-  // const { user } = useAuthenticator((context) => [context.user]);
 
   if (!isOpen) return null;
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      await onSignOut();
       onClose(); // Close the sidebar
     } catch (error) {
       console.error('Error signing out: ', error);
     }
+  };
+
+  const manageSubscriptionUrl = process.env.REACT_APP_STRIPE_MANAGE_URL;
+
+  const handleManageSubscription = () => {
+    localStorage.removeItem('selectedItineraryId');
+    window.open(manageSubscriptionUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -47,6 +51,16 @@ const UserSidebar = ({ isOpen, onClose, userInfo }) => {
                     <p><strong>Credits:</strong> {userInfo.credits}</p>
                     {/* Add more user information as needed */}
                   </div>
+                  
+                  {/* Manage Subscription Link */}
+                  {manageSubscriptionUrl && (
+                  <button
+                    onClick={handleManageSubscription}
+                    className="mt-6 block w-full text-center bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Manage Subscription
+                  </button>
+                )}
                   
                   {/* Update Password Button */}
                   <button

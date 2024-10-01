@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Authenticator, ThemeProvider, View, Text, Heading, Button, TextField,Image,Flex, useTheme , Card, useAuthenticator} from '@aws-amplify/ui-react';
 import { resetPassword, confirmResetPassword } from 'aws-amplify/auth';
 import '@aws-amplify/ui-react/styles.css';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 
 const Header = () => (
@@ -181,12 +182,22 @@ const cardStyles = {
   );
 };
 
-const AuthenticatedContent = ({ children }) => {
-  const { user, signOut } = useAuthenticator((context) => [context.user, context.signOut]);
-  return typeof children === 'function' ? children({ user, signOut }) : children;
+const AuthenticatedContent = ({ children, onStateChange }) => {
+  const { authStatus, user } = useAuthenticator((context) => [context.authStatus, context.user]);
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (authStatus === 'authenticated' && user) {
+      console.log('User authenticated, redirecting to itinerary-creation');
+      onStateChange('signedIn');
+      navigate('/itinerary-creation');
+    }
+  }, [authStatus, user, onStateChange, navigate]);
+
+  return null;
 };
 
-const StyledAuthenticator = ({ children }) => {
+const StyledAuthenticator = ({ onStateChange }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const theme = {
@@ -260,7 +271,7 @@ const StyledAuthenticator = ({ children }) => {
             components={components}
             loginMechanisms={['email']}
           >
-            <AuthenticatedContent>{children}</AuthenticatedContent>
+            <AuthenticatedContent onStateChange={onStateChange}></AuthenticatedContent>
           </Authenticator>
         )}
       </Authenticator.Provider>

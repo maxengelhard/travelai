@@ -126,19 +126,14 @@ def lambda_handler(event,context):
     if payload['type'] == 'invoice.payment_succeeded':
         payload_object = payload['data']['object'] 
         invoice_id = payload_object['id']
-
-        # update the user table depending on the plan
-        # if the plan is pro, update the plan_type to pro
-        # if the plan is jet setter, update the plan_type to jet setter
         customer_id = payload_object['customer']
-        # Extract the description from the first line item
         description = payload_object['lines']['data'][0]['description'].lower()
-        print('customer id')
-        print(customer_id)
-        print('description')
-        print(description)
+        print('customer id:', customer_id)
+        print('description:', description)
+        
         plan_type = None
         is_pro = False
+        is_yearly = False
         
         if 'pro' in description:
             plan_type = 'pro'
@@ -147,6 +142,16 @@ def lambda_handler(event,context):
             plan_type = 'jet setter'
             is_pro = True
         
+        if 'yearly' in description:
+            is_yearly = True
+
+        credits = 1000
+        if plan_type == 'jet setter':
+            credits = 20000
+
+        if is_yearly:
+            credits *= 12
+
         if plan_type:
             try:
                 with psycopg2.connect(
@@ -158,20 +163,36 @@ def lambda_handler(event,context):
                     sslmode='require') as conn:
 
                     with conn.cursor() as cur:
-                        # Update the user's plan type and is_pro status
-                        update_query = """
-                        UPDATE users 
-                        SET plan_type = %s, is_pro = %s
-                        WHERE stripe_customer_id = %s
-                        """
-                        cur.execute(update_query, (plan_type, is_pro, customer_id))
+                        # Check if user exists
+                        cur.execute("SELECT * FROM users WHERE stripe_customer_id = %s", (customer_id,))
+                        update_user = cur.fetchone()
+                        
+                        if update_user is None:
+                            # Fetch customer details from Stripe
+                            stripe_customer = stripe.Customer.retrieve(customer_id)
+                            email = stripe_customer.get('email', '')
+                            
+                            # Insert new user
+                            insert_query = """
+                            INSERT INTO users (email, status, stripe_customer_id, plan_type, is_pro, credits, is_yearly)
+                            VALUES (%s, 'pre', %s, %s, %s, %s, %s)
+                            """
+                            cur.execute(insert_query, (email, customer_id, plan_type, is_pro, credits, is_yearly))
+                            print(f"Inserted new user with plan {plan_type} for customer {customer_id}")
+                        else:
+                            # Update existing user
+                            update_query = """
+                            UPDATE users 
+                            SET plan_type = %s, is_pro = %s, credits = %s, is_yearly = %s
+                            WHERE stripe_customer_id = %s
+                            """
+                            cur.execute(update_query, (plan_type, is_pro, credits, is_yearly, customer_id))
+                            print(f"Updated user plan to {plan_type} for customer {customer_id}")
+                        
                         conn.commit()
-
-                        print(f"Updated user plan to {plan_type} for customer {customer_id}")
 
             except (Exception, psycopg2.DatabaseError) as error:
                 print(f"Error updating user plan: {error}")
-
 
         # try:
         #     # Retrieve the invoice
@@ -232,18 +253,32 @@ def lambda_handler(event,context):
                 sslmode='require') as conn:
 
                 with conn.cursor() as cur:
-                    # Add 1000 credits to the user's account
-                    query = """
-                    UPDATE users 
-                    SET stripe_customer_id = %s, credits = COALESCE(credits, 0) + 1000
-                    WHERE email = %s
-                    """
-                    cur.execute(query, (stripe_customer, customer_email,))
+                    # Check if user exists
+                    cur.execute("SELECT * FROM users WHERE email = %s", (customer_email,))
+                    update_user = cur.fetchone()
+                    
+                    if update_user is None:
+                        # Insert new user
+                        insert_query = """
+                        INSERT INTO users (email, status, stripe_customer_id, credits)
+                        VALUES (%s, 'pre', %s, %s, 1000)
+                        """
+                        cur.execute(insert_query, (customer_email, stripe_customer))
+                        print(f"Inserted new user data for email {customer_email}")
+                    else:
+                        # Update existing user
+                        update_query = """
+                        UPDATE users 
+                        SET stripe_customer_id = %s
+                        WHERE email = %s
+                        """
+                        cur.execute(update_query, (stripe_customer, customer_email))
+                        print(f"Updated user data for email {customer_email}")
+                    
                     conn.commit()
 
-
         except (Exception, psycopg2.DatabaseError) as error:
-            print(error)
+            print(f"Error updating user data: {error}")
 
         try:
             temp_password = generate_temp_password()
@@ -253,6 +288,8 @@ def lambda_handler(event,context):
             raise e
 
     if payload['type'] == 'customer.subscription.deleted':
+        print('customer.subscription.deleted')
+        print(payload)
         stripe_customer = payload['data']['object']['customer']
 
         try:
@@ -278,12 +315,12 @@ def lambda_handler(event,context):
                         cur.execute(delete_query, (stripe_customer,))
                         
                         # Delete from the other table using the email
-                        other_table_delete_query = "DELETE FROM other_table_name WHERE email = %s"
+                        other_table_delete_query = "DELETE FROM itinerarys WHERE email = %s"
                         cur.execute(other_table_delete_query, (email,))
                         
                         conn.commit()
                         
-                        print(f"Deleted user with email {email} from users and other_table_name")
+                        print(f"Deleted user with email {email} from users and itinerarys")
                         # Delete user from Cognito
                         try:
                             cognito_client.admin_delete_user(
@@ -318,7 +355,7 @@ def create_or_update_cognito_user(email, plan_type,temp_password):
     try:
         # Check if the user already exists
         try:
-            user = cognito_client.admin_get_user(
+            cognito_user = cognito_client.admin_get_user(
                 UserPoolId=USER_POOL_ID,
                 Username=email
             )

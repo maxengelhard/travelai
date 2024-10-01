@@ -21,10 +21,18 @@ const BurgerMenu = ({ userInfo, previousItineraries, onSelectItinerary, selected
   const handleSignOut = async () => {
     try {
       await signOut();
+      localStorage.removeItem('selectedItineraryId');
       navigate('/'); // Redirect to the home page or login page after sign out
     } catch (error) {
       console.error('Error signing out: ', error);
     }
+  };
+
+  const manageSubscriptionUrl = process.env.REACT_APP_STRIPE_MANAGE_URL;
+
+  const handleManageSubscription = () => {
+    localStorage.removeItem('selectedItineraryId');
+    window.open(manageSubscriptionUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -68,6 +76,14 @@ const BurgerMenu = ({ userInfo, previousItineraries, onSelectItinerary, selected
                   </div>
                 ))}
               </div>
+              {manageSubscriptionUrl && (
+                  <button
+                    onClick={handleManageSubscription}
+                    className="mt-6 block w-full text-center bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Manage Subscription
+                  </button>
+                )}
               <button
                 onClick={() => setIsUpdatePasswordModalOpen(true)}
                 className="mt-4 py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200"

@@ -1,10 +1,17 @@
 import React, { useState , useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Import components
 import TravelForm from '../components/TravelForm';
 import Itinerary from '../components/Itinerary';
 import Navigation from '../components/Navigation';
 import Testimonial from '../components/Testimonial';
 import ItineraryExamples from '../components/ItineraryExamples';
+import ExitIntentModal from '../components/ExitIntentModal';
+import HowItWorks from '../components/HowItWorks';
+
+// Import pricing
+import Pricing from './Pricing';
 
 const backgroundImages = [
   'https://travel-ai-s3.s3.amazonaws.com/travel_images/destination1.jpg',
@@ -27,12 +34,11 @@ const backgroundImages = [
 
 const styles = `
   .netflix-background {
-    position: absolute;
-    top: -10%;
-    left: -10%;
-    right: -10%;
-    bottom: -10%;
-    transform: rotate(10deg) scale(1.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow: hidden;
     background-color: black;
   }
@@ -49,12 +55,16 @@ const styles = `
    
   .netflix-scroll {
     display: flex;
-    animation: scroll 60s linear infinite;
+    animation: scroll 120s linear infinite;
+    width: 300vw;
+    height: 200vh;
+    transform: rotate(-5deg) translateY(-10%);
   }
 
   .netflix-scroll-content {
     display: flex;
     flex-wrap: wrap;
+    height: 100%;
   }
 
   .netflix-thumbnail {
@@ -64,7 +74,7 @@ const styles = `
     background-position: center;
     margin: 5px;
     border-radius: 10px;
-    opacity: 1;
+    opacity: 0.9;
     transition: opacity 0.3s ease;
   }
 
@@ -74,17 +84,21 @@ const styles = `
 
   @keyframes scroll {
     0% {
-      transform: translateX(0);
+      transform: rotate(5deg) translateY(-10%) translateX(0);
     }
     100% {
-      transform: translateX(-50%);
+      transform: rotate(5deg) translateY(-10%) translateX(-50%);
     }
   }
 
-    @media (max-width: 768px) {
+  @media (max-width: 768px) {
     .netflix-thumbnail {
       width: 100px;
       height: 100px;
+    }
+    .netflix-scroll {
+      width: 400vw;
+      height: 300vh;
     }
   }
 `;
@@ -259,10 +273,10 @@ function Home() {
                 Save time and money by using our AI travel planner instead of hiring an expensive travel agent!
               </p>
             </div>
-            <div className="w-full lg:w-2/5 bg-white bg-opacity-90 p-6 lg:p-8 rounded-lg shadow-lg">
-            <h2 className="text-2xl lg:text-3xl font-bold mb-4 text-gray-800">Plan Your Trip</h2>
-            <TravelForm onSubmit={generateItinerary} isGenerationComplete={isGenerationComplete} />
-            {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
+            <div className="w-full lg:w-2/5 bg-blue-600 p-6 lg:p-8 rounded-lg shadow-2xl">
+              <h2 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-100 text-center">Plan Your Dream Trip</h2>
+              <TravelForm onSubmit={generateItinerary} isGenerationComplete={isGenerationComplete} />
+              {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
             {error && (
                 <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
                 <p>{error}</p>
@@ -303,7 +317,17 @@ function Home() {
         <div className="z-20 relative w-full bg-black bg-opacity-75 py-16">
           <Testimonial />
         </div>
+        <div className="z-20 relative w-full">
+          <HowItWorks />
+        </div>
+        <ExitIntentModal />
       </div>
+      <div className="z-20 relative w-full bg-gray-100 py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">Our Pricing Plans</h2>
+            <Pricing />
+          </div>
+        </div>
     </>
   );
 }
