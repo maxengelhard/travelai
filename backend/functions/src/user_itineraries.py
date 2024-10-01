@@ -61,6 +61,8 @@ def lambda_handler(event, context):
             """, (email,))   
             columns = [desc[0] for desc in cur.description]
             results = cur.fetchall()
+
+            print(results)
             
             itineraries = []
             if results:
