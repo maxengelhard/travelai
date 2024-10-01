@@ -29,7 +29,7 @@ const ChatButton = () => {
     setSuccess(false);
 
     try {
-      await API.post('email-question', { question: question });
+      await API.post('email-question', { data: { question: question } });
       setSuccess(true);
       setQuestion('');
     } catch (err) {
