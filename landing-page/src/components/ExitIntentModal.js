@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const ExitIntentModal = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -7,7 +8,12 @@ const ExitIntentModal = () => {
   const [destination, setDestination] = useState('');
   const [days, setDays] = useState('');
   const [budget, setBudget] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [itinerary, setItinerary] = useState(null);
+  const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
   const modalRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let lastY = 0;
@@ -26,11 +32,49 @@ const ExitIntentModal = () => {
     };
   }, [isVisible]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log({ email, destination, days, budget });
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/itinerary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          destination,
+          days,
+          budget,
+          email,
+        })
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        const errorBody = JSON.parse(responseData.body);
+        throw new Error(errorBody.error || 'An error occurred');
+      }
+
+      setItinerary(responseData.itinerary);
+      setShowPaymentPrompt(true);
+    } catch (error) {
+      console.error("Error generating itinerary:", error);
+      
+      if (error.message === 'Email already in the system') {
+        setError("This email is already registered. Please log in or sign up to continue.");
+      } else {
+        setError("Sorry, there was an error generating your itinerary. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNavigateToPricing = () => {
     setIsVisible(false);
+    navigate('/pricing');
   };
 
   const handleOutsideClick = (e) => {
@@ -83,60 +127,92 @@ const ExitIntentModal = () => {
             {/* Right side - Form */}
             <div className="w-1/2 pl-6">
               <h2 className="text-2xl font-bold mb-4">Plan Your Dream Trip</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
-                  />
+              {!isLoading && !itinerary && (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="destination" className="block text-sm font-medium text-gray-700">Destination</label>
+                    <input
+                      type="text"
+                      id="destination"
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="days" className="block text-sm font-medium text-gray-700">Number of Days</label>
+                    <input
+                      type="number"
+                      id="days"
+                      value={days}
+                      onChange={(e) => setDays(e.target.value)}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                      required
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="budget" className="block text-sm font-medium text-gray-700">Budget</label>
+                    <input
+                      type="number"
+                      id="budget"
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                      required
+                      min="0"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Creating...' : 'Create My Itinerary'}
+                  </button>
+                </form>
+              )}
+              {isLoading && (
+                <div className="text-center">
+                  <p>Generating your itinerary...</p>
+                  {/* You can add a loading spinner here if you want */}
                 </div>
-                <div>
-                  <label htmlFor="destination" className="block text-sm font-medium text-gray-700">Destination</label>
-                  <input
-                    type="text"
-                    id="destination"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
-                  />
+              )}
+              {error && (
+                <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
+                  <p>{error}</p>
                 </div>
+              )}
+              {itinerary && (
                 <div>
-                  <label htmlFor="days" className="block text-sm font-medium text-gray-700">Number of Days</label>
-                  <input
-                    type="number"
-                    id="days"
-                    value={days}
-                    onChange={(e) => setDays(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
-                    min="1"
-                  />
+                  <h3 className="text-xl font-bold mb-2">Your Itinerary Preview:</h3>
+                  {/* Display a preview of the itinerary here */}
+                  <p>{itinerary[0].description}</p>
                 </div>
-                <div>
-                  <label htmlFor="budget" className="block text-sm font-medium text-gray-700">Budget</label>
-                  <input
-                    type="number"
-                    id="budget"
-                    value={budget}
-                    onChange={(e) => setBudget(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
-                    min="0"
-                  />
+              )}
+              {showPaymentPrompt && (
+                <div className="mt-4 p-4 bg-blue-100 rounded">
+                  <p className="mb-2">Check your email for the itinerary! Want to see the full itinerary? Sign up to unlock all days!</p>
+                  <button
+                    onClick={handleNavigateToPricing}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    View Pricing
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
-                >
-                  Create My Itinerary
-                </button>
-              </form>
+              )}
             </div>
 
             <button
