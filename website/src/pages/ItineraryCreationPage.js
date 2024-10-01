@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getCurrentUser, fetchUserAttributes } from '@aws-amplify/auth';
 import API from '../services/API';
+import { useNavigate } from 'react-router-dom';
+
 
 import Header from '../components/Header';
 import SideBar from '../components/SideBar';
@@ -18,6 +20,13 @@ function ItineraryCreationPage({ onSignOut }) {
   const [selectedItinerary, setSelectedItinerary] = useState(null);
   const [previousItineraries, setPreviousItineraries] = useState([]);
   const [isUserSidebarOpen, setIsUserSidebarOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleAuthError = useCallback(async () => {
+    await onSignOut();
+    navigate('/login');
+  }, [onSignOut, navigate]);
 
   const fetchUserInfo = useCallback(async (itineraryId = null) => {
     try {
@@ -39,11 +48,11 @@ function ItineraryCreationPage({ onSignOut }) {
       }
     } catch (error) {
       console.error('Error fetching user info:', error);
-      setError('Failed to fetch user information. Please try again later.');
+      await handleAuthError();
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [handleAuthError]);
 
   const fetchPreviousItineraries = useCallback(async () => {
     setLoading(true);
@@ -53,16 +62,26 @@ function ItineraryCreationPage({ onSignOut }) {
       setPreviousItineraries(response.data.body);
     } catch (err) {
       console.error('Error fetching previous itineraries:', err);
-      setError('Failed to load previous itineraries');
+      await handleAuthError();
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [handleAuthError]);
 
   useEffect(() => {
-    fetchUserInfo();
-    fetchPreviousItineraries();
-  }, [fetchUserInfo, fetchPreviousItineraries]);
+    const fetchData = async () => {
+      try {
+        await fetchUserInfo();
+        await fetchPreviousItineraries();
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        await handleAuthError();
+      }
+    };
+
+    fetchData();
+  }, [fetchUserInfo, fetchPreviousItineraries, handleAuthError]);
+
 
   const handleSelectItinerary = async (itineraryId) => {
     localStorage.setItem('selectedItineraryId', itineraryId);
