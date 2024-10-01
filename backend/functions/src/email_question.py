@@ -4,10 +4,16 @@ from email.mime.text import MIMEText
 from email.utils import formataddr
 import os
 import json
+from lambda_decorators import cors_headers, load_json_body, json_http_resp
 
+
+@cors_headers
+@load_json_body
+@json_http_resp
 def lambda_handler(event, context):
     # Parse the incoming JSON
-    body = json.loads(event['body'])
+    print(event)
+    body = event.get('body', {})
     question = body['question']
     
     # Get the user's email from the JWT token
