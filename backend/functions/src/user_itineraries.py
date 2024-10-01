@@ -68,12 +68,12 @@ def lambda_handler(event, context):
             if results:
                 for result in results:
                     itinerary = dict(zip(columns, result))
-                for key, value in itinerary.items():
-                    if isinstance(value, datetime):
-                        itinerary[key] = value.isoformat()
-                    elif key == 'themes' and value is not None:
-                        itinerary[key] = list(value)  # Convert array to list
-                itineraries.append(itinerary)
+                    for key, value in itinerary.items():
+                        if isinstance(value, datetime):
+                            itinerary[key] = value.isoformat()
+                        elif key == 'themes' and value is not None:
+                            itinerary[key] = list(value)  # Convert array to list
+                    itineraries.append(itinerary)
             
             return {
                 'statusCode': 200,
