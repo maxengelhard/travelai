@@ -11,6 +11,8 @@ import ItineraryOptions from '../components/ItineraryOptions';
 import ItineraryGrid from '../components/ItineraryGrid';
 import UserSidebar from '../components/UserSidebar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ChatButton from '../components/ChatButton';  // Add this import
+
 
 function ItineraryCreationPage({ onSignOut }) {
   const [userInfo, setUserInfo] = useState(null);
@@ -161,6 +163,7 @@ function ItineraryCreationPage({ onSignOut }) {
           onSignOut={onSignOut}
         />
       </div>
+      <ChatButton />
     </div>
   );
 }
