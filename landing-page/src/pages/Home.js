@@ -103,6 +103,8 @@ const styles = `
   }
 `;
 
+const APP_URL = `https://${process.env.REACT_APP_DOMAIN_SUFFIX}.tripjourney.co`;
+
 function Home() {
   const [itinerary, setItinerary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -215,8 +217,11 @@ function Home() {
       console.error("Error generating itinerary:", error);
       
       if (error.message === 'Email already in the system') {
+        const loginUrl = `${APP_URL}/login`;
+        window.location.href = loginUrl;
         setError("This email is already registered.");
         setIsExistingUser(true);
+        
       } else {
         setError("Sorry, there was an error generating your itinerary. Please try again.");
       }

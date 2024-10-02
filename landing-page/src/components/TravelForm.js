@@ -115,6 +115,9 @@ function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
         >
           {isLoading ? 'Generating...' : 'Generate Itinerary'}
         </button>
+        <p className="text-sm text-center text-gray-300 mt-2">
+          If you already have an account, we'll log you in.
+        </p>
       </form>
       {isLoading && (
         <div className="text-center mt-4">
