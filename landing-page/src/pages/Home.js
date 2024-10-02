@@ -1,5 +1,5 @@
-import React, { useState , useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState , useEffect , useRef} from 'react';
+import { useNavigate, useLocation} from 'react-router-dom';
 
 // Import components
 import TravelForm from '../components/TravelForm';
@@ -9,7 +9,7 @@ import Testimonial from '../components/Testimonial';
 import ItineraryExamples from '../components/ItineraryExamples';
 import ExitIntentModal from '../components/ExitIntentModal';
 import HowItWorks from '../components/HowItWorks';
-
+import AIModelExplanation from '../components/AIModelExplanation';
 // Import pricing
 import Pricing from './Pricing';
 
@@ -103,6 +103,8 @@ const styles = `
   }
 `;
 
+const APP_URL = `https://${process.env.REACT_APP_DOMAIN_SUFFIX}.tripjourney.co`;
+
 function Home() {
   const [itinerary, setItinerary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -111,10 +113,18 @@ function Home() {
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [isGenerationComplete, setIsGenerationComplete] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const pricingRef = useRef(null);
 
   useEffect(() => {
     createThumbnails();
-  }, []);
+    const params = new URLSearchParams(location.search);
+    if (params.get('showPricing') === 'true') {
+      // Scroll to the pricing section
+      pricingRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+  }, [location]);
 
   const createThumbnails = () => {
     const scrollContainer = document.querySelector('.netflix-scroll');
@@ -215,8 +225,11 @@ function Home() {
       console.error("Error generating itinerary:", error);
       
       if (error.message === 'Email already in the system') {
+        const loginUrl = `${APP_URL}/login`;
+        window.location.href = loginUrl;
         setError("This email is already registered.");
         setIsExistingUser(true);
+        
       } else {
         setError("Sorry, there was an error generating your itinerary. Please try again.");
       }
@@ -273,8 +286,8 @@ function Home() {
                 Save time and money by using our AI travel planner instead of hiring an expensive travel agent!
               </p>
             </div>
-            <div className="w-full lg:w-2/5 bg-blue-600 p-6 lg:p-8 rounded-lg shadow-2xl">
-              <h2 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-100 text-center">Plan Your Dream Trip</h2>
+            <div className="w-full lg:w-2/5 bg-white p-6 lg:p-8 rounded-lg shadow-2xl">
+              <h2 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-700 text-center">Plan Your Dream Trip</h2>
               <TravelForm onSubmit={generateItinerary} isGenerationComplete={isGenerationComplete} />
               {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
             {error && (
@@ -320,14 +333,14 @@ function Home() {
         <div className="z-20 relative w-full">
           <HowItWorks />
         </div>
+        <div className="z-20 relative w-full">
+          <AIModelExplanation />
+        </div>
         <ExitIntentModal />
       </div>
-      <div className="z-20 relative w-full bg-gray-100 py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-8">Our Pricing Plans</h2>
-            <Pricing />
-          </div>
-        </div>
+      <div className="z-20 relative w-full bg-black py-16" ref={pricingRef}>
+        <Pricing />
+      </div>
     </>
   );
 }

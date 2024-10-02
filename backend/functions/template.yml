@@ -340,6 +340,46 @@ Resources:
             Resource: 
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*" 
 
+
+  EmailQuestion:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_email_question_${STAGE}"
+      Handler: email_question.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64      
+      Description: Email question to support
+      Environment:
+        Variables:
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /email-question
+            Method: post
+            Auth:
+              AddDefaultAuthorizerToCorsPreflight: false
+              Authorizer: CognitoAuthorizer
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup 
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"  
+
+
 ###### STRIPE ######
   StripeUserWebhook:
     Type: AWS::Serverless::Function

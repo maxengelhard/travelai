@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { FaArrowRight } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
 
-const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description, features, isPopular, yearlyStripeLink, monthlyStripeLink, isYearly }) => {
-  const stripeLink = isYearly ? yearlyStripeLink : monthlyStripeLink;
-  
+
+const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description, features, isPopular, yearlyStripeLink, monthlyStripeLink, isYearly , preFilledEmail}) => {
+  const stripeLinkNaked = isYearly ? yearlyStripeLink : monthlyStripeLink;
+  const monthsFreeSavings = 6; // Assuming 6 months free savings
+
+  // Add the pre_filled_email parameter to the Stripe link if it exists
+  const stripeLink = stripeLinkNaked && preFilledEmail
+    ? `${stripeLinkNaked}${stripeLinkNaked.includes('?') ? '&' : '?'}prefilled_email=${preFilledEmail}`
+    : stripeLinkNaked;
+
   return (
     <div className={`bg-gray-800 rounded-lg shadow-lg p-8 ${isPopular ? 'border-2 border-blue-400 relative' : ''}`}>
       {isPopular && (
@@ -11,33 +20,48 @@ const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description,
         </span>
       )}
       <h3 className="text-2xl font-semibold mb-4 text-white">{title}</h3>
-      <div className="flex items-end mb-6">
-        <div>
-          <p className="text-5xl font-bold text-blue-400">
-            ${isYearly ? yearlyPrice : monthlyPrice}
-            <span className="text-sm font-normal text-gray-300">
-              {isYearly ? ' / year' : ' / month'}
-            </span>
-          </p>
+      <div className="mb-6">
+        <div className="flex items-end mb-2">
+          <span className="text-5xl font-bold text-blue-400">$</span>
+          <span className="text-5xl font-bold text-blue-400">
+            {isYearly ? Math.round(yearlyPrice / 12) : monthlyPrice}
+          </span>
+          <span className="text-xl text-blue-400 ml-1 mb-1">per month</span>
         </div>
-        <div className="ml-4 text-left">
-          {isYearly ? (
+        <div className="flex flex-col">
+          {isYearly && (
             <>
-              <p className="text-xl font-normal text-gray-500 line-through">
-                ${Math.round(monthlyPrice * 12,2)} / year
+              <p className="text-lg font-semibold text-green-400">
+                {monthsFreeSavings}+ months free
               </p>
-              <p className="text-sm font-normal text-green-400">
-                50% discount
+              <p className="text-xl font-normal text-gray-300">
+                billed yearly ${yearlyPrice}
               </p>
             </>
-          ) : (
-            <p className="text-xl font-normal text-gray-300">
-              ${Math.round(monthlyPrice * 12,2)} / year
-            </p>
           )}
         </div>
       </div>
-      <p className="mb-4 text-lg text-gray-300">{credits}</p>
+      <a 
+        href={stripeLink || '#'}
+        className={`block w-full text-white text-center py-4 px-6 rounded-lg transition duration-300 text-lg font-semibold ${stripeLink ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-500 cursor-not-allowed'} flex items-center justify-center`}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => {
+          if (!stripeLink) {
+            e.preventDefault();
+            alert('Stripe link is not available at the moment. Please try again later.');
+          }
+        }}
+      >
+        {stripeLink ? (
+          <>
+            Subscribe <FaArrowRight className="ml-2" />
+          </>
+        ) : (
+          'Coming Soon'
+        )}
+      </a>
+      <p className="mt-6 mb-4 text-lg text-gray-300">{credits}</p>
       <p className="mb-6 text-gray-400">{description}</p>
       <ul className="mb-8 text-gray-300 space-y-3">
         {features.map((feature, index) => (
@@ -49,20 +73,6 @@ const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description,
           </li>
         ))}
       </ul>
-      <a 
-        href={stripeLink || '#'}
-        className={`block w-full text-white text-center py-3 rounded-lg transition duration-300 text-lg font-semibold ${stripeLink ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 cursor-not-allowed'}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => {
-          if (!stripeLink) {
-            e.preventDefault();
-            alert('Stripe link is not available at the moment. Please try again later.');
-          }
-        }}
-      >
-        {stripeLink ? 'Get Started' : 'Coming Soon'}
-      </a>
     </div>
   );
 };
@@ -76,6 +86,9 @@ const Pricing = () => {
     jetSetterMonthly: ''
   });
 
+  const [preFilledEmail, setPreFilledEmail] = useState('');
+  const location = useLocation();
+
   useEffect(() => {
     setStripeLinks({
       proYearly: process.env.REACT_APP_STRIPE_PRO_YEARLY_URL || '',
@@ -83,14 +96,21 @@ const Pricing = () => {
       jetSetterYearly: process.env.REACT_APP_STRIPE_JET_SETTER_YEARLY_URL || '',
       jetSetterMonthly: process.env.REACT_APP_STRIPE_JET_SETTER_URL || ''
     });
-  }, []);
+
+    // Get the pre_filled_email from URL parameters
+    const params = new URLSearchParams(location.search);
+    const email = params.get('prefilled_email');
+    if (email) {
+      setPreFilledEmail(email);
+    }
+  }, [location]);
 
   const togglePricing = () => {
     setIsYearly(!isYearly);
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen py-16 px-4 sm:px-6 lg:px-8">
+    <div className="bg-black min-h-screen py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-4xl font-extrabold text-white text-center mb-12">Choose Your Travel Plan</h2>
         <p className="text-xl text-gray-300 text-center mb-16 max-w-3xl mx-auto">
@@ -129,6 +149,7 @@ const Pricing = () => {
               "Downloadable itineraries",
             ]}
             isYearly={isYearly}
+            preFilledEmail={preFilledEmail}
           />
           <PricingOption
             title="Jet Setter"
@@ -146,6 +167,7 @@ const Pricing = () => {
               "Multi-city trip planning",
             ]}
             isYearly={isYearly}
+            preFilledEmail={preFilledEmail}
           />
         </div>
       </div>
