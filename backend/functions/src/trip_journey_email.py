@@ -63,7 +63,7 @@ def send_itinerary_email(sender_creds, recipient_email, itinerary, destination, 
         {format_itinerary_content(itinerary)}
 
         <p>Want to see the full {days}-day itinerary?</p>
-        <a href="https://tripjourney.co/pricing" class="cta-button">View Full Itinerary</a>
+        <a href="https://tripjourney.co/?showPricing=true&prefilled_email={recipient_email}" class="cta-button">View Full Itinerary</a>
         
         <div class="note">
             <p><strong>Note:</strong> This is just a preview of your trip. To access the full {days}-day itinerary and unlock more features, sign up for a plan.</p>

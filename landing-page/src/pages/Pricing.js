@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
 
 
-const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description, features, isPopular, yearlyStripeLink, monthlyStripeLink, isYearly }) => {
-  const stripeLink = isYearly ? yearlyStripeLink : monthlyStripeLink;
+const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description, features, isPopular, yearlyStripeLink, monthlyStripeLink, isYearly , preFilledEmail}) => {
+  const stripeLinkNaked = isYearly ? yearlyStripeLink : monthlyStripeLink;
   const monthsFreeSavings = 6; // Assuming 6 months free savings
-  
+
+  // Add the pre_filled_email parameter to the Stripe link if it exists
+  const stripeLink = stripeLinkNaked && preFilledEmail
+    ? `${stripeLinkNaked}${stripeLinkNaked.includes('?') ? '&' : '?'}prefilled_email=${preFilledEmail}`
+    : stripeLinkNaked;
+
   return (
     <div className={`bg-gray-800 rounded-lg shadow-lg p-8 ${isPopular ? 'border-2 border-blue-400 relative' : ''}`}>
       {isPopular && (
@@ -80,6 +86,9 @@ const Pricing = () => {
     jetSetterMonthly: ''
   });
 
+  const [preFilledEmail, setPreFilledEmail] = useState('');
+  const location = useLocation();
+
   useEffect(() => {
     setStripeLinks({
       proYearly: process.env.REACT_APP_STRIPE_PRO_YEARLY_URL || '',
@@ -87,7 +96,14 @@ const Pricing = () => {
       jetSetterYearly: process.env.REACT_APP_STRIPE_JET_SETTER_YEARLY_URL || '',
       jetSetterMonthly: process.env.REACT_APP_STRIPE_JET_SETTER_URL || ''
     });
-  }, []);
+
+    // Get the pre_filled_email from URL parameters
+    const params = new URLSearchParams(location.search);
+    const email = params.get('prefilled_email');
+    if (email) {
+      setPreFilledEmail(email);
+    }
+  }, [location]);
 
   const togglePricing = () => {
     setIsYearly(!isYearly);
@@ -133,6 +149,7 @@ const Pricing = () => {
               "Downloadable itineraries",
             ]}
             isYearly={isYearly}
+            preFilledEmail={preFilledEmail}
           />
           <PricingOption
             title="Jet Setter"
@@ -150,6 +167,7 @@ const Pricing = () => {
               "Multi-city trip planning",
             ]}
             isYearly={isYearly}
+            preFilledEmail={preFilledEmail}
           />
         </div>
       </div>

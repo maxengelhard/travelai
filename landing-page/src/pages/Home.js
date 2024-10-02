@@ -1,5 +1,5 @@
-import React, { useState , useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState , useEffect , useRef} from 'react';
+import { useNavigate, useLocation} from 'react-router-dom';
 
 // Import components
 import TravelForm from '../components/TravelForm';
@@ -113,10 +113,18 @@ function Home() {
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [isGenerationComplete, setIsGenerationComplete] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const pricingRef = useRef(null);
 
   useEffect(() => {
     createThumbnails();
-  }, []);
+    const params = new URLSearchParams(location.search);
+    if (params.get('showPricing') === 'true') {
+      // Scroll to the pricing section
+      pricingRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+  }, [location]);
 
   const createThumbnails = () => {
     const scrollContainer = document.querySelector('.netflix-scroll');
@@ -327,7 +335,7 @@ function Home() {
         </div>
         <ExitIntentModal />
       </div>
-      <div className="z-20 relative w-full bg-black py-16">
+      <div className="z-20 relative w-full bg-black py-16" ref={pricingRef}>
         <Pricing />
       </div>
     </>
