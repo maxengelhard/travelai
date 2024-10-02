@@ -41,7 +41,7 @@ function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
     <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="destination" className="block text-sm font-medium text-gray-100 mb-1">Destination</label>
+          <label htmlFor="destination" className="block text-sm font-medium text-gray-900 mb-1">Destination</label>
           <div className="flex rounded-md shadow-sm">
             <input
               type="text"
@@ -49,13 +49,13 @@ function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
               placeholder="e.g., Paris, Tokyo, New York"
-              className="flex-grow min-w-0 block w-full px-4 py-3 rounded-l-md bg-white border-2 border-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-300 focus:border-blue-300 sm:text-sm transition duration-150 ease-in-out"
+              className="flex-grow min-w-0 block w-full px-4 py-3 rounded-l-md bg-white border-2 border-green-700 text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-green-300 sm:text-sm transition duration-150 ease-in-out"
               required
             />
             <button
               type="button"
               onClick={handleRandomDestination}
-              className="inline-flex items-center px-4 py-3 border-2 border-blue-700 rounded-r-md bg-blue-700 text-white text-sm hover:bg-blue-800 hover:border-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out ml-1"
+              className="inline-flex items-center px-4 py-3 border-2 border-green-700 rounded-r-md bg-green-700 text-white text-sm hover:bg-green-800 hover:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out ml-1"
             >
               Random
             </button>
@@ -63,7 +63,7 @@ function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="days" className="block text-sm font-medium text-gray-100 mb-1">Number of Days</label>
+            <label htmlFor="days" className="block text-sm font-medium text-gray-900 mb-1">Number of Days</label>
             <input
               type="number"
               id="days"
@@ -71,15 +71,15 @@ function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
               onChange={(e) => setDays(e.target.value)}
               min="1"
               placeholder="e.g., 7"
-              className="block w-full px-4 py-3 bg-white border-2 border-white text-gray-800 placeholder-gray-400 rounded-md focus:ring-2 focus:ring-blue-300 focus:border-blue-300 sm:text-sm transition duration-150 ease-in-out"
+              className="block w-full px-4 py-3 bg-white border-2 border-green-700 text-gray-800 placeholder-gray-600 rounded-md focus:ring-2 focus:ring-green-300 focus:border-green-300 sm:text-sm transition duration-150 ease-in-out"
               required
             />
           </div>
           <div>
-            <label htmlFor="budget" className="block text-sm font-medium text-gray-100 mb-1">Budget (USD)</label>
+            <label htmlFor="budget" className="block text-sm font-medium text-gray-900 mb-1">Budget (USD)</label>
             <div className="relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm">$</span>
+                <span className="text-gray-900 sm:text-sm">$</span>
               </div>
               <input
                 type="text"
@@ -87,23 +87,23 @@ function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
                 value={budget}
                 onChange={handleBudgetChange}
                 placeholder="e.g., 1000"
-                className="block w-full pl-7 pr-12 py-3 bg-white border-2 border-white text-gray-800 placeholder-gray-400 rounded-md focus:ring-2 focus:ring-blue-300 focus:border-blue-300 sm:text-sm transition duration-150 ease-in-out"
+                className="block w-full pl-7 pr-12 py-3 bg-white border-2 border-green-700 text-gray-900 placeholder-gray-600 rounded-md focus:ring-2 focus:ring-green-300 focus:border-green-300 sm:text-sm transition duration-150 ease-in-out"
                 required
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm">USD</span>
+                <span className="text-gray-900 sm:text-sm">USD</span>
               </div>
             </div>
           </div>
         </div>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-100 mb-1">Email</label>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-1">Email</label>
           <input
             type="email"
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="block w-full px-4 py-3 bg-white border-2 border-white text-gray-800 placeholder-gray-400 rounded-md focus:ring-2 focus:ring-blue-300 focus:border-blue-300 sm:text-sm transition duration-150 ease-in-out"
+            className="block w-full px-4 py-3 bg-white border-2 border-green-700 text-gray-800 placeholder-gray-600 rounded-md focus:ring-2 focus:ring-green-300 focus:border-green-300 sm:text-sm transition duration-150 ease-in-out"
             placeholder="your@email.com"
             required
           />
@@ -115,13 +115,13 @@ function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
         >
           {isLoading ? 'Generating...' : 'Generate Itinerary'}
         </button>
-        <p className="text-sm text-center text-gray-300 mt-2">
+        <p className="text-sm text-center text-gray-700 mt-2">
           If you already have an account, we'll log you in.
         </p>
       </form>
       {isLoading && (
         <div className="text-center mt-4">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-700"></div>
           <p className="mt-2 text-sm text-gray-200">Generating your itinerary...</p>
         </div>
       )}
