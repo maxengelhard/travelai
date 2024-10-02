@@ -327,12 +327,9 @@ function Home() {
         </div>
         <ExitIntentModal />
       </div>
-      <div className="z-20 relative w-full bg-gray-100 py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-8">Our Pricing Plans</h2>
-            <Pricing />
-          </div>
-        </div>
+      <div className="z-20 relative w-full bg-black py-16">
+        <Pricing />
+      </div>
     </>
   );
 }
