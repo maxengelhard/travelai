@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ExitIntentModal from './ExitIntentModal';
 
-const ItineraryExample = ({ destination, image, activities, onClick }) => {
+const ItineraryExample = ({ destination, image, activities, cost, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -15,6 +15,7 @@ const ItineraryExample = ({ destination, image, activities, onClick }) => {
       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-end">
         <div className="text-white p-4">
           <h3 className="text-xl font-bold">{destination}</h3>
+          <p className="text-sm mt-1">Expected cost: ${cost}</p>
         </div>
       </div>
       {isHovered && (
@@ -24,6 +25,7 @@ const ItineraryExample = ({ destination, image, activities, onClick }) => {
               <li>🌅 {activities.morning}</li>
               <li>☀️ {activities.afternoon}</li>
               <li>🌙 {activities.evening}</li>
+              <li>💰 Expected cost: ${cost}</li>
             </ul>
           </div>
         </div>
@@ -44,7 +46,8 @@ const ItineraryExamples = () => {
         morning: "Enjoy a croissant at a local boulangerie",
         afternoon: "Picnic in the hidden Parc des Buttes-Chaumont",
         evening: "Jazz night at Le Caveau de la Huchette"
-      }
+      },
+      cost: 150
     },
     {
       destination: "Tokyo, Japan",
@@ -53,7 +56,8 @@ const ItineraryExamples = () => {
         morning: "Join locals for morning exercise at Yoyogi Park",
         afternoon: "Explore the quirky shops of Shimokitazawa",
         evening: "Izakaya hopping in Harmonica Yokocho, Kichijoji"
-      }
+      },
+      cost: 180
     },
     {
       destination: "New York City, USA",
@@ -62,7 +66,8 @@ const ItineraryExamples = () => {
         morning: "Bagel and lox at Russ & Daughters",
         afternoon: "Stroll through the High Line park",
         evening: "Comedy show at the Comedy Cellar"
-      }
+      },
+      cost: 200
     },
     {
       destination: "Marrakech, Morocco",
@@ -71,7 +76,8 @@ const ItineraryExamples = () => {
         morning: "Breakfast at Cafe Clock in the Kasbah",
         afternoon: "Shop for spices in the hidden Souk des Épices",
         evening: "Dinner at a local's home through Traveling Spoon"
-      }
+      },
+      cost: 100
     },
     {
       destination: "Kyoto, Japan",
@@ -80,7 +86,8 @@ const ItineraryExamples = () => {
         morning: "Join a morning meditation at a local temple",
         afternoon: "Tea ceremony in a traditional machiya house",
         evening: "Sake tasting in Fushimi district"
-      }
+      },
+      cost: 160
     },
     {
       destination: "Buenos Aires, Argentina",
@@ -89,7 +96,8 @@ const ItineraryExamples = () => {
         morning: "Coffee and medialunas at Café Tortoni",
         afternoon: "Book hunting in El Ateneo Grand Splendid",
         evening: "Milonga night at La Catedral Club"
-      }
+      },
+      cost: 120
     },
     {
       destination: "Istanbul, Turkey",
@@ -98,7 +106,8 @@ const ItineraryExamples = () => {
         morning: "Breakfast cruise on the Bosphorus",
         afternoon: "Explore the hidden Pera neighborhood",
         evening: "Meyhane experience in Beyoğlu"
-      }
+      },
+      cost: 110
     },
     {
       destination: "Melbourne, Australia",
@@ -107,7 +116,8 @@ const ItineraryExamples = () => {
         morning: "Coffee tasting tour in laneway cafes",
         afternoon: "Street art walk in Fitzroy",
         evening: "Rooftop cinema and bar hopping"
-      }
+      },
+      cost: 170
     },
     {
       destination: "Lisbon, Portugal",
@@ -116,7 +126,8 @@ const ItineraryExamples = () => {
         morning: "Pastel de nata tasting in Belém",
         afternoon: "Fado workshop in Mouraria",
         evening: "Sunset at a secret miradouro (viewpoint)"
-      }
+      },
+      cost: 130
     }
   ];
 

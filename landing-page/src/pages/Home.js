@@ -9,7 +9,7 @@ import Testimonial from '../components/Testimonial';
 import ItineraryExamples from '../components/ItineraryExamples';
 import ExitIntentModal from '../components/ExitIntentModal';
 import HowItWorks from '../components/HowItWorks';
-
+import AIModelExplanation from '../components/AIModelExplanation';
 // Import pricing
 import Pricing from './Pricing';
 
@@ -332,6 +332,9 @@ function Home() {
         </div>
         <div className="z-20 relative w-full">
           <HowItWorks />
+        </div>
+        <div className="z-20 relative w-full">
+          <AIModelExplanation />
         </div>
         <ExitIntentModal />
       </div>
