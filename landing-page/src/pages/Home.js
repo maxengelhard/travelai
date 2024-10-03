@@ -117,23 +117,19 @@ function Home() {
   const navigate = useNavigate();
   const location = useLocation();
   const pricingRef = useRef(null);
-  const [isTurnstileVerified, setIsTurnstileVerified] = useState(false);
-  
-  
+  const [isVerified, setIsVerified] = useState(false);
+
   useEffect(() => {
-    const verifiedCookie = Cookies.get('turnstileVerified');
-    if (verifiedCookie === 'true') {
-      setIsTurnstileVerified(true);
+    const hasCookie = Cookies.get('turnstile_verified');
+    if (hasCookie) {
+      setIsVerified(true);
     }
   }, []);
 
-  const handleTurnstileVerification = (verified) => {
-    setIsTurnstileVerified(verified);
-    if (verified) {
-      Cookies.set('turnstileVerified', 'true', { expires: 1 }); // Cookie expires in 1 day
-    }
+  const handleTurnstileSuccess = () => {
+    setIsVerified(true);
+    Cookies.set('turnstile_verified', 'true', { expires: 7 });
   };
-
 
 
   useEffect(() => {
@@ -315,7 +311,11 @@ function Home() {
             <div className="w-full lg:w-2/5 bg-white p-6 lg:p-8 rounded-lg shadow-2xl">
               <h2 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-700 text-center">Plan Your Dream Trip</h2>
               <TravelForm onSubmit={generateItinerary} isGenerationComplete={isGenerationComplete} />
-              {!isTurnstileVerified ? (<TurnstileWidget setIsTurnstileVerified={handleTurnstileVerification} />) : null}
+              {!isVerified ? (
+                <TurnstileWidget onSuccess={handleTurnstileSuccess} />
+              ) : (
+                null
+              )}
               {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
             {error && (
                 <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
