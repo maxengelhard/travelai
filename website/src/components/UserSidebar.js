@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import UpdatePasswordModal from './UpdatePasswordModal';
+import { FaUser, FaEnvelope, FaCoins, FaCreditCard, FaLock, FaSignOutAlt } from 'react-icons/fa';
 
 const UserSidebar = ({ isOpen, onClose, userInfo, onSignOut, darkMode }) => {
   const [isUpdatePasswordModalOpen, setIsUpdatePasswordModalOpen] = useState(false);
@@ -9,7 +10,7 @@ const UserSidebar = ({ isOpen, onClose, userInfo, onSignOut, darkMode }) => {
   const handleLogout = async () => {
     try {
       await onSignOut();
-      onClose(); // Close the sidebar
+      onClose();
     } catch (error) {
       console.error('Error signing out: ', error);
     }
@@ -32,7 +33,7 @@ const UserSidebar = ({ isOpen, onClose, userInfo, onSignOut, darkMode }) => {
               <div className={`h-full flex flex-col py-6 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl overflow-y-scroll`}>
                 <div className="px-4 sm:px-6">
                   <div className="flex items-start justify-between">
-                    <h2 className={`text-lg font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>User Profile</h2>
+                    <h2 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>User Profile</h2>
                     <button
                       onClick={onClose}
                       className={`rounded-md ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-500'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
@@ -44,34 +45,49 @@ const UserSidebar = ({ isOpen, onClose, userInfo, onSignOut, darkMode }) => {
                     </button>
                   </div>
                 </div>
-                <div className="mt-6 relative flex-1 px-4 sm:px-6">
-                  <div className={`space-y-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    <p><strong>Email:</strong> {userInfo.email}</p>
-                    <p><strong>Credits:</strong> {userInfo.credits}</p>
+                <div className="mt-8 relative flex-1 px-4 sm:px-6">
+                  <div className={`space-y-6 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <div className="flex items-center space-x-3">
+                      <FaUser className="text-indigo-500" />
+                      <p className="text-lg"><strong>User Info</strong></p>
+                    </div>
+                    <div className="flex items-center space-x-3 ml-6">
+                      <FaEnvelope className="text-indigo-400" />
+                      <p>{userInfo.email}</p>
+                    </div>
+                    <div className="flex items-center space-x-3 ml-6">
+                      <FaCoins className="text-indigo-400" />
+                      <p><strong>Credits:</strong> {userInfo.credits}</p>
+                    </div>
                   </div>
                   
-                  {manageSubscriptionUrl && (
+                  <div className="mt-10 space-y-4">
+                    {manageSubscriptionUrl && (
+                      <button
+                        onClick={handleManageSubscription}
+                        className={`w-full flex items-center justify-center space-x-2 ${darkMode ? 'bg-indigo-700 hover:bg-indigo-800' : 'bg-indigo-600 hover:bg-indigo-700'} text-white py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out`}
+                      >
+                        <FaCreditCard />
+                        <span>Manage Subscription</span>
+                      </button>
+                    )}
+                    
                     <button
-                      onClick={handleManageSubscription}
-                      className={`mt-6 block w-full text-center ${darkMode ? 'bg-indigo-700 hover:bg-indigo-800' : 'bg-indigo-600 hover:bg-indigo-700'} text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+                      onClick={() => setIsUpdatePasswordModalOpen(true)}
+                      className={`w-full flex items-center justify-center space-x-2 ${darkMode ? 'bg-indigo-700 hover:bg-indigo-800' : 'bg-indigo-600 hover:bg-indigo-700'} text-white py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out`}
                     >
-                      Manage Subscription
+                      <FaLock />
+                      <span>Update Password</span>
                     </button>
-                  )}
-                  
-                  <button
-                    onClick={() => setIsUpdatePasswordModalOpen(true)}
-                    className={`mt-6 w-full ${darkMode ? 'bg-indigo-700 hover:bg-indigo-800' : 'bg-indigo-600 hover:bg-indigo-700'} text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-                  >
-                    Update Password
-                  </button>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className={`mt-6 w-full ${darkMode ? 'bg-red-700 hover:bg-red-800' : 'bg-red-600 hover:bg-red-700'} text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500`}
-                  >
-                    Logout
-                  </button>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className={`w-full flex items-center justify-center space-x-2 ${darkMode ? 'bg-red-700 hover:bg-red-800' : 'bg-red-600 hover:bg-red-700'} text-white py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out`}
+                    >
+                      <FaSignOutAlt />
+                      <span>Logout</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

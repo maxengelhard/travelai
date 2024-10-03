@@ -30,33 +30,33 @@ const ItineraryGrid = ({ destination, itinerary, darkMode }) => {
         shadow-xl overflow-hidden transition-colors duration-300
       `}>
         <div className={`
-          relative
           ${darkMode 
             ? 'bg-gradient-to-r from-indigo-900 to-indigo-800 border-indigo-700' 
             : 'bg-gradient-to-r from-blue-500 to-blue-500 border-blue-400'
           }
           text-white transition-all duration-300
-          border-b
+          border-b p-4
         `}>
-          <div className="text-center py-6">
-            <h2 className="text-3xl font-bold">{destination} Itinerary</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-center">
+            <div className="text-center sm:text-left mb-4 sm:mb-0">
+              <h2 className="text-2xl sm:text-3xl font-bold">{destination} Itinerary</h2>
+            </div>
+            <button
+              onClick={() => toPDF()}
+              className={`
+                ${darkMode 
+                  ? 'bg-indigo-700 hover:bg-indigo-600 border-indigo-500' 
+                  : 'bg-blue-400 hover:bg-blue-300 border-blue-300'
+                }
+                text-white font-bold py-2 px-4 rounded-lg 
+                flex items-center transition-all duration-300 shadow-lg
+                border-2
+              `}
+            >
+              <FaDownload className="mr-2" />
+              Download PDF
+            </button>
           </div>
-          <button
-            onClick={() => toPDF()}
-            className={`
-              absolute right-4 top-1/2 transform -translate-y-1/2
-              ${darkMode 
-                ? 'bg-indigo-700 hover:bg-indigo-600 border-indigo-500' 
-                : 'bg-blue-400 hover:bg-blue-300 border-blue-300'
-              }
-              text-white font-bold py-2 px-4 rounded-lg 
-              flex items-center transition-all duration-300 shadow-lg
-              border-2
-            `}
-          >
-            <FaDownload className="mr-2" />
-            Download PDF
-          </button>
         </div>
       </div>
       <div ref={targetRef}>

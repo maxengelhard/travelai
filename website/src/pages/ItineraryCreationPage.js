@@ -143,6 +143,7 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
           selectedItineraryId={selectedItinerary?.itinerary_id}
           onUserButtonClick={handleUserButtonClick}
           darkMode={darkMode}
+          setDarkMode={setDarkMode}
         />
         <main className={`flex-1 flex flex-col overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex-shrink-0">

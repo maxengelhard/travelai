@@ -22,10 +22,11 @@ const Header = ({ credits, userInfo, onUserButtonClick, darkMode, setDarkMode })
           `} />
           <span>{credits}</span>
         </div>
+        {/* Dark mode toggle button - visible only on larger screens */}
         <button
           onClick={() => setDarkMode(!darkMode)}
           className={`
-            p-2 rounded-full 
+            hidden md:block p-2 rounded-full 
             ${darkMode 
               ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
               : 'bg-blue-400 text-white hover:bg-blue-300'
