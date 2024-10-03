@@ -108,7 +108,7 @@ def check_and_send_promo():
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        hour_ago = datetime.utcnow() - timedelta(minutes=1)
+        hour_ago = datetime.utcnow() - timedelta(hours=1)
         query = """
         SELECT email FROM users
         WHERE email IS NOT NULL

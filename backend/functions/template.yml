@@ -201,7 +201,7 @@ Resources:
         Schedule:
           Type: Schedule
           Properties:
-            Schedule: cron(*/10 * * * ? *) # do this every 10 minutes
+            Schedule: cron(0 * * * ? *) # do this every hour
       Policies:
         Statement:
           - Effect: Allow
