@@ -193,6 +193,10 @@ Resources:
         Variables:
           EMAIL_PASSWORD: !Ref EMAILPASSWORD
           STRIPE_SECRET_KEY: !Ref STRIPESECRETKEY
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
       Events:
         Schedule:
           Type: Schedule
