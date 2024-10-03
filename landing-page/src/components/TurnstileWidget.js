@@ -2,7 +2,7 @@ import React from 'react';
 import Turnstile from 'react-turnstile';
 import axios from 'axios';
 
-const TurnstileWidget = ({ onVerify }) => {
+const TurnstileWidget = ({ setIsTurnstileVerified }) => {
   const handleVerify = async (token) => {
     console.log('Turnstile token received:', token);
     try {
@@ -14,7 +14,7 @@ const TurnstileWidget = ({ onVerify }) => {
       
       if (response.data.success) {
         console.log('Turnstile verification successful');
-        onVerify();
+        setIsTurnstileVerified(true);
       } else {
         console.error('Turnstile verification failed:', response.data);
       }
