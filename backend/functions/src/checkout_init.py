@@ -42,7 +42,7 @@ def lambda_handler(event, context):
                 }
             else:
                 # Store the checkout ID in the database
-                cur.execute("UPDATE users SET checkout_id = %s WHERE email = %s", (True, email))
+                cur.execute("UPDATE users SET checkout_init = %s WHERE email = %s", (True, email))
                 conn.commit()
                 # Return the checkout ID to the frontend
                 return {
