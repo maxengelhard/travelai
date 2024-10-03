@@ -1,16 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 
-const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description, features, isPopular, yearlyStripeLink, monthlyStripeLink, isYearly , preFilledEmail}) => {
+const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description, features, isPopular, yearlyStripeLink, monthlyStripeLink, isYearly , preFilledEmail, preFilledPromoCode}) => {
   const stripeLinkNaked = isYearly ? yearlyStripeLink : monthlyStripeLink;
   const monthsFreeSavings = 6; // Assuming 6 months free savings
 
   // Add the pre_filled_email parameter to the Stripe link if it exists
-  const stripeLink = stripeLinkNaked && preFilledEmail
-    ? `${stripeLinkNaked}${stripeLinkNaked.includes('?') ? '&' : '?'}prefilled_email=${preFilledEmail}`
+  const stripeLink = stripeLinkNaked && (preFilledEmail || preFilledPromoCode)
+    ? `${stripeLinkNaked}${stripeLinkNaked.includes('?') ? '&' : '?'}${preFilledEmail ? `prefilled_email=${preFilledEmail}` : ''}${preFilledEmail && preFilledPromoCode ? '&' : ''}${preFilledPromoCode ? `prefilled_promo_code=${preFilledPromoCode}` : ''}`
     : stripeLinkNaked;
+
+    const handleCheckoutInit = async (email) => {
+      try {
+        const apiUrl = `https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/checkout-init`;
+        await axios.post(apiUrl, { email });
+        console.log('Checkout initialized for:', email);
+      } catch (error) {
+        console.error('Error initializing checkout:', error);
+      }
+    };
+  
+    const handleClick = async (e) => {
+      if (!stripeLink) {
+        e.preventDefault();
+        alert('Stripe link is not available at the moment. Please try again later.');
+      } else if (preFilledEmail) {
+        e.preventDefault();
+        await handleCheckoutInit(preFilledEmail);
+        window.open(stripeLink, '_blank');
+      }
+    };
 
   return (
     <div className={`bg-gray-800 rounded-lg shadow-lg p-8 ${isPopular ? 'border-2 border-blue-400 relative' : ''}`}>
@@ -46,12 +68,7 @@ const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description,
         className={`block w-full text-white text-center py-4 px-6 rounded-lg transition duration-300 text-lg font-semibold ${stripeLink ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-500 cursor-not-allowed'} flex items-center justify-center`}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={(e) => {
-          if (!stripeLink) {
-            e.preventDefault();
-            alert('Stripe link is not available at the moment. Please try again later.');
-          }
-        }}
+        onClick={handleClick}
       >
         {stripeLink ? (
           <>
@@ -87,6 +104,7 @@ const Pricing = () => {
   });
 
   const [preFilledEmail, setPreFilledEmail] = useState('');
+  const [preFilledPromoCode, setPreFilledPromoCode] = useState('');
   const location = useLocation();
 
   useEffect(() => {
@@ -100,8 +118,12 @@ const Pricing = () => {
     // Get the pre_filled_email from URL parameters
     const params = new URLSearchParams(location.search);
     const email = params.get('prefilled_email');
+    const promoCode = params.get('prefilled_promo_code');
     if (email) {
       setPreFilledEmail(email);
+    }
+    if (promoCode) {
+      setPreFilledPromoCode(promoCode);
     }
   }, [location]);
 
@@ -150,6 +172,7 @@ const Pricing = () => {
             ]}
             isYearly={isYearly}
             preFilledEmail={preFilledEmail}
+            preFilledPromoCode={preFilledPromoCode}
           />
           <PricingOption
             title="Jet Setter"
@@ -168,6 +191,7 @@ const Pricing = () => {
             ]}
             isYearly={isYearly}
             preFilledEmail={preFilledEmail}
+            preFilledPromoCode={preFilledPromoCode}
           />
         </div>
       </div>

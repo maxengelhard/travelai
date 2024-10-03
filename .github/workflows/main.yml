@@ -28,6 +28,7 @@ jobs:
       DB_NAME: ${{ secrets.DB_NAME }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
     steps:
     - uses: actions/checkout@main
     - name: Use Node.js
@@ -64,6 +65,7 @@ jobs:
           echo "STRIPE_CONNECT_WEBHOOK_KEY=${{ secrets.STRIPE_CONNECT_WEBHOOK_KEY_DEV }}" >> $GITHUB_ENV
           echo "STRIPE_PRODUCT_ID=${{ secrets.STRIPE_PRODUCT_ID_DEV }}" >> $GITHUB_ENV
           echo "STRIPE_COUPON=${{ secrets.STRIPE_COUPON_DEV }}" >> $GITHUB_ENV
+          echo "TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY_DEV }}" >> $GITHUB_ENV
         fi
 
 
@@ -81,4 +83,4 @@ jobs:
       run: sam package --template-file .aws-sam/build/template.yaml --s3-bucket ${{ env.BACKEND_BUCKET }} --output-template-file sam-packaged.yaml
     
     - name: SAM deploy us-east-1
-      run: sam deploy --stack-name ${{ env.STACK_NAME }} --parameter-overrides "EMAILPASSWORD='${{ env.EMAIL_PASSWORD }}'" "STRIPESECRETKEY=${{ env.STRIPE_SECRET_KEY }}" "STRIPEWEBHOOKKEY=${{ env.STRIPE_WEBHOOK_KEY }}" "DBUSER=${{ env.DB_USER }}" "DBHOST=${{ env.DB_HOST }}" "DBNAME=${{ env.DB_NAME }}" "DBPASSWORD=${{ env.DB_PASSWORD }}" "USERPOOLID=${{ env.USERPOOLID }}" "OPENAIAPIKEY=${{ env.OPENAI_API_KEY }}" "APIDOMAINSUFFIX=${{ env.APIDOMAINSUFFIX }}" "STAGE=${{ env.STAGE }}"  "HOSTEDZONEID=${{ secrets.HOSTEDZONEID }}" "CERTIFICATEARN=${{ secrets.CERTIFICATEARN}}" "BUCKET=${{ env.BACKEND_BUCKET }}" --template-file sam-packaged.yaml --s3-bucket ${{ env.BACKEND_BUCKET }} --region us-east-1 --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM --no-confirm-changeset --no-fail-on-empty-changeset
+      run: sam deploy --stack-name ${{ env.STACK_NAME }} --parameter-overrides "TURNSTILESECRETKEY=${{ env.TURNSTILE_SECRET_KEY }}" "EMAILPASSWORD='${{ env.EMAIL_PASSWORD }}'" "STRIPESECRETKEY=${{ env.STRIPE_SECRET_KEY }}" "STRIPEWEBHOOKKEY=${{ env.STRIPE_WEBHOOK_KEY }}" "DBUSER=${{ env.DB_USER }}" "DBHOST=${{ env.DB_HOST }}" "DBNAME=${{ env.DB_NAME }}" "DBPASSWORD=${{ env.DB_PASSWORD }}" "USERPOOLID=${{ env.USERPOOLID }}" "OPENAIAPIKEY=${{ env.OPENAI_API_KEY }}" "APIDOMAINSUFFIX=${{ env.APIDOMAINSUFFIX }}" "STAGE=${{ env.STAGE }}"  "HOSTEDZONEID=${{ secrets.HOSTEDZONEID }}" "CERTIFICATEARN=${{ secrets.CERTIFICATEARN}}" "BUCKET=${{ env.BACKEND_BUCKET }}" --template-file sam-packaged.yaml --s3-bucket ${{ env.BACKEND_BUCKET }} --region us-east-1 --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM --no-confirm-changeset --no-fail-on-empty-changeset

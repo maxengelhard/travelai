@@ -1,6 +1,6 @@
 import React, { useState , useEffect , useRef} from 'react';
 import { useNavigate, useLocation} from 'react-router-dom';
-
+// import Cookies from 'js-cookie';
 // Import components
 import TravelForm from '../components/TravelForm';
 import Itinerary from '../components/Itinerary';
@@ -10,6 +10,8 @@ import ItineraryExamples from '../components/ItineraryExamples';
 import ExitIntentModal from '../components/ExitIntentModal';
 import HowItWorks from '../components/HowItWorks';
 import AIModelExplanation from '../components/AIModelExplanation';
+// import TurnstileWidget from '../components/TurnstileWidget';
+
 // Import pricing
 import Pricing from './Pricing';
 
@@ -115,6 +117,22 @@ function Home() {
   const navigate = useNavigate();
   const location = useLocation();
   const pricingRef = useRef(null);
+  // const [isVerified, setIsVerified] = useState(false);
+
+  // useEffect(() => {
+  //   const hasCookie = Cookies.get('turnstile_verified');
+  //   if (hasCookie) {
+  //     setIsVerified(true);
+  //   }
+  // }, []);
+
+  // const handleTurnstileVerification = (success) => {
+  //   setIsVerified(success);
+  //   if (success) {
+  //     Cookies.set('turnstile_verified', 'true', { expires: 7 });
+  //   }
+  // };
+
 
   useEffect(() => {
     createThumbnails();
@@ -295,6 +313,11 @@ function Home() {
             <div className="w-full lg:w-2/5 bg-white p-6 lg:p-8 rounded-lg shadow-2xl">
               <h2 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-700 text-center">Plan Your Dream Trip</h2>
               <TravelForm onSubmit={generateItinerary} isGenerationComplete={isGenerationComplete} />
+              {/* {!isVerified ? (
+                <TurnstileWidget onVerificationComplete={handleTurnstileVerification} />
+              ) : (
+                null
+              )} */}
               {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
             {error && (
                 <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">

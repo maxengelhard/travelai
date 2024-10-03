@@ -7,7 +7,7 @@ const popularDestinations = [
   "Cape Town", "Kyoto"
 ];
 
-function TravelForm({ onSubmit, isLoading, error, isGenerationComplete }) {
+function TravelForm({ onSubmit, isLoading, error, isGenerationComplete,isVerified }) {
   const [destination, setDestination] = useState('');
   const [days, setDays] = useState('');
   const [budget, setBudget] = useState('');

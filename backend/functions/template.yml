@@ -45,7 +45,8 @@ Parameters:
     Type: String
   EMAILPASSWORD:
     Type: String
-  
+  TURNSTILESECRETKEY:
+    Type: String
 
 Conditions:
   IsProd: !Equals [ !Ref STAGE, prd ]
@@ -98,6 +99,7 @@ Resources:
         HostedZoneId: !GetAtt ApiDomain.DistributionHostedZoneId
 
 ######## API's #########
+## LANDING PAGE ##
   Itinerary:
     Type: AWS::Serverless::Function
     Properties:
@@ -139,6 +141,118 @@ Resources:
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
 
+  CheckoutInit:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_checkout_init_${STAGE}"
+      Handler: checkout_init.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64
+      Description: Stores checkout init for user
+      Environment:
+        Variables:
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /checkout-init
+            Method: post
+      Policies:
+        Statement:  
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+
+  ForgotToSignup:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_forgot_to_signup_${STAGE}"
+      Handler: forgot_to_signup.lambda_handler
+      Runtime: python3.10 
+      Architectures: 
+        - x86_64
+      Description: Sends promo email to users who have not signed up yet
+      Environment:
+        Variables:
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
+          STRIPE_SECRET_KEY: !Ref STRIPESECRETKEY
+          DB_USER: !Ref DBUSER
+          DB_HOST: !Ref DBHOST
+          DB_NAME: !Ref DBNAME
+          DB_PASSWORD: !Ref DBPASSWORD
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 * * * ? *) # do this every hour
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup 
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"  
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"   
+
+## CLOUDFLARE ##
+  CloudflareVerify:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_cloudflare_verify_${STAGE}"
+      Handler: cloudflare_verify.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64  
+      Description: Verify Cloudflare Turnstile token
+      Environment:
+        Variables:
+          TURNSTILE_SECRET_KEY: !Ref TURNSTILESECRETKEY
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /cloudflare-verify
+            Method: post
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+
+### APP ###
   CreateNewItinerary:
     Type: AWS::Serverless::Function
     Properties:
