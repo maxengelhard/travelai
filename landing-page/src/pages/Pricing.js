@@ -4,13 +4,13 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 
-const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description, features, isPopular, yearlyStripeLink, monthlyStripeLink, isYearly , preFilledEmail}) => {
+const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description, features, isPopular, yearlyStripeLink, monthlyStripeLink, isYearly , preFilledEmail, preFilledPromoCode}) => {
   const stripeLinkNaked = isYearly ? yearlyStripeLink : monthlyStripeLink;
   const monthsFreeSavings = 6; // Assuming 6 months free savings
 
   // Add the pre_filled_email parameter to the Stripe link if it exists
-  const stripeLink = stripeLinkNaked && preFilledEmail
-    ? `${stripeLinkNaked}${stripeLinkNaked.includes('?') ? '&' : '?'}prefilled_email=${preFilledEmail}`
+  const stripeLink = stripeLinkNaked && (preFilledEmail || preFilledPromoCode)
+    ? `${stripeLinkNaked}${stripeLinkNaked.includes('?') ? '&' : '?'}${preFilledEmail ? `prefilled_email=${preFilledEmail}` : ''}${preFilledEmail && preFilledPromoCode ? '&' : ''}${preFilledPromoCode ? `prefilled_promo_code=${preFilledPromoCode}` : ''}`
     : stripeLinkNaked;
 
     const handleCheckoutInit = async (email) => {
@@ -104,6 +104,7 @@ const Pricing = () => {
   });
 
   const [preFilledEmail, setPreFilledEmail] = useState('');
+  const [preFilledPromoCode, setPreFilledPromoCode] = useState('');
   const location = useLocation();
 
   useEffect(() => {
@@ -117,8 +118,12 @@ const Pricing = () => {
     // Get the pre_filled_email from URL parameters
     const params = new URLSearchParams(location.search);
     const email = params.get('prefilled_email');
+    const promoCode = params.get('prefilled_promo_code');
     if (email) {
       setPreFilledEmail(email);
+    }
+    if (promoCode) {
+      setPreFilledPromoCode(promoCode);
     }
   }, [location]);
 
@@ -167,6 +172,7 @@ const Pricing = () => {
             ]}
             isYearly={isYearly}
             preFilledEmail={preFilledEmail}
+            preFilledPromoCode={preFilledPromoCode}
           />
           <PricingOption
             title="Jet Setter"
@@ -185,6 +191,7 @@ const Pricing = () => {
             ]}
             isYearly={isYearly}
             preFilledEmail={preFilledEmail}
+            preFilledPromoCode={preFilledPromoCode}
           />
         </div>
       </div>
