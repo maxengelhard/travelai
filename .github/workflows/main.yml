@@ -65,6 +65,7 @@ jobs:
           echo "STRIPE_CONNECT_WEBHOOK_KEY=${{ secrets.STRIPE_CONNECT_WEBHOOK_KEY_DEV }}" >> $GITHUB_ENV
           echo "STRIPE_PRODUCT_ID=${{ secrets.STRIPE_PRODUCT_ID_DEV }}" >> $GITHUB_ENV
           echo "STRIPE_COUPON=${{ secrets.STRIPE_COUPON_DEV }}" >> $GITHUB_ENV
+          echo "TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY_DEV }}" >> $GITHUB_ENV
         fi
 
 

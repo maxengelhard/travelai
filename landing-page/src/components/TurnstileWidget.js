@@ -4,15 +4,22 @@ import axios from 'axios';
 
 const TurnstileWidget = ({ onVerify }) => {
   const handleVerify = async (token) => {
+    console.log('Turnstile token received:', token);
     try {
-      const response = await axios.post(`https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/cloudflare-verify`, { token });
+      const apiUrl = `https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/cloudflare-verify`;
+      console.log('Sending verification request to:', apiUrl);
+      
+      const response = await axios.post(apiUrl, { token });
+      console.log('Verification response:', response.data);
+      
       if (response.data.success) {
+        console.log('Turnstile verification successful');
         onVerify();
       } else {
-        console.error('Turnstile verification failed');
+        console.error('Turnstile verification failed:', response.data);
       }
     } catch (error) {
-      console.error('Error verifying Turnstile:', error);
+      console.error('Error verifying Turnstile:', error.response ? error.response.data : error.message);
     }
   };
 
