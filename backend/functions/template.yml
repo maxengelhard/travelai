@@ -179,6 +179,38 @@ Resources:
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
 
+  ForgotToSignup:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_forgot_to_signup_${STAGE}"
+      Handler: forgot_to_signup.lambda_handler
+      Runtime: python3.10 
+      Architectures: 
+        - x86_64
+      Description: Sends promo email to users who have not signed up yet
+      Environment:
+        Variables:
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 * * * ? *) # do this every hour
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup 
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"  
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"   
+
 ## CLOUDFLARE ##
   CloudflareVerify:
     Type: AWS::Serverless::Function
@@ -207,7 +239,13 @@ Resources:
             Action: 
               - logs:CreateLogGroup
             Resource: 
-              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*" 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
 
 ### APP ###
   CreateNewItinerary:

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import stripe
 
 # Database configuration
 DB_PARAMS = {
@@ -28,14 +29,34 @@ sender_email = sender_creds['email']  # email
 sender_password = sender_creds['password']
 sender_name = sender_creds['name']
 
-STRIPE_SIGNUP_URL = os.environ['STRIPE_SIGNUP_URL']
-DISCOUNT_CODE = 'SIGNUP20'
+STRIPE_API_KEY = os.environ['STRIPE_API_KEY']
+stripe.api_key = STRIPE_API_KEY
 
 def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
-def send_promo_email(user_email):
+def create_promo_code():
+    try:
+        coupon = stripe.Coupon.create(
+            percent_off=20,
+            duration="once",
+            max_redemptions=1,
+            redeem_by=int((datetime.now() + timedelta(hours=24)).timestamp())
+        )
+        
+        promo_code = stripe.PromotionCode.create(
+            coupon=coupon.id,
+            code=f"SIGNUP{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            max_redemptions=1
+        )
+        
+        return promo_code.code
+    except stripe.error.StripeError as e:
+        print(f"An error occurred while creating the promo code: {str(e)}")
+        return None
+
+def send_promo_email(user_email,promo_code):
     subject = "You didn't complete your Trip Journey AI signup"
     body_text = f"""
     Hi!
@@ -44,7 +65,7 @@ def send_promo_email(user_email):
 
     If you'd still like to become a member, I've given you 20% off on any plan when you sign up in the next 24 hours:
 
-    https://tripjourney.co/?showPricing=true&prefilled_email={user_email}&prefilled_promo_code={DISCOUNT_CODE}
+    https://tripjourney.co/?showPricing=true&prefilled_email={user_email}&prefilled_promo_code={promo_code}
 
     This is the last email I'll ever send (unless you sign up of course).
 
@@ -57,7 +78,7 @@ def send_promo_email(user_email):
     <p>Hi!</p>
     <p>You tried to sign up to Trip Journey AI 15 minutes ago. Not sure what happened but you didn't complete.</p>
     <p>If you'd still like to become a member, I've given you 20% off on any plan when you sign up in the next 24 hours:</p>
-    <p><a href="https://tripjourney.co/?showPricing=true&prefilled_email={user_email}&prefilled_promo_code={DISCOUNT_CODE}">Click here to complete your signup with 20% off</a></p>
+    <p><a href="https://tripjourney.co/?showPricing=true&prefilled_email={user_email}&prefilled_promo_code={promo_code}">Click here to complete your signup with 20% off</a></p>
     <p>This is the last email I'll ever send (unless you sign up of course).</p>
     <p>-Trip Journey AI</p>
     </body>
@@ -88,7 +109,7 @@ def check_and_send_promo():
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        fifteen_minutes_ago = datetime.utcnow() - timedelta(hours=1)
+        hour_ago = datetime.utcnow() - timedelta(hours=1)
         query = """
         SELECT email FROM users
         WHERE email IS NOT NULL
@@ -97,18 +118,26 @@ def check_and_send_promo():
         AND promo_emails_sent < 1
         AND created_at <= %s
         """
-        cur.execute(query, (fifteen_minutes_ago,))
+        cur.execute(query, (hour_ago,))
         users_to_email = cur.fetchall()
 
+        print(users_to_email)
+
         for (user_email,) in users_to_email:
-            send_promo_email(user_email)
-            update_query = """
-            UPDATE users
-            SET promo_emails_sent = promo_emails_sent + 1
-            WHERE email = %s
-            """
-            cur.execute(update_query, (user_email,))
-            print(f"Sent promo email to {user_email}")
+            promo_code = create_promo_code()
+
+            if promo_code:
+                send_promo_email(user_email, promo_code)
+                update_query = """
+                UPDATE users
+                SET promo_emails_sent = promo_emails_sent + 1
+                WHERE email = %s
+                """
+                cur.execute(update_query, (user_email,))
+                print(f"Sent promo email to {user_email} with code {promo_code}")
+            else:
+                print(f"Failed to create promo code for {user_email}")
+
 
         conn.commit()
     except Exception as e:
