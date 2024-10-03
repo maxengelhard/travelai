@@ -45,7 +45,8 @@ Parameters:
     Type: String
   EMAILPASSWORD:
     Type: String
-  
+  TURNSTILESECRETKEY:
+    Type: String
 
 Conditions:
   IsProd: !Equals [ !Ref STAGE, prd ]
@@ -98,6 +99,7 @@ Resources:
         HostedZoneId: !GetAtt ApiDomain.DistributionHostedZoneId
 
 ######## API's #########
+## LANDING PAGE ##
   Itinerary:
     Type: AWS::Serverless::Function
     Properties:
@@ -139,6 +141,36 @@ Resources:
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
 
+## CLOUDFLARE ##
+  CloudflareVerify:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_cloudflare_verify_${STAGE}"
+      Handler: cloudflare_verify.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64  
+      Description: Verify Cloudflare Turnstile token
+      Environment:
+        Variables:
+          TURNSTILE_SECRET_KEY: !Ref TURNSTILESECRETKEY
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:  
+            Path: /cloudflare-verify
+            Method: post
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*" 
+
+### APP ###
   CreateNewItinerary:
     Type: AWS::Serverless::Function
     Properties:
