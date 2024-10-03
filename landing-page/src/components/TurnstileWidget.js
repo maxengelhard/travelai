@@ -5,7 +5,7 @@ import axios from 'axios';
 const TurnstileWidget = ({ onVerify }) => {
   const handleVerify = async (token) => {
     try {
-      const response = await axios.post(`https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/verify-turnstile`, { token });
+      const response = await axios.post(`https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/cloudflare-verify`, { token });
       if (response.data.success) {
         onVerify();
       } else {
