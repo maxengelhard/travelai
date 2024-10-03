@@ -1,8 +1,9 @@
 import os
 import psycopg2
 from datetime import datetime, timedelta
-import boto3
-from botocore.exceptions import ClientError
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Database configuration
 DB_PARAMS = {
@@ -13,79 +14,86 @@ DB_PARAMS = {
     'port': 5432
 }
 
-# AWS SES configuration
-AWS_REGION = os.environ['AWS_REGION']
-SENDER = os.environ['SENDER_EMAIL']
-CHARSET = "UTF-8"
+sender_creds = {
+            'email': 'tripjourneyai@gmail.com',
+            'password': os.getenv('EMAIL_PASSWORD'),
+            'name': "Trip Journey AI"
+        }
+
+
+# SMTP configuration
+smtp_server = "smtp.gmail.com"
+smtp_port = 587
+sender_email = sender_creds['email']  # email
+sender_password = sender_creds['password']
+sender_name = sender_creds['name']
 
 STRIPE_SIGNUP_URL = os.environ['STRIPE_SIGNUP_URL']
 DISCOUNT_CODE = 'SIGNUP20'
-
-sender_creds = {
-    'email': 'tripjourneyai@gmail.com',
-    'password': os.getenv('EMAIL_PASSWORD'),
-    'name': "Trip Journey AI"
-}
 
 def get_db_connection():
     """Create a database connection."""
     return psycopg2.connect(**DB_PARAMS)
 
 def send_promo_email(user_email):
-    subject = "Don't miss out! 20% off when you sign up now"
+    subject = "You didn't complete your Trip Journey AI signup"
     body_text = f"""
-    Hello,
+    Hi!
 
-    We noticed you haven't completed your signup. Don't miss out on our amazing service!
+    You tried to sign up to Trip Journey AI about an hour ago. Not sure what happened but you didn't complete.
 
-    Sign up now and get 20% off with the code: {DISCOUNT_CODE}
+    If you'd still like to become a member, I've given you 20% off on any plan when you sign up in the next 24 hours:
 
-    Click here to complete your signup: {STRIPE_SIGNUP_URL}?discount={DISCOUNT_CODE}
+    https://tripjourney.co/?showPricing=true&prefilled_email={user_email}&prefilled_promo_code={DISCOUNT_CODE}
 
-    Best regards,
-    Trip Journey AI
+    This is the last email I'll ever send (unless you sign up of course).
+
+    -Trip Journey AI
     """
 
     body_html = f"""
     <html>
     <body>
-    <p>Hello,</p>
-    <p>We noticed you haven't completed your signup. Don't miss out on our amazing service!</p>
-    <p>Sign up now and get 20% off with the code: <strong>{DISCOUNT_CODE}</strong></p>
-    <p><a href="{STRIPE_SIGNUP_URL}?discount={DISCOUNT_CODE}">Click here to complete your signup</a></p>
-    <p>Best regards,<br>Trip Journey AI</p>
+    <p>Hi!</p>
+    <p>You tried to sign up to Trip Journey AI 15 minutes ago. Not sure what happened but you didn't complete.</p>
+    <p>If you'd still like to become a member, I've given you 20% off on any plan when you sign up in the next 24 hours:</p>
+    <p><a href="https://tripjourney.co/?showPricing=true&prefilled_email={user_email}&prefilled_promo_code={DISCOUNT_CODE}">Click here to complete your signup with 20% off</a></p>
+    <p>This is the last email I'll ever send (unless you sign up of course).</p>
+    <p>-Trip Journey AI</p>
     </body>
     </html>
     """
 
-    client = boto3.client('ses', region_name=AWS_REGION)
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = sender_creds['email']
+    msg['To'] = user_email
+
+    part1 = MIMEText(body_text, 'plain')
+    part2 = MIMEText(body_html, 'html')
+
+    msg.attach(part1)
+    msg.attach(part2)
 
     try:
-        response = client.send_email(
-            Destination={'ToAddresses': [user_email]},
-            Message={
-                'Body': {
-                    'Html': {'Charset': CHARSET, 'Data': body_html},
-                    'Text': {'Charset': CHARSET, 'Data': body_text},
-                },
-                'Subject': {'Charset': CHARSET, 'Data': subject},
-            },
-            Source=SENDER
-        )
-    except ClientError as e:
-        print(f"An error occurred: {e.response['Error']['Message']}")
-    else:
-        print(f"Email sent to {user_email}! Message ID: {response['MessageId']}")
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, user_email, msg.as_string())
+        print(f"Email sent to {user_email}!")
+    except Exception as e:
+        print(f"An error occurred while sending email to {user_email}: {str(e)}")
 
 def check_and_send_promo():
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        fifteen_minutes_ago = datetime.utcnow() - timedelta(minutes=15)
+        fifteen_minutes_ago = datetime.utcnow() - timedelta(hours=1)
         query = """
         SELECT email FROM users
         WHERE email IS NOT NULL
         AND stripe_customer_id IS NULL
+        AND checkout_init = TRUE
         AND promo_emails_sent < 1
         AND created_at <= %s
         """
@@ -111,6 +119,7 @@ def check_and_send_promo():
         conn.close()
 
 def lambda_handler(event, context):
+    print(event)
     check_and_send_promo()
     return {
         'statusCode': 200,
