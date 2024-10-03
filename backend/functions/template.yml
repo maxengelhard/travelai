@@ -192,6 +192,7 @@ Resources:
       Environment:
         Variables:
           EMAIL_PASSWORD: !Ref EMAILPASSWORD
+          STRIPE_SECRET_KEY: !Ref STRIPESECRETKEY
       Events:
         Schedule:
           Type: Schedule

@@ -29,8 +29,7 @@ sender_email = sender_creds['email']  # email
 sender_password = sender_creds['password']
 sender_name = sender_creds['name']
 
-STRIPE_API_KEY = os.environ['STRIPE_API_KEY']
-stripe.api_key = STRIPE_API_KEY
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 def get_db_connection():
     """Create a database connection."""
