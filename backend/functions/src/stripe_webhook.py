@@ -164,13 +164,14 @@ def lambda_handler(event,context):
 
                     with conn.cursor() as cur:
                         # Check if user exists
-                        cur.execute("SELECT * FROM users WHERE stripe_customer_id = %s", (customer_id,))
+                        stripe_customer = stripe.Customer.retrieve(customer_id)
+                        email = stripe_customer.get('email', '')
+                        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
                         update_user = cur.fetchone()
                         
                         if update_user is None:
                             # Fetch customer details from Stripe
-                            stripe_customer = stripe.Customer.retrieve(customer_id)
-                            email = stripe_customer.get('email', '')
+                            
                             
                             # Insert new user
                             insert_query = """

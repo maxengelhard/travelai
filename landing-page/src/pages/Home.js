@@ -120,8 +120,14 @@ function Home() {
     createThumbnails();
     const params = new URLSearchParams(location.search);
     if (params.get('showPricing') === 'true') {
-      // Scroll to the pricing section
-      pricingRef.current?.scrollIntoView({ behavior: 'smooth' });
+      // Scroll to the pricing section after a short delay
+      setTimeout(() => {
+        if (pricingRef.current) {
+          const yOffset = 100; // Adjust this value to fine-tune the scroll position
+          const y = pricingRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 100);
     }
 
   }, [location]);
