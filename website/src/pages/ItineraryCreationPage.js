@@ -111,7 +111,7 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
   }, []);
 
   if (loading) {
-    return <LoadingSpinner />
+    return <LoadingSpinner darkMode={darkMode} />
   }
 
   if (error) {
@@ -119,7 +119,7 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
       <Header 
         credits={userInfo?.credits || 0} 
         userInfo={userInfo}
@@ -133,6 +133,7 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
             onSelectItinerary={handleSelectItinerary}
             selectedItineraryId={selectedItinerary?.itinerary_id}
             previousItineraries={previousItineraries}
+            darkMode={darkMode}
           />
         </div>
         <BurgerMenu 
@@ -141,8 +142,9 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
           onSelectItinerary={handleSelectItinerary}
           selectedItineraryId={selectedItinerary?.itinerary_id}
           onUserButtonClick={handleUserButtonClick}
+          darkMode={darkMode}
         />
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className={`flex-1 flex flex-col overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex-shrink-0">
             <ItineraryOptions 
               userInfo={userInfo}
@@ -150,11 +152,12 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
               option={option}
               setOption={setOption}
               currentItinerary={selectedItinerary}
+              darkMode={darkMode}
             />
           </div>
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto">
             {selectedItinerary && (
-              <ItineraryGrid itinerary={selectedItinerary.itinerary} />
+              <ItineraryGrid destination={selectedItinerary.destination} itinerary={selectedItinerary.itinerary} darkMode={darkMode}/>
             )}
           </div>
         </main>
@@ -163,9 +166,10 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
           onClose={handleCloseUserSidebar}
           userInfo={userInfo}
           onSignOut={onSignOut}
+          darkMode={darkMode}
         />
       </div>
-      <ChatButton />
+      <ChatButton darkMode={darkMode} />
     </div>
   );
 }
