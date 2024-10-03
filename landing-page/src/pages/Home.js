@@ -296,7 +296,7 @@ function Home() {
             <div className="w-full lg:w-2/5 bg-white p-6 lg:p-8 rounded-lg shadow-2xl">
               <h2 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-700 text-center">Plan Your Dream Trip</h2>
               <TravelForm onSubmit={generateItinerary} isGenerationComplete={isGenerationComplete} />
-              {!isTurnstileVerified && <TurnstileWidget setIsTurnstileVerified={setIsTurnstileVerified} />}
+              {!isTurnstileVerified ? (<TurnstileWidget setIsTurnstileVerified={setIsTurnstileVerified} />) : null}
               {isLoading && <p className="mt-4 text-center">Generating your itinerary...</p>}
             {error && (
                 <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
