@@ -14,7 +14,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ChatButton from '../components/ChatButton';  // Add this import
 
 
-function ItineraryCreationPage({ onSignOut }) {
+function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -124,6 +124,8 @@ function ItineraryCreationPage({ onSignOut }) {
         credits={userInfo?.credits || 0} 
         userInfo={userInfo}
         onUserButtonClick={handleUserButtonClick}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
       />
       <div className="flex flex-1 overflow-hidden">
         <div className="hidden md:block">
