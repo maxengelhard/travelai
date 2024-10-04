@@ -94,7 +94,7 @@ const PricingOption = ({ title, yearlyPrice, monthlyPrice, credits, description,
   );
 };
 
-const Pricing = () => {
+const Pricing = ({prefilledEmail}) => {
   const [isYearly, setIsYearly] = useState(true);
   const [stripeLinks, setStripeLinks] = useState({
     proYearly: '',
@@ -103,7 +103,7 @@ const Pricing = () => {
     jetSetterMonthly: ''
   });
 
-  const [preFilledEmail, setPreFilledEmail] = useState('');
+  const [preFilledEmail, setPreFilledEmail] = useState(prefilledEmail);
   const [preFilledPromoCode, setPreFilledPromoCode] = useState('');
   const location = useLocation();
 
@@ -115,17 +115,23 @@ const Pricing = () => {
       jetSetterMonthly: process.env.REACT_APP_STRIPE_JET_SETTER_URL || ''
     });
 
-    // Get the pre_filled_email from URL parameters
-    const params = new URLSearchParams(location.search);
-    const email = params.get('prefilled_email');
-    const promoCode = params.get('prefilled_promo_code');
-    if (email) {
-      setPreFilledEmail(email);
+    // Use the prefilledEmail prop if it exists, otherwise check URL parameters
+    if (prefilledEmail) {
+      setPreFilledEmail(prefilledEmail);
+    } else {
+      const params = new URLSearchParams(location.search);
+      const email = params.get('prefilled_email');
+      if (email) {
+        setPreFilledEmail(email);
+      }
     }
+
+    const params = new URLSearchParams(location.search);
+    const promoCode = params.get('prefilled_promo_code');
     if (promoCode) {
       setPreFilledPromoCode(promoCode);
     }
-  }, [location]);
+  }, [location, prefilledEmail]);
 
   const togglePricing = () => {
     setIsYearly(!isYearly);

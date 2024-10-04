@@ -62,8 +62,11 @@ def send_promo_email(user_email,promo_code):
 
     You tried to sign up to Trip Journey AI about an hour ago. Not sure what happened but you didn't complete.
 
-    If you'd still like to become a member, I've given you 20% off on any plan when you sign up in the next 24 hours:
+    If you'd still like to become a member, I've given you 20% off on any plan when you sign up in the next 24 hours.
 
+    Your coupon code is: {promo_code}
+
+    You can use this link to complete your signup (the coupon code will be automatically applied):
     https://tripjourney.co/?showPricing=true&prefilled_email={user_email}&prefilled_promo_code={promo_code}
 
     This is the last email I'll ever send (unless you sign up of course).
@@ -75,9 +78,10 @@ def send_promo_email(user_email,promo_code):
     <html>
     <body>
     <p>Hi!</p>
-    <p>You tried to sign up to Trip Journey AI 15 minutes ago. Not sure what happened but you didn't complete.</p>
-    <p>If you'd still like to become a member, I've given you 20% off on any plan when you sign up in the next 24 hours:</p>
-    <p><a href="https://tripjourney.co/?showPricing=true&prefilled_email={user_email}&prefilled_promo_code={promo_code}">Click here to complete your signup with 20% off</a></p>
+    <p>You tried to sign up to Trip Journey AI about an hour ago. Not sure what happened but you didn't complete.</p>
+    <p>If you'd still like to become a member, I've given you 20% off on any plan when you sign up in the next 24 hours.</p>
+    <p>Your coupon code is: <strong>{promo_code}</strong></p>
+    <p><a href="https://tripjourney.co/?showPricing=true&prefilled_email={user_email}&prefilled_promo_code={promo_code}">Click here to complete your signup with 20% off</a> (the coupon code will be automatically applied)</p>
     <p>This is the last email I'll ever send (unless you sign up of course).</p>
     <p>-Trip Journey AI</p>
     </body>
