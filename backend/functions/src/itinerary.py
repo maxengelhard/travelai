@@ -36,9 +36,15 @@ def check_and_add_email(email):
     try:
         with conn.cursor() as cur:
             # Check if email exists
-            cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-            if cur.fetchone() is not None:
-                return {'success': False, 'message': 'Email already in the system'}
+            cur.execute("SELECT stripe_customer_id FROM users WHERE email = %s", (email,))
+            result = cur.fetchone()
+            
+            if result is not None:
+                stripe_customer_id = result[0]
+                if stripe_customer_id:
+                    return {'success': False, 'message': 'Email already in the system'}
+                else:
+                    return {'success': False, 'message': 'No customer_id found'}
 
             # If email doesn't exist, insert it
             cur.execute(

@@ -254,6 +254,21 @@ function Home() {
         setError("This email is already registered.");
         setIsExistingUser(true);
         
+      } else if (error.message === 'No customer_id found') {
+        // Update URL with showPricing=true and prefilled_email
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('showPricing', 'true');
+        newUrl.searchParams.set('prefilled_email', email);
+        window.history.pushState({}, '', newUrl);
+        
+        // Scroll to pricing section
+        if (pricingRef.current) {
+          const yOffset = 100; // Adjust this value to fine-tune the scroll position
+          const y = pricingRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+        
+        setError("No customer ID found. Please check our pricing options.");
       } else {
         setError("Sorry, there was an error generating your itinerary. Please try again.");
       }
