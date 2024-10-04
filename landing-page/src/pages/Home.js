@@ -1,5 +1,5 @@
 import React, { useState , useEffect , useRef} from 'react';
-import { useNavigate, useLocation} from 'react-router-dom';
+import { useLocation} from 'react-router-dom';
 // import Cookies from 'js-cookie';
 // Import components
 import TravelForm from '../components/TravelForm';
@@ -109,12 +109,12 @@ const APP_URL = `https://${process.env.REACT_APP_DOMAIN_SUFFIX}.tripjourney.co`;
 
 function Home() {
   const [itinerary, setItinerary] = useState(null);
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
   const [error, setError] = useState(null);
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [isGenerationComplete, setIsGenerationComplete] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
   const pricingRef = useRef(null);
   const [prefilledEmail, setPrefilledEmail] = useState('');
@@ -233,6 +233,7 @@ function Home() {
 
   const generateItinerary = async (destination, days, budget, email) => {
     setIsLoading(true);
+    setEmail(email);
     setError(null); // Clear any previous errors
     setIsGenerationComplete(false);
     try {
@@ -296,8 +297,22 @@ function Home() {
     }
   };
 
-  const handleNavigateToPricing = () => {
-    navigate('/pricing');
+  const handleNavigateToPricing = (email) => {
+    // Update URL with showPricing=true and prefilled_email
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('showPricing', 'true');
+    newUrl.searchParams.set('prefilled_email', email);
+    window.history.pushState({}, '', newUrl);
+
+    // Set the prefilled email in the state
+    setPrefilledEmail(email);
+
+    // Scroll to pricing section
+    if (pricingRef.current) {
+      const yOffset = 100; // Adjust this value to fine-tune the scroll position
+      const y = pricingRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -376,7 +391,7 @@ function Home() {
                 <div className="mt-4 p-4 bg-blue-100 rounded">
                 <p className="mb-2">Check your email for the itinerary! Want to see the full itinerary? Sign up to unlock all days!</p>
                 <button
-                    onClick={handleNavigateToPricing}
+                    onClick={() => handleNavigateToPricing(email)}
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
                     View Pricing
