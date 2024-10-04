@@ -19,6 +19,16 @@ function App() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const [darkMode, setDarkMode] = useState(true);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
   useEffect(() => {
     const checkAuthState = async () => {
       try {
@@ -74,7 +84,7 @@ function App() {
         path="/itinerary-creation" 
         element={
           isAuthenticated ? 
-            <ItineraryCreationPage onSignOut={handleSignOut} /> : 
+            <ItineraryCreationPage onSignOut={handleSignOut} darkMode={darkMode} setDarkMode={setDarkMode} /> : 
             <Navigate to="/login" replace />
         } 
       />

@@ -14,7 +14,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ChatButton from '../components/ChatButton';  // Add this import
 
 
-function ItineraryCreationPage({ onSignOut }) {
+function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -111,7 +111,7 @@ function ItineraryCreationPage({ onSignOut }) {
   }, []);
 
   if (loading) {
-    return <LoadingSpinner />
+    return <LoadingSpinner darkMode={darkMode} />
   }
 
   if (error) {
@@ -119,11 +119,13 @@ function ItineraryCreationPage({ onSignOut }) {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
       <Header 
         credits={userInfo?.credits || 0} 
         userInfo={userInfo}
         onUserButtonClick={handleUserButtonClick}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
       />
       <div className="flex flex-1 overflow-hidden">
         <div className="hidden md:block">
@@ -131,6 +133,7 @@ function ItineraryCreationPage({ onSignOut }) {
             onSelectItinerary={handleSelectItinerary}
             selectedItineraryId={selectedItinerary?.itinerary_id}
             previousItineraries={previousItineraries}
+            darkMode={darkMode}
           />
         </div>
         <BurgerMenu 
@@ -139,8 +142,10 @@ function ItineraryCreationPage({ onSignOut }) {
           onSelectItinerary={handleSelectItinerary}
           selectedItineraryId={selectedItinerary?.itinerary_id}
           onUserButtonClick={handleUserButtonClick}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
         />
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className={`flex-1 flex flex-col overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex-shrink-0">
             <ItineraryOptions 
               userInfo={userInfo}
@@ -148,11 +153,12 @@ function ItineraryCreationPage({ onSignOut }) {
               option={option}
               setOption={setOption}
               currentItinerary={selectedItinerary}
+              darkMode={darkMode}
             />
           </div>
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto">
             {selectedItinerary && (
-              <ItineraryGrid itinerary={selectedItinerary.itinerary} />
+              <ItineraryGrid destination={selectedItinerary.destination} itinerary={selectedItinerary.itinerary} darkMode={darkMode}/>
             )}
           </div>
         </main>
@@ -161,9 +167,10 @@ function ItineraryCreationPage({ onSignOut }) {
           onClose={handleCloseUserSidebar}
           userInfo={userInfo}
           onSignOut={onSignOut}
+          darkMode={darkMode}
         />
       </div>
-      <ChatButton />
+      <ChatButton darkMode={darkMode} />
     </div>
   );
 }
