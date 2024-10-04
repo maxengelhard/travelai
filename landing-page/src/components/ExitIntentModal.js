@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 const ExitIntentModal = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -13,9 +13,18 @@ const ExitIntentModal = () => {
   const [itinerary, setItinerary] = useState(null);
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
   const modalRef = useRef(null);
-  const navigate = useNavigate();
+  const location = useLocation();
+  const APP_URL = `https://${process.env.REACT_APP_DOMAIN_SUFFIX}.tripjourney.co`;
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const prefilledEmail = params.get('prefilled_email');
+
+    if (prefilledEmail) {
+      // If there's a prefilled email, don't show the exit intent modal
+      return;
+    }
+
     let lastY = 0;
     const handleMouseMove = (e) => {
       const currentY = e.clientY;
@@ -30,7 +39,7 @@ const ExitIntentModal = () => {
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [isVisible]);
+  }, [isVisible, location.search]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,9 +70,11 @@ const ExitIntentModal = () => {
       setShowPaymentPrompt(true);
     } catch (error) {
       console.error("Error generating itinerary:", error);
-      
       if (error.message === 'Email already in the system') {
-        setError("This email is already registered. Please log in or sign up to continue.");
+        const loginUrl = `${APP_URL}/login`;
+        window.location.href = loginUrl;
+      } else if (error.message === 'No customer_id found') {
+        handleNavigateToPricing(email);
       } else {
         setError("Sorry, there was an error generating your itinerary. Please try again.");
       }
@@ -72,9 +83,18 @@ const ExitIntentModal = () => {
     }
   };
 
-  const handleNavigateToPricing = () => {
+  const handleNavigateToPricing = (email) => {
     setIsVisible(false);
-    navigate('/pricing');
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('showPricing', 'true');
+    newUrl.searchParams.set('prefilled_email', email);
+    window.history.pushState({}, '', newUrl);
+    
+    // Dispatch a custom event to notify the Home component
+    window.dispatchEvent(new CustomEvent('scrollToPricing', { detail: { email } }));
+    
+    // Close the modal
+    setIsVisible(false);
   };
 
   const handleOutsideClick = (e) => {
@@ -206,7 +226,7 @@ const ExitIntentModal = () => {
                 <div className="mt-4 p-4 bg-blue-100 rounded">
                   <p className="mb-2">Check your email for the itinerary! Want to see the full itinerary? Sign up to unlock all days!</p>
                   <button
-                    onClick={handleNavigateToPricing}
+                    onClick={() => handleNavigateToPricing(email)}
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                   >
                     View Pricing
