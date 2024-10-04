@@ -117,6 +117,7 @@ function Home() {
   const navigate = useNavigate();
   const location = useLocation();
   const pricingRef = useRef(null);
+  const [prefilledEmail, setPrefilledEmail] = useState('');
   // const [isVerified, setIsVerified] = useState(false);
 
   // useEffect(() => {
@@ -256,6 +257,7 @@ function Home() {
         
       } else if (error.message === 'No customer_id found') {
         // Update URL with showPricing=true and prefilled_email
+        setPrefilledEmail(email);
         const newUrl = new URL(window.location);
         newUrl.searchParams.set('showPricing', 'true');
         newUrl.searchParams.set('prefilled_email', email);
@@ -383,7 +385,7 @@ function Home() {
         <ExitIntentModal />
       </div>
       <div className="z-20 relative w-full bg-black py-16" ref={pricingRef}>
-        <Pricing />
+        <Pricing prefilledEmail={prefilledEmail} />
       </div>
     </>
   );
