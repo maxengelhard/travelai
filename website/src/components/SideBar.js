@@ -15,7 +15,7 @@ const SideBar = ({ onSelectItinerary, selectedItineraryId, previousItineraries, 
         : 'bg-gray-100 text-gray-900 border-gray-300'
     }`}>
       <div className="flex flex-col h-full">
-        <div className="flex-grow overflow-auto p-4">
+        <div className="flex-grow overflow-auto p-4 pb-2">
           <h2 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Previous Itineraries</h2>
           {previousItineraries.length > 0 ? (
             <div className="space-y-4">
@@ -49,7 +49,7 @@ const SideBar = ({ onSelectItinerary, selectedItineraryId, previousItineraries, 
             <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>No previous itineraries found.</p>
           )}
         </div>
-        <div className="flex-shrink-0 h-[300px]">
+        <div className="flex-shrink-0">
           <ExpediaWidget />
         </div>
       </div>
