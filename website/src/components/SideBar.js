@@ -1,6 +1,6 @@
 import React from 'react';
 import { capitalizeWords } from '../utils/capitalizeWords';
-import ExpediaWidget from './ExpediaSearchWidget';
+// import ExpediaWidget from './ExpediaSearchWidget';
 
 const SideBar = ({ onSelectItinerary, selectedItineraryId, previousItineraries, darkMode }) => {
   const handleItineraryClick = (itinerary) => {
@@ -14,10 +14,10 @@ const SideBar = ({ onSelectItinerary, selectedItineraryId, previousItineraries, 
         ? 'bg-gray-800 text-gray-100 border-gray-700' 
         : 'bg-gray-100 text-gray-900 border-gray-300'
     }`}>
-      <div className="p-4">
+      {/* <div className="p-4">
         <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Travel Search</h3>
         <ExpediaWidget />
-      </div>
+      </div> */}
       <div className="flex-grow p-4">
         <h2 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Previous Itineraries</h2>
         {previousItineraries.length > 0 ? (
