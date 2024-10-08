@@ -74,7 +74,7 @@ jobs:
 #### dump blog posts to s3 buckets ####
     - name: Dump blog posts to s3 buckets
       run: |
-        aws s3 cp ./landing_page/src/blogPosts s3://${{ env.BLOG_BUCKET }}/${{ env.BLOG_PREFIX }} --recursive
+        aws s3 cp ./landing-page/src/blogPosts s3://${{ env.BLOG_BUCKET }}/${{ env.BLOG_PREFIX }} --recursive
 
 
 #### BACKEND #####    
