@@ -138,7 +138,7 @@ const Pricing = ({prefilledEmail}) => {
   };
 
   return (
-    <div className="bg-black min-h-screen py-16 px-4 sm:px-6 lg:px-8">
+    <div className="bg-black min-h-screen pt-32 py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-4xl font-extrabold text-white text-center mb-12">Choose Your Travel Plan</h2>
         <p className="text-xl text-gray-300 text-center mb-16 max-w-3xl mx-auto">
