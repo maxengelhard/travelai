@@ -52,7 +52,7 @@ def lambda_handler(event, context):
         posts = get_blog_posts(bucket_name, prefix)
         return {
             'statusCode': 200,
-            'body': json.dumps(posts)
+            'body': posts
         }
     elif path.startswith('/blog/'):
         post_id = path.split('/')[-1]
@@ -60,15 +60,15 @@ def lambda_handler(event, context):
         if post:
             return {
                 'statusCode': 200,
-                'body': json.dumps(post)
+                'body': post
             }
         else:
             return {
                 'statusCode': 404,
-                'body': json.dumps({'error': 'Post not found'})
+                'body': {'error': 'Post not found'}
             }
     else:
         return {
             'statusCode': 404,
-            'body': json.dumps({'error': 'Not found'})
+            'body': {'error': 'Not found'}
         }
