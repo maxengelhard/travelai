@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+import './BlogPost.css';
 
 function BlogPost() {
   const { title } = useParams();
@@ -65,7 +66,10 @@ function BlogPost() {
         )}
         <div className="text-gray-300 prose prose-invert max-w-none">
           {post.content ? (
-            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            <div 
+            dangerouslySetInnerHTML={{ __html: post.content }} 
+            className="blog-content"
+          />
           ) : (
             <p>No content available</p>
           )}
