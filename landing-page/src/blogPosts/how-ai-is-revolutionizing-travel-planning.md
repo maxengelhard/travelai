@@ -5,7 +5,7 @@ excerpt: "Discover the ways artificial intelligence is changing the way we plan 
 author: "AI Travel Expert"
 date: "2024-03-15"
 tags: ["AI", "Travel Planning", "Technology", "Personalization"]
-image: "https://travel-ai-s3.s3.amazonaws.com/travel_images/destination1.jpg"
+image: "https://travel-ai-s3.s3.amazonaws.com/travel_images/destination2.jpg"
 ---
 
 ## The AI Revolution in Travel
