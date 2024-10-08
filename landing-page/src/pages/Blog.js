@@ -22,7 +22,8 @@ function Blog() {
         }
 
         const data = await response.json();
-        setAllPostsData(data);
+        // The 'body' field now directly contains the array of posts
+        setAllPostsData(data.body);
       } catch (err) {
         setError(err.message);
       } finally {

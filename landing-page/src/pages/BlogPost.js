@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import ReactMarkdown from 'react-markdown';
 
@@ -8,11 +8,12 @@ function BlogPost() {
   const [post, setPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/blog/${id}`, {
+        const response = await fetch(`https://${process.env.REACT_APP_API_DOMAIN_SUFFIX}.tripjourney.co/blog?id=${id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -20,6 +21,10 @@ function BlogPost() {
         });
 
         if (!response.ok) {
+          if (response.status === 404) {
+            navigate('/blog'); // Redirect to blog list if post not found
+            return;
+          }
           throw new Error('Failed to fetch blog post');
         }
 
@@ -33,7 +38,7 @@ function BlogPost() {
     };
 
     fetchPost();
-  }, [id]);
+  }, [id, navigate]);
 
   if (isLoading) return <div className="bg-black text-white min-h-screen flex items-center justify-center">Loading...</div>;
   if (error) return <div className="bg-black text-white min-h-screen flex items-center justify-center">Error: {error}</div>;

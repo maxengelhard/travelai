@@ -47,15 +47,10 @@ def lambda_handler(event, context):
     bucket_name = os.environ['BLOG_BUCKET']
     prefix = os.environ['BLOG_PREFIX']
     
-    path = event['path']
-    if path == '/blog':
-        posts = get_blog_posts(bucket_name, prefix)
-        return {
-            'statusCode': 200,
-            'body': posts
-        }
-    elif path.startswith('/blog/'):
-        post_id = path.split('/')[-1]
+    query_params = event.get('queryStringParameters', {}) or {}
+    post_id = query_params.get('id')
+
+    if post_id:
         post = get_post_data(bucket_name, f"{prefix}{post_id}.md")
         if post:
             return {
@@ -68,7 +63,14 @@ def lambda_handler(event, context):
                 'body': {'error': 'Post not found'}
             }
     else:
-        return {
-            'statusCode': 404,
-            'body': {'error': 'Not found'}
-        }
+        posts = get_blog_posts(bucket_name, prefix)
+        if posts:   
+            return {
+                'statusCode': 200,
+                'body': posts
+            }
+        else:
+            return {
+                'statusCode': 404,
+                'body': {'error': 'Posts not found'}
+            }
