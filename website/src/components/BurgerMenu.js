@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaBars, FaTimes, FaUser, FaEnvelope, FaCoins, FaMapMarkedAlt, FaCreditCard, FaLock, FaSignOutAlt, FaMoon, FaSun } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaEnvelope, FaCoins, FaMapMarkedAlt, FaCreditCard, FaLock, FaSignOutAlt, FaMoon, FaSun, FaPlane } from 'react-icons/fa';
 import { signOut } from 'aws-amplify/auth';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,6 +35,10 @@ const BurgerMenu = ({ userInfo, previousItineraries, onSelectItinerary, selected
     window.open(manageSubscriptionUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const handleStartJourney = () => {
+    window.open('https://expedia.com/affiliate/UcHCHQd', '_blank');
+  };
+
   return (
     <div className="md:hidden">
       <button 
@@ -67,6 +71,17 @@ const BurgerMenu = ({ userInfo, previousItineraries, onSelectItinerary, selected
                   <p><strong>Credits:</strong> {userInfo.credits}</p>
                 </div>
               </div>
+
+              <div className={`mt-8 mb-6 p-4 rounded-lg shadow-lg ${darkMode ? 'bg-gray-800' : 'bg-blue-100'} text-center`}>
+              <h3 className={`text-lg font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Ready for an Adventure?</h3>
+              <button 
+                onClick={handleStartJourney}
+                className="px-6 py-2 bg-yellow-400 text-black text-sm font-semibold rounded-full hover:bg-yellow-300 transition duration-300 inline-flex items-center justify-center mx-auto"
+              >
+                <FaPlane className="mr-2" />
+                Start My Journey
+              </button>
+            </div>
               
               <div className="mt-10">
                 <div className="flex items-center space-x-3 mb-4">

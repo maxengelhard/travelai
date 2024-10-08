@@ -15,7 +15,9 @@ const SideBar = ({ onSelectItinerary, selectedItineraryId, previousItineraries, 
         : 'bg-gray-100 text-gray-900 border-gray-300'
     }`}>
       <div className="flex flex-col h-full">
-        <div className="flex-grow overflow-auto p-4 pb-2">
+        <div className={`flex-grow overflow-auto p-4 pb-2 mb-2 border-b ${
+          darkMode ? 'border-gray-700' : 'border-gray-300'
+        }`}>
           <h2 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Previous Itineraries</h2>
           {previousItineraries.length > 0 ? (
             <div className="space-y-4">
