@@ -54,7 +54,7 @@ function Blog() {
               <p className="mb-4 text-gray-300 flex-grow">{post.excerpt}</p>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-400">{post.date}</span>
-                <Link to={`/blog/${post.id}`} className="text-blue-400 hover:underline">Read more</Link>
+                <Link to={`/blog/${encodeURIComponent(post.title)}`} className="text-blue-400 hover:underline">Read more</Link>
               </div>
             </div>
           ))}

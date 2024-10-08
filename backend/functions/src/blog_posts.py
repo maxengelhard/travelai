@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 import markdown
 import yaml
 from lambda_decorators import json_http_resp, cors_headers , load_json_body
+from urllib.parse import unquote
 
 
 s3 = boto3.client('s3')
@@ -48,10 +49,14 @@ def lambda_handler(event, context):
     prefix = os.environ['BLOG_PREFIX']
     
     query_params = event.get('queryStringParameters', {}) or {}
-    post_id = query_params.get('id')
+    post_title = query_params.get('title')
 
-    if post_id:
-        post = get_post_data(bucket_name, f"{prefix}{post_id}.md")
+    if post_title:
+        # URL decode the title
+        post_title = unquote(post_title)
+        # Replace spaces with hyphens and make lowercase
+        file_name = post_title.replace(' ', '-').lower() + '.md'
+        post = get_post_data(bucket_name, f"{prefix}{file_name}")
         if post:
             return {
                 'statusCode': 200,
