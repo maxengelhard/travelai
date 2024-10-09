@@ -16,7 +16,6 @@ from email.header import Header
 from email.utils import formataddr
 
 
-# Create a new SES client
 cognito_client = boto3.client('cognito-idp')
 USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
 BUCKET_NAME = os.getenv('S3_DB')
@@ -67,7 +66,7 @@ def delete_user_itineraries(email):
 
 
 def lambda_handler(event, context):
-    payload = json.loads(event['body'])
+    payload = event['body']
     sig_header = event['headers']['Stripe-Signature']
     
     try:
