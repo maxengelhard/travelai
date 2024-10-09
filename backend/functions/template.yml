@@ -146,7 +146,14 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3DB}/*" 
 
   CheckoutInit:
     Type: AWS::Serverless::Function
@@ -186,6 +193,13 @@ Resources:
               - logs:PutLogEvents
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3DB}/*"
 
   ForgotToSignup:
     Type: AWS::Serverless::Function
@@ -223,7 +237,14 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"   
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3DB}/*"
 
   BlogPosts:
     Type: AWS::Serverless::Function
@@ -340,6 +361,13 @@ Resources:
               - logs:PutLogEvents
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3DB}/*"
 
 
   UpdateItinerary:
@@ -385,6 +413,13 @@ Resources:
               - logs:PutLogEvents
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" 
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3DB}/*"
 
 
   UserStatus:
@@ -428,6 +463,13 @@ Resources:
               - logs:PutLogEvents
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3DB}/*"
 
   UserItineraries:
     Type: AWS::Serverless::Function
@@ -470,6 +512,13 @@ Resources:
               - logs:PutLogEvents
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3DB}/*"
 
 
   UpdateCredits:
@@ -500,7 +549,8 @@ Resources:
             Action: 
               - logs:CreateLogGroup
             Resource: 
-              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*" 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+               
 
 
   EmailQuestion:
@@ -595,3 +645,10 @@ Resources:
               - cognito-idp:AdminDeleteUser
             Resource:
               - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${USERPOOLID}"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3DB}/*"
