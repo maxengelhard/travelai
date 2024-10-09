@@ -35,6 +35,10 @@ Parameters:
     Type: String
   STRIPEWEBHOOKKEY:
     Type: String
+  BLOGBUCKET:
+    Type: String
+  BLOGPREFIX:
+    Type: String
   # STRIPECONNECTWEBHOOKKEY:
   #   Type: String
   # STRIPEPRODUCTID:
@@ -215,6 +219,40 @@ Resources:
               - logs:PutLogEvents
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"   
+
+  BlogPosts:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_blog_posts_${STAGE}"
+      Handler: blog_posts.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64
+      Description: Fetch blog posts from S3
+      Environment:
+        Variables:
+          BLOG_BUCKET: !Ref BLOGBUCKET
+          BLOG_PREFIX: !Ref BLOGPREFIX
+      Events:
+        ApiEventBlogList:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /blog
+            Method: get
+        ApiEventBlogPost:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /blog/{id}
+            Method: get
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref BLOGBUCKET
+
 
 ## CLOUDFLARE ##
   CloudflareVerify:

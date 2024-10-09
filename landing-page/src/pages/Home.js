@@ -1,5 +1,6 @@
 import React, { useState , useEffect , useRef} from 'react';
 import { useLocation} from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 // import Cookies from 'js-cookie';
 // Import components
 import TravelForm from '../components/TravelForm';
@@ -317,6 +318,10 @@ function Home() {
 
   return (
     <>
+    <Helmet>
+        <title>AI-Powered Travel Itineraries | Trip Journey AI</title>
+        <meta name="description" content="Plan your perfect trip with AI-generated itineraries. Get personalized travel recommendations and create unforgettable journeys with Trip Journey AI." />
+      </Helmet>
       <style>{styles}</style>
       <div className="min-h-screen flex flex-col relative">
         <Navigation />

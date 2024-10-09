@@ -1,11 +1,11 @@
 import React from 'react';
 import { usePDF } from 'react-to-pdf';
-import { FaDownload } from 'react-icons/fa';
+import { FaDownload, FaSun, FaCloud, FaMoon, FaUtensils, FaWalking, FaBed, FaMoneyBill } from 'react-icons/fa';
 
 const ItineraryGrid = ({ destination, itinerary, darkMode }) => {
   const { toPDF, targetRef } = usePDF({filename: `${destination}-itinerary.pdf`});
   
-  if (!itinerary) return <div className="text-gray-600 dark:text-gray-400">No itinerary available</div>;
+  if (!itinerary) return <div className="text-gray-600 dark:text-gray-400 text-center p-8">No itinerary available</div>;
 
   const parseItinerary = (rawItinerary) => {
     const days = rawItinerary.split(/Day \d+:/).filter(day => day.trim() !== '');
@@ -23,83 +23,100 @@ const ItineraryGrid = ({ destination, itinerary, darkMode }) => {
 
   const parsedItinerary = parseItinerary(itinerary);
 
+  const getIcon = (key) => {
+    const lowerKey = key.toLowerCase();
+    if (lowerKey.includes('morning')) return FaSun;
+    if (lowerKey.includes('afternoon')) return FaCloud;
+    if (lowerKey.includes('evening')) return FaMoon;
+    if (lowerKey.includes('dinner') || lowerKey.includes('lunch') || lowerKey.includes('breakfast')) return FaUtensils;
+    if (lowerKey.includes('activity') || lowerKey.includes('visit')) return FaWalking;
+    if (lowerKey.includes('costs')) return FaMoneyBill;
+    return FaBed;
+  };
+
   return (
-    <div className="relative">
+    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className={`
-        ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}
-        shadow-xl overflow-hidden transition-colors duration-300
+        ${darkMode ? 'bg-gray-800' : 'bg-white'}
+        rounded-lg shadow-xl overflow-hidden transition-colors duration-300 mb-8
       `}>
         <div className={`
           ${darkMode 
-            ? 'bg-gradient-to-r from-indigo-900 to-indigo-800 border-indigo-700' 
-            : 'bg-gradient-to-r from-blue-500 to-blue-500 border-blue-400'
+            ? 'bg-gradient-to-r from-purple-900 to-indigo-800' 
+            : 'bg-gradient-to-r from-blue-500 to-indigo-500'
           }
           text-white transition-all duration-300
-          border-b p-4
+          p-4
         `}>
           <div className="flex flex-col sm:flex-row justify-between items-center">
-            <div className="text-center sm:text-left mb-4 sm:mb-0">
-              <h2 className="text-2xl sm:text-3xl font-bold">{destination} Itinerary</h2>
+            <div className="text-center sm:text-left mb-4 sm:mb-0 flex-grow">
+              <h2 className="text-3xl sm:text-4xl font-bold">{destination} Itinerary</h2>
             </div>
-            <button
-              onClick={() => toPDF()}
-              className={`
-                ${darkMode 
-                  ? 'bg-indigo-700 hover:bg-indigo-600 border-indigo-500' 
-                  : 'bg-blue-400 hover:bg-blue-300 border-blue-300'
-                }
-                text-white font-bold py-2 px-4 rounded-lg 
-                flex items-center transition-all duration-300 shadow-lg
-                border-2
-              `}
-            >
-              <FaDownload className="mr-2" />
-              Download PDF
-            </button>
+            <div className="flex justify-center sm:justify-end w-full sm:w-auto">
+              <button
+                onClick={() => toPDF()}
+                className={`
+                  ${darkMode 
+                    ? 'bg-indigo-600 hover:bg-indigo-500' 
+                    : 'bg-blue-400 hover:bg-blue-300'
+                  }
+                  text-white font-bold p-3 rounded-full 
+                  flex items-center justify-center transition-all duration-300 shadow-lg
+                  transform hover:scale-105 w-12 h-12
+                `}
+              >
+                <FaDownload className="text-xl" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
-      <div ref={targetRef}>
+      <div ref={targetRef} className="space-y-8">
         {parsedItinerary.map((day, index) => (
           <div key={index} className={`
             ${darkMode ? 'bg-gray-800' : 'bg-white'}
-            shadow-xl overflow-hidden transition-colors duration-300
-            ${index !== 0 ? 'border-t border-gray-700 dark:border-gray-600' : ''}
+            rounded-lg shadow-xl overflow-hidden transition-colors duration-300
           `}>
             <h3 className={`
-              text-xl font-bold 
+              text-2xl font-bold 
               ${darkMode 
-                ? 'bg-gradient-to-r from-indigo-800 to-indigo-700' 
-                : 'bg-gradient-to-r from-blue-400 to-blue-300'
+                ? 'bg-gradient-to-r from-purple-800 to-indigo-700' 
+                : 'bg-gradient-to-r from-blue-400 to-indigo-400'
               } 
-              text-white p-4 transition-all duration-300
+              text-white p-2 transition-all duration-300
             `}>
               {day.day}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-gray-200 dark:bg-gray-700">
-              {day.activities.map((activity, actIndex) => (
-                <div 
-                  key={actIndex} 
-                  className={`
-                    ${darkMode ? 'bg-gray-800' : 'bg-white'} 
-                    p-4 transition-colors duration-300
-                  `}
-                >
-                  <h4 className={`
-                    font-semibold mb-2
-                    ${darkMode ? 'text-indigo-300' : 'text-blue-600'}
-                    transition-colors duration-300
-                  `}>
-                    {activity.key}
-                  </h4>
-                  <p className={`
-                    ${darkMode ? 'text-gray-300' : 'text-gray-700'}
-                    transition-colors duration-300
-                  `}>
-                    {activity.value}
-                  </p>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 pb-2 pt-2">
+              {day.activities.map((activity, actIndex) => {
+                const Icon = getIcon(activity.key);
+                return (
+                  <div 
+                    key={actIndex} 
+                    className={`
+                      ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} 
+                      p-2 rounded-lg transition-colors duration-300 transform hover:scale-105
+                    `}
+                  >
+                    <div className="flex items-center mb-4">
+                      <Icon className={`mr-3 text-2xl ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                      <h4 className={`
+                        font-semibold text-lg
+                        ${darkMode ? 'text-indigo-300' : 'text-indigo-700'}
+                        transition-colors duration-300
+                      `}>
+                        {activity.key}
+                      </h4>
+                    </div>
+                    <p className={`
+                      ${darkMode ? 'text-gray-300' : 'text-gray-700'}
+                      transition-colors duration-300
+                    `}>
+                      {activity.value}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
