@@ -637,6 +637,7 @@ Resources:
           COGNITO_USER_POOL_ID: !Ref USERPOOLID
           EMAIL_PASSWORD: !Ref EMAILPASSWORD
           S3_DB: !Ref S3DB
+          STAGE: !Ref STAGE
       Events:
         StripeWebhook:
           Type: Api

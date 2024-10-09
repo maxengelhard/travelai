@@ -21,7 +21,7 @@ cognito_client = boto3.client('cognito-idp')
 USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
 BUCKET_NAME = os.getenv('S3_DB')
 SES_SENDER_EMAIL = 'tripjourneyai@gmail.com'
-LOGIN_URL = 'appdev.tripjourney.co'  # URL where users can log in
+LOGIN_URL = 'appdev.tripjourney.co' if os.getenv('STAGE') == 'dev' else 'app.tripjourney.co'  # URL where users can log in
 
 
 s3 = boto3.client('s3')
