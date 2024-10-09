@@ -39,6 +39,8 @@ Parameters:
     Type: String
   BLOGPREFIX:
     Type: String
+  S3DB:
+    Type: String
   # STRIPECONNECTWEBHOOKKEY:
   #   Type: String
   # STRIPEPRODUCTID:
@@ -123,6 +125,7 @@ Resources:
           DB_PASSWORD: !Ref DBPASSWORD
           COGNITO_USER_POOL_ID: !Ref USERPOOLID
           EMAIL_PASSWORD: !Ref EMAILPASSWORD
+          S3_DB: !Ref S3DB
       Events:
         ApiEvent:
           Type: Api
@@ -161,6 +164,7 @@ Resources:
           DB_HOST: !Ref DBHOST
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
+          S3_DB: !Ref S3DB
       Events:
         ApiEvent:
           Type: Api
@@ -201,6 +205,7 @@ Resources:
           DB_HOST: !Ref DBHOST
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
+          S3_DB: !Ref S3DB
       Events:
         Schedule:
           Type: Schedule
@@ -310,6 +315,7 @@ Resources:
           DB_PASSWORD: !Ref DBPASSWORD
           COGNITO_USER_POOL_ID: !Ref USERPOOLID
           EMAIL_PASSWORD: !Ref EMAILPASSWORD
+          S3_DB: !Ref S3DB
       Events:
         ApiEvent:
           Type: Api
@@ -354,6 +360,7 @@ Resources:
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
           COGNITO_USER_POOL_ID: !Ref USERPOOLID 
+          S3_DB: !Ref S3DB
       Events:
         ApiEvent:
           Type: Api
@@ -396,6 +403,7 @@ Resources:
           DB_HOST: !Ref DBHOST
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
+          S3_DB: !Ref S3DB
       Events:
         ApiEvent:
           Type: Api
@@ -437,6 +445,7 @@ Resources:
           DB_HOST: !Ref DBHOST
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
+          S3_DB: !Ref S3DB
       Events:
         ApiEvent:
           Type: Api
@@ -479,6 +488,7 @@ Resources:
           DB_HOST: !Ref DBHOST
           DB_NAME: !Ref DBNAME
           DB_PASSWORD: !Ref DBPASSWORD
+          S3_DB: !Ref S3DB
       Events:
         MidnightTrigger:
           Type: Schedule
@@ -553,6 +563,7 @@ Resources:
           DB_PASSWORD: !Ref DBPASSWORD
           COGNITO_USER_POOL_ID: !Ref USERPOOLID
           EMAIL_PASSWORD: !Ref EMAILPASSWORD
+          S3_DB: !Ref S3DB
       Events:
         StripeWebhook:
           Type: Api

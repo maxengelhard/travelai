@@ -3,6 +3,8 @@ import json
 import stripe
 import psycopg2
 import boto3
+from datetime import datetime
+import pytz
 import psycopg2.extras
 from botocore.exceptions import ClientError
 import string
@@ -16,11 +18,13 @@ from email.utils import formataddr
 
 # Create a new SES client
 cognito_client = boto3.client('cognito-idp')
-ses_client = boto3.client('ses')
 USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
+BUCKET_NAME = os.getenv('S3_DB')
 SES_SENDER_EMAIL = 'tripjourneyai@gmail.com'
 LOGIN_URL = 'appdev.tripjourney.co'  # URL where users can log in
 
+
+s3 = boto3.client('s3')
 user = os.getenv('DB_USER')
 host = os.getenv('DB_HOST')
 password = os.getenv('DB_PASSWORD')
@@ -36,102 +40,51 @@ sender_creds = {
             'name': "Trip Journey AI",
         }
 
+def save_user_data(email, user_data):
+    s3.put_object(
+        Bucket=BUCKET_NAME,
+        Key=f'users/{email}.json',
+        Body=json.dumps(user_data),
+        ContentType='application/json'
+    )
+
+def get_user_data(email):
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=f'users/{email}.json')
+        return json.loads(response['Body'].read().decode('utf-8'))
+    except s3.exceptions.NoSuchKey:
+        return None
+
+def delete_user_data(email):
+    s3.delete_object(Bucket=BUCKET_NAME, Key=f'users/{email}.json')
+
+def delete_user_itineraries(email):
+    prefix = f'itineraries/{email}/'
+    response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=prefix)
+    if 'Contents' in response:
+        for obj in response['Contents']:
+            s3.delete_object(Bucket=BUCKET_NAME, Key=obj['Key'])
 
 
-# ---------------- Stripe Webhook Setup ----------------
-def lambda_handler(event,context):
-    payload = event['body']
+def lambda_handler(event, context):
+    payload = json.loads(event['body'])
     sig_header = event['headers']['Stripe-Signature']
     
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, endpoint_secret
+            payload, sig_header, os.environ['STRIPE_WEBHOOK_SECRET']
         )
     except ValueError as e:
-        # Invalid payload
-        raise e
+        return {'statusCode': 400, 'body': 'Invalid payload'}
     except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
-        raise e
-    
-    payload = json.loads(payload)
-    print(payload)
-    print(payload['type'])
-    if payload['type'] == 'checkout.session.completed':
-        payload_object = payload['data']['object'] 
-        session_id = payload_object['id']
-        customer = payload_object['customer']
-        retrieve_response = stripe.checkout.Session.retrieve(
-        session_id,
-        expand=['total_details.breakdown']
-        )
-        total_details = retrieve_response['total_details']['breakdown']
-        discounts = total_details.get('discounts',[])
-        if len(discounts) > 0:
-            discount = discounts[0]
-            promo_code_id = discount['discount']['promotion_code']
-        else:
-            return {
-                'statusCode': 200,
-                'body': json.dumps('Done!')
-            }
-        ## if there is already a connection you don't need to set it up
-        metadata = payload_object['metadata']
-        if 'account_id' in metadata:
-            return {
-                'statusCode': 200,
-                'body': json.dumps('Done!')
-            }
-        try:
-            with psycopg2.connect(
-                host=host,
-                database=database,
-                user=user,
-                password=password,
-                port="5432",
-                sslmode='require') as conn:
+        return {'statusCode': 400, 'body': 'Invalid signature'}
 
-                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                    query = "SELECT account_id FROM sellers WHERE promo_code_id=%s"
-                    cur.execute(query, (promo_code_id,))
-                    result = cur.fetchone() or {}
-                    account_id = result.get('account_id')
-                    if account_id:
-                        print('setting up connection')
-                        stripe.Customer.modify(
-                        customer,
-                        metadata={"account_id": account_id},
-                        )
-
-                        insert_query = "INSERT INTO subscription_account_association (subscription_id, account_id) VALUES (%s, %s)"
-                        subscription_id = retrieve_response['subscription']
-                        cur.execute(insert_query, (subscription_id, account_id))
-                        conn.commit()
-
-                        amount_to_transfer = int(payload_object['amount_total'] * 0.30)
-                        if amount_to_transfer > 0:
-                            # Create a transfer to the connected account
-                            print('transfering to account')
-                            stripe.Transfer.create(
-                                amount=amount_to_transfer,
-                                currency=payload_object['currency'],
-                                destination=account_id,
-                                transfer_group=payload_object['invoice'],
-                            )
-
+    if event['type'] == 'invoice.payment_succeeded':
+        invoice = event['data']['object']
+        customer_id = invoice['customer']
+        description = invoice['lines']['data'][0]['description'].lower()
         
-        except (Exception,psycopg2.DatabaseError) as error:
-            print(error)
-    
-    if payload['type'] == 'invoice.payment_succeeded':
-        payload_object = payload['data']['object'] 
-        invoice_id = payload_object['id']
-        customer_id = payload_object['customer']
-        description = payload_object['lines']['data'][0]['description'].lower()
-        print('customer id:', customer_id)
-        print('description:', description)
-        
-        plan_type = None
+        plan_type = 'basic'
         is_pro = False
         is_yearly = False
         
@@ -145,205 +98,394 @@ def lambda_handler(event,context):
         if 'yearly' in description:
             is_yearly = True
 
-        credits = 1000
-        if plan_type == 'jet setter':
-            credits = 20000
-
+        credits = 1000 if plan_type == 'pro' else 20000
         if is_yearly:
             credits *= 12
 
-        if plan_type:
-            try:
-                with psycopg2.connect(
-                    host=host,
-                    database=database,
-                    user=user,
-                    password=password,
-                    port="5432",
-                    sslmode='require') as conn:
+        stripe_customer = stripe.Customer.retrieve(customer_id)
+        email = stripe_customer.get('email', '')
 
-                    with conn.cursor() as cur:
-                        # Check if user exists
-                        stripe_customer = stripe.Customer.retrieve(customer_id)
-                        email = stripe_customer.get('email', '')
-                        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-                        update_user = cur.fetchone()
-                        
-                        if update_user is None:
-                            # Fetch customer details from Stripe
-                            
-                            
-                            # Insert new user
-                            insert_query = """
-                            INSERT INTO users (email, status, stripe_customer_id, plan_type, is_pro, credits, is_yearly)
-                            VALUES (%s, 'pre', %s, %s, %s, %s, %s)
-                            """
-                            cur.execute(insert_query, (email, customer_id, plan_type, is_pro, credits, is_yearly))
-                            print(f"Inserted new user with plan {plan_type} for customer {customer_id}")
-                        else:
-                            # Update existing user
-                            update_query = """
-                            UPDATE users 
-                            SET plan_type = %s, is_pro = %s, credits = %s, is_yearly = %s
-                            WHERE stripe_customer_id = %s
-                            """
-                            cur.execute(update_query, (plan_type, is_pro, credits, is_yearly, customer_id))
-                            print(f"Updated user plan to {plan_type} for customer {customer_id}")
-                        
-                        conn.commit()
-
-            except (Exception, psycopg2.DatabaseError) as error:
-                print(f"Error updating user plan: {error}")
-
-        # try:
-        #     # Retrieve the invoice
-        #     invoice = stripe.Invoice.retrieve(invoice_id)
-        #     subscription_id = invoice.get('subscription')
-
-        #     if subscription_id:
-        #         # Database operation to find associated account
-        #         with psycopg2.connect(
-        #             host=host,
-        #             database=database,
-        #             user=user,
-        #             password=password,
-        #             port="5432",
-        #             sslmode='require') as conn:
-
-        #             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-        #                 # Query to find the associated account for this subscription
-        #                 query = "SELECT account_id FROM subscription_account_association WHERE subscription_id=%s"
-        #                 cur.execute(query, (subscription_id,))
-        #                 result = cur.fetchone()
-
-        #                 if result:
-        #                     account_id = result.get('account_id')
-        #                     if invoice['billing_reason'] == 'subscription_cycle':
-        #                         # Check if this is the payment after the start
-        #                         # Calculate 20% of the payment
-        #                         amount_to_transfer = int(invoice['amount_paid'] * 0.30)
-        #                         if amount_to_transfer > 0:
-        #                             # Create a transfer to the connected account
-        #                             print('transfering to account')
-        #                             stripe.Transfer.create(
-        #                                 amount=amount_to_transfer,
-        #                                 currency=invoice['currency'],
-        #                                 destination=account_id,
-        #                                 transfer_group=invoice_id,
-        #                             )
-        # except Exception as e:
-        #     print(f"Error: {e}")
-
+        user_data = get_user_data(email)
+        if user_data is None:
+            user_data = {
+                'email': email,
+                'stripe_customer_id': customer_id,
+                'plan_type': plan_type,
+                'is_pro': is_pro,
+                'credits': credits,
+                'is_yearly': is_yearly,
+                'created_at': datetime.now(pytz.utc).isoformat()
+            }
+        else:
+            user_data.update({
+                'plan_type': plan_type,
+                'is_pro': is_pro,
+                'credits': credits,
+                'is_yearly': is_yearly
+            })
         
+        save_user_data(email, user_data)
 
-        
-    if payload['type'] == 'customer.created':
-        print(payload)
-        session = payload['data']['object']
+    elif event['type'] == 'customer.created':
+        session = event['data']['object']
         customer_email = session['email']
-        customer_name = session['name']
         stripe_customer = session['id']
+
+        user_data = get_user_data(customer_email)
+        if user_data is None:
+            user_data = {
+                'email': customer_email,
+                'stripe_customer_id': stripe_customer,
+                'credits': 1000,
+                'status': 'pre',
+                'created_at': datetime.now(pytz.utc).isoformat()
+            }
+        else:
+            user_data['stripe_customer_id'] = stripe_customer
         
-        try:
-            with psycopg2.connect(
-                host=host,
-                database=database,
-                user=user,
-                password=password,
-                port="5432",
-                sslmode='require') as conn:
+        save_user_data(customer_email, user_data)
 
-                with conn.cursor() as cur:
-                    # Check if user exists
-                    cur.execute("SELECT * FROM users WHERE email = %s", (customer_email,))
-                    update_user = cur.fetchone()
-                    
-                    if update_user is None:
-                        # Insert new user
-                        insert_query = """
-                        INSERT INTO users (email, status, stripe_customer_id, credits)
-                        VALUES (%s, 'pre', %s, %s, 1000)
-                        """
-                        cur.execute(insert_query, (customer_email, stripe_customer))
-                        print(f"Inserted new user data for email {customer_email}")
-                    else:
-                        # Update existing user
-                        update_query = """
-                        UPDATE users 
-                        SET stripe_customer_id = %s
-                        WHERE email = %s
-                        """
-                        cur.execute(update_query, (stripe_customer, customer_email))
-                        print(f"Updated user data for email {customer_email}")
-                    
-                    conn.commit()
+        temp_password = generate_temp_password()
+        create_or_update_cognito_user(customer_email, 'pro', temp_password)
+        send_login_email(customer_email, temp_password)
 
-        except (Exception, psycopg2.DatabaseError) as error:
-            print(f"Error updating user data: {error}")
-
-        try:
-            temp_password = generate_temp_password()
-            create_or_update_cognito_user(customer_email, 'pro',temp_password)
-            send_login_email(customer_email, temp_password)
-        except Exception as e:
-            raise e
-
-    if payload['type'] == 'customer.subscription.deleted':
-        print('customer.subscription.deleted')
-        print(payload)
-        stripe_customer = payload['data']['object']['customer']
-
-        try:
-            with psycopg2.connect(
-                host=host,
-                database=database,
-                user=user,
-                password=password,
-                port="5432",
-                sslmode='require') as conn:
-
-                with conn.cursor() as cur:
-                    # First, retrieve the email
-                    select_query = "SELECT email FROM users WHERE stripe_customer_id = %s"
-                    cur.execute(select_query, (stripe_customer,))
-                    result = cur.fetchone()
-                    
-                    if result:
-                        email = result[0]
-                        
-                        # Now delete from users table
-                        delete_query = "DELETE FROM users WHERE stripe_customer_id = %s"
-                        cur.execute(delete_query, (stripe_customer,))
-                        
-                        # Delete from the other table using the email
-                        other_table_delete_query = "DELETE FROM itinerarys WHERE email = %s"
-                        cur.execute(other_table_delete_query, (email,))
-                        
-                        conn.commit()
-                        
-                        print(f"Deleted user with email {email} from users and itinerarys")
-                        # Delete user from Cognito
-                        try:
-                            cognito_client.admin_delete_user(
-                                UserPoolId=USER_POOL_ID,
-                                Username=email
-                            )
-                            print(f"Deleted user {email} from Cognito user pool")
-                        except cognito_client.exceptions.UserNotFoundException:
-                            print(f"User {email} not found in Cognito user pool")
-                        except Exception as e:
-                            print(f"Error deleting user from Cognito: {str(e)}")
-
-                    else:
-                        print(f"No user found with stripe_customer_id {stripe_customer}")
-
-        except (Exception, psycopg2.DatabaseError) as error:
-            print(error)
+    elif event['type'] == 'customer.subscription.deleted':
+        stripe_customer = event['data']['object']['customer']
         
+        # Find the user with this stripe_customer_id
+        for key in s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix='users/')['Contents']:
+            user_data = json.loads(s3.get_object(Bucket=BUCKET_NAME, Key=key['Key'])['Body'].read().decode('utf-8'))
+            if user_data.get('stripe_customer_id') == stripe_customer:
+                email = user_data['email']
+                delete_user_data(email)
+                delete_user_itineraries(email)
+                
+                try:
+                    cognito_client.admin_delete_user(
+                        UserPoolId=USER_POOL_ID,
+                        Username=email
+                    )
+                    print(f"Deleted user {email} from Cognito user pool")
+                except cognito_client.exceptions.UserNotFoundException:
+                    print(f"User {email} not found in Cognito user pool")
+                except Exception as e:
+                    print(f"Error deleting user from Cognito: {str(e)}")
+                
+                break
+
     return {
         'statusCode': 200,
         'body': json.dumps('Done!')
     }
+
+
+#### rds old code
+# ---------------- Stripe Webhook Setup ----------------
+# def lambda_handler(event,context):
+#     payload = event['body']
+#     sig_header = event['headers']['Stripe-Signature']
+    
+#     try:
+#         event = stripe.Webhook.construct_event(
+#             payload, sig_header, endpoint_secret
+#         )
+#     except ValueError as e:
+#         # Invalid payload
+#         raise e
+#     except stripe.error.SignatureVerificationError as e:
+#         # Invalid signature
+#         raise e
+    
+#     payload = json.loads(payload)
+#     print(payload)
+#     print(payload['type'])
+#     if payload['type'] == 'checkout.session.completed':
+#         payload_object = payload['data']['object'] 
+#         session_id = payload_object['id']
+#         customer = payload_object['customer']
+#         retrieve_response = stripe.checkout.Session.retrieve(
+#         session_id,
+#         expand=['total_details.breakdown']
+#         )
+#         total_details = retrieve_response['total_details']['breakdown']
+#         discounts = total_details.get('discounts',[])
+#         if len(discounts) > 0:
+#             discount = discounts[0]
+#             promo_code_id = discount['discount']['promotion_code']
+#         else:
+#             return {
+#                 'statusCode': 200,
+#                 'body': json.dumps('Done!')
+#             }
+#         ## if there is already a connection you don't need to set it up
+#         metadata = payload_object['metadata']
+#         if 'account_id' in metadata:
+#             return {
+#                 'statusCode': 200,
+#                 'body': json.dumps('Done!')
+#             }
+#         try:
+#             with psycopg2.connect(
+#                 host=host,
+#                 database=database,
+#                 user=user,
+#                 password=password,
+#                 port="5432",
+#                 sslmode='require') as conn:
+
+#                 with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+#                     query = "SELECT account_id FROM sellers WHERE promo_code_id=%s"
+#                     cur.execute(query, (promo_code_id,))
+#                     result = cur.fetchone() or {}
+#                     account_id = result.get('account_id')
+#                     if account_id:
+#                         print('setting up connection')
+#                         stripe.Customer.modify(
+#                         customer,
+#                         metadata={"account_id": account_id},
+#                         )
+
+#                         insert_query = "INSERT INTO subscription_account_association (subscription_id, account_id) VALUES (%s, %s)"
+#                         subscription_id = retrieve_response['subscription']
+#                         cur.execute(insert_query, (subscription_id, account_id))
+#                         conn.commit()
+
+#                         amount_to_transfer = int(payload_object['amount_total'] * 0.30)
+#                         if amount_to_transfer > 0:
+#                             # Create a transfer to the connected account
+#                             print('transfering to account')
+#                             stripe.Transfer.create(
+#                                 amount=amount_to_transfer,
+#                                 currency=payload_object['currency'],
+#                                 destination=account_id,
+#                                 transfer_group=payload_object['invoice'],
+#                             )
+
+        
+#         except (Exception,psycopg2.DatabaseError) as error:
+#             print(error)
+    
+#     if payload['type'] == 'invoice.payment_succeeded':
+#         payload_object = payload['data']['object'] 
+#         invoice_id = payload_object['id']
+#         customer_id = payload_object['customer']
+#         description = payload_object['lines']['data'][0]['description'].lower()
+#         print('customer id:', customer_id)
+#         print('description:', description)
+        
+#         plan_type = None
+#         is_pro = False
+#         is_yearly = False
+        
+#         if 'pro' in description:
+#             plan_type = 'pro'
+#             is_pro = True
+#         elif 'jet setter' in description:
+#             plan_type = 'jet setter'
+#             is_pro = True
+        
+#         if 'yearly' in description:
+#             is_yearly = True
+
+#         credits = 1000
+#         if plan_type == 'jet setter':
+#             credits = 20000
+
+#         if is_yearly:
+#             credits *= 12
+
+#         if plan_type:
+#             try:
+#                 with psycopg2.connect(
+#                     host=host,
+#                     database=database,
+#                     user=user,
+#                     password=password,
+#                     port="5432",
+#                     sslmode='require') as conn:
+
+#                     with conn.cursor() as cur:
+#                         # Check if user exists
+#                         stripe_customer = stripe.Customer.retrieve(customer_id)
+#                         email = stripe_customer.get('email', '')
+#                         cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+#                         update_user = cur.fetchone()
+                        
+#                         if update_user is None:
+#                             # Fetch customer details from Stripe
+                            
+                            
+#                             # Insert new user
+#                             insert_query = """
+#                             INSERT INTO users (email, status, stripe_customer_id, plan_type, is_pro, credits, is_yearly)
+#                             VALUES (%s, 'pre', %s, %s, %s, %s, %s)
+#                             """
+#                             cur.execute(insert_query, (email, customer_id, plan_type, is_pro, credits, is_yearly))
+#                             print(f"Inserted new user with plan {plan_type} for customer {customer_id}")
+#                         else:
+#                             # Update existing user
+#                             update_query = """
+#                             UPDATE users 
+#                             SET plan_type = %s, is_pro = %s, credits = %s, is_yearly = %s
+#                             WHERE stripe_customer_id = %s
+#                             """
+#                             cur.execute(update_query, (plan_type, is_pro, credits, is_yearly, customer_id))
+#                             print(f"Updated user plan to {plan_type} for customer {customer_id}")
+                        
+#                         conn.commit()
+
+#             except (Exception, psycopg2.DatabaseError) as error:
+#                 print(f"Error updating user plan: {error}")
+
+#         # try:
+#         #     # Retrieve the invoice
+#         #     invoice = stripe.Invoice.retrieve(invoice_id)
+#         #     subscription_id = invoice.get('subscription')
+
+#         #     if subscription_id:
+#         #         # Database operation to find associated account
+#         #         with psycopg2.connect(
+#         #             host=host,
+#         #             database=database,
+#         #             user=user,
+#         #             password=password,
+#         #             port="5432",
+#         #             sslmode='require') as conn:
+
+#         #             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+#         #                 # Query to find the associated account for this subscription
+#         #                 query = "SELECT account_id FROM subscription_account_association WHERE subscription_id=%s"
+#         #                 cur.execute(query, (subscription_id,))
+#         #                 result = cur.fetchone()
+
+#         #                 if result:
+#         #                     account_id = result.get('account_id')
+#         #                     if invoice['billing_reason'] == 'subscription_cycle':
+#         #                         # Check if this is the payment after the start
+#         #                         # Calculate 20% of the payment
+#         #                         amount_to_transfer = int(invoice['amount_paid'] * 0.30)
+#         #                         if amount_to_transfer > 0:
+#         #                             # Create a transfer to the connected account
+#         #                             print('transfering to account')
+#         #                             stripe.Transfer.create(
+#         #                                 amount=amount_to_transfer,
+#         #                                 currency=invoice['currency'],
+#         #                                 destination=account_id,
+#         #                                 transfer_group=invoice_id,
+#         #                             )
+#         # except Exception as e:
+#         #     print(f"Error: {e}")
+
+        
+
+        
+#     if payload['type'] == 'customer.created':
+#         print(payload)
+#         session = payload['data']['object']
+#         customer_email = session['email']
+#         customer_name = session['name']
+#         stripe_customer = session['id']
+        
+#         try:
+#             with psycopg2.connect(
+#                 host=host,
+#                 database=database,
+#                 user=user,
+#                 password=password,
+#                 port="5432",
+#                 sslmode='require') as conn:
+
+#                 with conn.cursor() as cur:
+#                     # Check if user exists
+#                     cur.execute("SELECT * FROM users WHERE email = %s", (customer_email,))
+#                     update_user = cur.fetchone()
+                    
+#                     if update_user is None:
+#                         # Insert new user
+#                         insert_query = """
+#                         INSERT INTO users (email, status, stripe_customer_id, credits)
+#                         VALUES (%s, 'pre', %s, %s, 1000)
+#                         """
+#                         cur.execute(insert_query, (customer_email, stripe_customer))
+#                         print(f"Inserted new user data for email {customer_email}")
+#                     else:
+#                         # Update existing user
+#                         update_query = """
+#                         UPDATE users 
+#                         SET stripe_customer_id = %s
+#                         WHERE email = %s
+#                         """
+#                         cur.execute(update_query, (stripe_customer, customer_email))
+#                         print(f"Updated user data for email {customer_email}")
+                    
+#                     conn.commit()
+
+#         except (Exception, psycopg2.DatabaseError) as error:
+#             print(f"Error updating user data: {error}")
+
+#         try:
+#             temp_password = generate_temp_password()
+#             create_or_update_cognito_user(customer_email, 'pro',temp_password)
+#             send_login_email(customer_email, temp_password)
+#         except Exception as e:
+#             raise e
+
+#     if payload['type'] == 'customer.subscription.deleted':
+#         print('customer.subscription.deleted')
+#         print(payload)
+#         stripe_customer = payload['data']['object']['customer']
+
+#         try:
+#             with psycopg2.connect(
+#                 host=host,
+#                 database=database,
+#                 user=user,
+#                 password=password,
+#                 port="5432",
+#                 sslmode='require') as conn:
+
+#                 with conn.cursor() as cur:
+#                     # First, retrieve the email
+#                     select_query = "SELECT email FROM users WHERE stripe_customer_id = %s"
+#                     cur.execute(select_query, (stripe_customer,))
+#                     result = cur.fetchone()
+                    
+#                     if result:
+#                         email = result[0]
+                        
+#                         # Now delete from users table
+#                         delete_query = "DELETE FROM users WHERE stripe_customer_id = %s"
+#                         cur.execute(delete_query, (stripe_customer,))
+                        
+#                         # Delete from the other table using the email
+#                         other_table_delete_query = "DELETE FROM itinerarys WHERE email = %s"
+#                         cur.execute(other_table_delete_query, (email,))
+                        
+#                         conn.commit()
+                        
+#                         print(f"Deleted user with email {email} from users and itinerarys")
+#                         # Delete user from Cognito
+#                         try:
+#                             cognito_client.admin_delete_user(
+#                                 UserPoolId=USER_POOL_ID,
+#                                 Username=email
+#                             )
+#                             print(f"Deleted user {email} from Cognito user pool")
+#                         except cognito_client.exceptions.UserNotFoundException:
+#                             print(f"User {email} not found in Cognito user pool")
+#                         except Exception as e:
+#                             print(f"Error deleting user from Cognito: {str(e)}")
+
+#                     else:
+#                         print(f"No user found with stripe_customer_id {stripe_customer}")
+
+#         except (Exception, psycopg2.DatabaseError) as error:
+#             print(error)
+        
+#     return {
+#         'statusCode': 200,
+#         'body': json.dumps('Done!')
+#     }
 
 
 def generate_temp_password(length=12):
