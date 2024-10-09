@@ -46,27 +46,28 @@ const ItineraryGrid = ({ destination, itinerary, darkMode }) => {
             : 'bg-gradient-to-r from-blue-500 to-indigo-500'
           }
           text-white transition-all duration-300
-          p-2
+          p-4
         `}>
           <div className="flex flex-col sm:flex-row justify-between items-center">
-            <div className="text-center sm:text-left mb-4 sm:mb-0">
+            <div className="text-center sm:text-left mb-4 sm:mb-0 flex-grow">
               <h2 className="text-3xl sm:text-4xl font-bold">{destination} Itinerary</h2>
             </div>
-            <button
-              onClick={() => toPDF()}
-              className={`
-                ${darkMode 
-                  ? 'bg-indigo-600 hover:bg-indigo-500' 
-                  : 'bg-blue-400 hover:bg-blue-300'
-                }
-                text-white font-bold py-3 px-6 rounded-full 
-                flex items-center transition-all duration-300 shadow-lg
-                transform hover:scale-105
-              `}
-            >
-              <FaDownload className="mr-2" />
-              Download PDF
-            </button>
+            <div className="flex justify-center sm:justify-end w-full sm:w-auto">
+              <button
+                onClick={() => toPDF()}
+                className={`
+                  ${darkMode 
+                    ? 'bg-indigo-600 hover:bg-indigo-500' 
+                    : 'bg-blue-400 hover:bg-blue-300'
+                  }
+                  text-white font-bold p-3 rounded-full 
+                  flex items-center justify-center transition-all duration-300 shadow-lg
+                  transform hover:scale-105 w-12 h-12
+                `}
+              >
+                <FaDownload className="text-xl" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
