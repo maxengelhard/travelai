@@ -53,6 +53,8 @@ Parameters:
     Type: String
   TURNSTILESECRETKEY:
     Type: String
+  GOOGLEMAPSAPIKEY:
+    Type: String
 
 Conditions:
   IsProd: !Equals [ !Ref STAGE, prd ]
@@ -614,6 +616,43 @@ Resources:
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"  
 
+
+  SearchLocation:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_search_location_${STAGE}"
+      Handler: search_location.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64  
+      Description: Search for a location
+      Environment:
+        Variables:
+          GOOGLE_MAPS_API_KEY: !Ref GOOGLEMAPSAPIKEY
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayBackend
+            Path: /search-location
+            Method: get
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+              
+              
 
 ###### STRIPE ######
   StripeUserWebhook:
