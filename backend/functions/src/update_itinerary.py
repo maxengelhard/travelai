@@ -106,18 +106,21 @@ def lambda_handler(event, context):
         prompt += f"The themes for this trip are: {', '.join(themes)}. "
     prompt += f"Please incorporate the following changes: {edit_prompt}"
     prompt += """
-    
+
     Please provide the updated itinerary in the following format:
     Day X:
     Morning: [Morning activity]
-    Lunch: [Lunch recommendation]
+    Lunch: [Lunch recommendation] (Estimated cost: $XX)
     Afternoon: [Afternoon activity]
-    Dinner: [Dinner recommendation]
+    Dinner: [Dinner recommendation] (Estimated cost: $XX)
     Evening: [Evening activity]
-    Costs: [Estimated costs for the day, if applicable]
+    Costs: [Detailed breakdown of estimated costs for the day, including meals and activities]
 
     Ensure each section is on a new line and follows this exact structure for each day.
-    IMPORTANT: Make sure that no activities or restaurants repeat across the entire itinerary. Each activity and meal should be unique throughout the trip.
+    IMPORTANT: 
+    1. Make sure that no activities or restaurants repeat across the entire itinerary. Each activity and meal should be unique throughout the trip.
+    2. Include estimated costs for lunch and dinner in parentheses next to each recommendation.
+    3. Provide a detailed breakdown of all costs in the 'Costs' section, including meals and activities.
     """
 
     try:
