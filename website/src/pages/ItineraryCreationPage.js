@@ -42,7 +42,7 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
         useCache: false
       });
       setUserInfo(response.data.body);
-      if (response.data.body.itinerary) {
+      if (response.data.body.content) {
         setSelectedItinerary({
           itinerary_id: response.data.body.itinerary_id,
           ...response.data.body
@@ -104,7 +104,7 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
       ...userStatus,
     }));
     setPreviousItineraries(userItineraries);
-    setSelectedItinerary(userStatus.itinerary ? {
+    setSelectedItinerary(userStatus.content ? {
       ...userStatus
     } : null);
     setOption(null);
@@ -119,7 +119,7 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
   }
 
   return (
-    <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
+    <div className={`flex flex-col h-screen ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
       <Header 
         credits={userInfo?.credits || 0} 
         userInfo={userInfo}
@@ -145,7 +145,7 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
           darkMode={darkMode}
           setDarkMode={setDarkMode}
         />
-        <main className={`flex-1 flex flex-col overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <main className={`flex-1 flex flex-col overflow-hidden ${darkMode ? 'bg-black' : 'bg-white'}`}>
           <div className="flex-shrink-0">
             <ItineraryOptions 
               userInfo={userInfo}
@@ -158,7 +158,7 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
           </div>
           <div className="flex-1 overflow-auto">
             {selectedItinerary && (
-              <ItineraryGrid destination={selectedItinerary.destination} itinerary={selectedItinerary.itinerary} darkMode={darkMode}/>
+              <ItineraryGrid destination={selectedItinerary.destination} itinerary={selectedItinerary.content} darkMode={darkMode}/>
             )}
           </div>
         </main>
