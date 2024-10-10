@@ -3,7 +3,6 @@ import { getCurrentUser, fetchUserAttributes } from '@aws-amplify/auth';
 import API from '../services/API';
 import { useNavigate } from 'react-router-dom';
 
-
 import Header from '../components/Header';
 import SideBar from '../components/SideBar';
 import BurgerMenu from '../components/BurgerMenu';
@@ -11,8 +10,7 @@ import ItineraryOptions from '../components/ItineraryOptions';
 import ItineraryGrid from '../components/ItineraryGrid';
 import UserSidebar from '../components/UserSidebar';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ChatButton from '../components/ChatButton';  // Add this import
-
+import ChatButton from '../components/ChatButton';
 
 function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
   const [userInfo, setUserInfo] = useState(null);
@@ -30,64 +28,53 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
     navigate('/login');
   }, [onSignOut, navigate]);
 
-  const fetchUserInfo = useCallback(async (itineraryId = null) => {
+  const fetchUserStatus = useCallback(async () => {
     try {
-      setLoading(true);
-      await getCurrentUser();
-      await fetchUserAttributes();
-      const cachedItineraryId = localStorage.getItem('selectedItineraryId');
-      const queryParams = cachedItineraryId ? { itinerary_id: cachedItineraryId } : {};
-      const response = await API.get('user-status', { 
-        queryParams: queryParams,
-        useCache: false
-      });
+      const response = await API.get('user-status');
       setUserInfo(response.data.body);
-      if (response.data.body.content) {
-        setSelectedItinerary({
-          itinerary_id: response.data.body.itinerary_id,
-          ...response.data.body
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching user info:', error);
-      await handleAuthError();
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching user status:', err);
+      setError('Failed to fetch user status. Please try again.');
     }
-  }, [handleAuthError]);
+  }, []);
 
-  const fetchPreviousItineraries = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      await getCurrentUser();
+      await fetchUserAttributes();
+      await fetchUserStatus();
       const response = await API.get('user-itineraries', { useCache: false });
       setPreviousItineraries(response.data.body);
+      
+      // Set selected itinerary from localStorage if available
+      const cachedItineraryId = localStorage.getItem('selectedItineraryId');
+      if (cachedItineraryId) {
+        const cachedItinerary = response.data.body.find(itinerary => itinerary.itinerary_id === cachedItineraryId);
+        if (cachedItinerary) {
+          setSelectedItinerary(cachedItinerary);
+        }
+      }
     } catch (err) {
-      console.error('Error fetching previous itineraries:', err);
+      console.error('Error fetching data:', err);
+      setError('Failed to fetch data. Please try again.');
       await handleAuthError();
     } finally {
       setLoading(false);
     }
-  }, [handleAuthError]);
+  }, [handleAuthError, fetchUserStatus]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await fetchUserInfo();
-        await fetchPreviousItineraries();
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        await handleAuthError();
-      }
-    };
-
     fetchData();
-  }, [fetchUserInfo, fetchPreviousItineraries, handleAuthError]);
+  }, [fetchData]);
 
-
-  const handleSelectItinerary = async (itineraryId) => {
-    localStorage.setItem('selectedItineraryId', itineraryId);
-    await fetchUserInfo(itineraryId);
+  const handleSelectItinerary = (itineraryId) => {
+    const selected = previousItineraries.find(itinerary => itinerary.itinerary_id === itineraryId);
+    if (selected) {
+      setSelectedItinerary(selected);
+      localStorage.setItem('selectedItineraryId', itineraryId);
+    }
   };
 
   const handleUserButtonClick = () => {
@@ -98,20 +85,17 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
     setIsUserSidebarOpen(false);
   };
 
-  const handleItineraryUpdate = useCallback(({ userStatus, userItineraries, creditsUsed }) => {
-    setUserInfo(prevUserInfo => ({
-      ...prevUserInfo,
-      ...userStatus,
-    }));
+  const handleItineraryUpdate = useCallback(async ({ userStatus, userItineraries, creditsUsed }) => {
+    await fetchUserStatus(); // Fetch updated user status after itinerary update
     setPreviousItineraries(userItineraries);
     setSelectedItinerary(userStatus.content ? {
       ...userStatus
     } : null);
     setOption(null);
-  }, []);
+  }, [fetchUserStatus]);
 
   if (loading) {
-    return <LoadingSpinner darkMode={darkMode} />
+    return <LoadingSpinner darkMode={darkMode} />;
   }
 
   if (error) {

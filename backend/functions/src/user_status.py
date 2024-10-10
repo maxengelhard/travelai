@@ -17,8 +17,6 @@ def json_serial(obj):
 @load_json_body
 @json_http_resp
 def lambda_handler(event, context):
-    query_strings = event.get('queryStringParameters', {})
-    itinerary_id = query_strings.get('itinerary_id') if query_strings else None
     if 'requestContext' in event and 'authorizer' in event['requestContext']:
         claims = event['requestContext']['authorizer']['claims']
         email = claims.get('email')
@@ -38,25 +36,9 @@ def lambda_handler(event, context):
         user_response = s3.get_object(Bucket=BUCKET_NAME, Key=f'users/{email}.json')
         user_data = json.loads(user_response['Body'].read().decode('utf-8'))
 
-        # Get itinerary data
-        if itinerary_id and itinerary_id.lower() != 'undefined':
-            itinerary_response = s3.get_object(Bucket=BUCKET_NAME, Key=f'itineraries/{email}/{itinerary_id}.json')
-            itinerary_data = json.loads(itinerary_response['Body'].read().decode('utf-8'))
-        else:
-            # Get the most recent itinerary
-            itineraries = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=f'itineraries/{email}/')
-            if 'Contents' in itineraries and itineraries['Contents']:
-                latest_itinerary = max(itineraries['Contents'], key=lambda x: x['LastModified'])
-                itinerary_response = s3.get_object(Bucket=BUCKET_NAME, Key=latest_itinerary['Key'])
-                itinerary_data = json.loads(itinerary_response['Body'].read().decode('utf-8'))
-            else:
-                itinerary_data = None
-
-        result = {**user_data, **itinerary_data} if itinerary_data else user_data
-
         return {
             'statusCode': 200,
-            'body': result,
+            'body': user_data,
             'headers': {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
@@ -65,7 +47,7 @@ def lambda_handler(event, context):
     except s3.exceptions.NoSuchKey:
         return {
             'statusCode': 404,
-            'body': json.dumps({'error': 'User or itinerary not found'}),
+            'body': json.dumps({'error': 'User not found'}),
             'headers': {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
