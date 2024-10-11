@@ -85,12 +85,20 @@ function ItineraryCreationPage({ onSignOut, darkMode, setDarkMode }) {
     setIsUserSidebarOpen(false);
   };
 
-  const handleItineraryUpdate = useCallback(async ({ userStatus, userItineraries, creditsUsed }) => {
+  const handleItineraryUpdate = useCallback(async ({ userStatus, userItineraries }) => {
     await fetchUserStatus(); // Fetch updated user status after itinerary update
     setPreviousItineraries(userItineraries);
-    setSelectedItinerary(userStatus.content ? {
-      ...userStatus
-    } : null);
+    
+    // Find the most recently created itinerary
+    const newItinerary = userItineraries.reduce((latest, current) => {
+      return !latest || new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
+    }, null);
+  
+    if (newItinerary) {
+      setSelectedItinerary(newItinerary);
+      localStorage.setItem('selectedItineraryId', newItinerary.itinerary_id);
+    }
+    
     setOption(null);
   }, [fetchUserStatus]);
 
