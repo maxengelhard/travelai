@@ -1,6 +1,6 @@
 ---
 id: 2
-title: "Top 10 Reasons to Use TripJourney.co for Your Next Vacation Itinerary"
+title: "Top 10 Reasons to Use TripJourney AI for Your Next Vacation Itinerary"
 excerpt: "Discover why TripJourney.co is the ultimate travel planning tool for your next vacation."
 author: "Max"
 date: "2024-10-11"
