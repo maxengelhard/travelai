@@ -30,7 +30,7 @@ function Footer() {
           </div>
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact</h3>
-            <p className="mb-2">Email: contact@tripjourney.co</p>
+            <p className="mb-2">Email: tripjourneyai@gmail.com</p>
             <div className="flex space-x-4 mt-4">
               <a href="https://twitter.com/tripjourneyai" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400">
                 <FaTwitter size={24} />
