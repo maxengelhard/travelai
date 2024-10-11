@@ -638,6 +638,9 @@ Resources:
               Ref: ApiGatewayBackend
             Path: /search-location
             Method: get
+            Auth:
+              AddDefaultAuthorizerToCorsPreflight: false
+              Authorizer: CognitoAuthorizer
       Policies:
         Statement:
           - Effect: Allow

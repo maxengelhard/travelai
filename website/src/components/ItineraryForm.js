@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import API from '../services/API';
 import LoadingOverlay from './LoadingOverlay';
+import { FaMapMarkerAlt } from 'react-icons/fa';
 
 const availableThemes = [
-  'Adventure', 'Social', 'Relaxation', 'Cultural', 'Foodie', 'Nightlife','Nature', 'Urban', 'Beach', 'Historical', 'Shopping'
+  'Adventure', 'Social', 'Relaxation', 'Cultural', 'Foodie', 'Nightlife', 'Nature', 'Urban', 'Beach', 'Historical', 'Shopping'
 ];
 
-const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentItinerary,darkMode }) => {
+const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentItinerary, darkMode }) => {
   const [formData, setFormData] = useState({
     destination: '',
     days: '',
@@ -15,6 +16,10 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
     prompt: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionClicked, setSuggestionClicked] = useState(false);
+  const suggestionRef = useRef(null);
 
   useEffect(() => {
     if (option === 'edit' && currentItinerary) {
@@ -28,9 +33,47 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
     }
   }, [option, currentItinerary]);
 
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (formData.destination.length > 2 && !suggestionClicked) {
+        try {
+          const response = await API.get('search-location', {
+            queryParams: { input: formData.destination }
+          });
+          setSuggestions(response.data.body);
+          setShowSuggestions(true);
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timeoutId);
+  }, [formData.destination, suggestionClicked]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'destination') {
+      setSuggestionClicked(false);
+    }
   };
 
   const handleThemeToggle = (theme) => {
@@ -40,6 +83,12 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
         ? prev.themes.filter(t => t !== theme)
         : [...prev.themes, theme]
     }));
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setFormData(prev => ({ ...prev, destination: suggestion.description }));
+    setShowSuggestions(false);
+    setSuggestionClicked(true);
   };
 
   const creditCost = useMemo(() => {
@@ -58,15 +107,11 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
         itinerary_id: option === 'edit' ? currentItinerary.itinerary_id : undefined
       };
       const response = await API.post(endpoint, { data: payload });
-    //   console.log(response)
       if (option === 'create' && response.data.body && response.data.body.itinerary_id) {
         localStorage.setItem('selectedItineraryId', response.data.body.itinerary_id.toString());
       }
       
-      // Fetch updated user status
       const userStatusResponse = await API.get('user-status');
-      console.log('User Status Response:', userStatusResponse);
-      // Fetch updated user itineraries
       const userItinerariesResponse = await API.get('user-itineraries');
       
       onItineraryUpdate({
@@ -94,20 +139,39 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
         <h2 className={`text-2xl font-bold mb-4 text-center ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
           {option === 'create' ? 'Create New Itinerary' : 'Edit Existing Itinerary'}
         </h2>
-        <div>
+        <div ref={suggestionRef}>
           <label htmlFor="destination" className="block mb-1 font-medium">Destination</label>
-          <input
-            type="text"
-            id="destination"
-            name="destination"
-            value={formData.destination}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              option === 'edit' ? 'bg-gray-100 dark:bg-gray-700' : ''
-            } ${darkMode ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}
-            required
-            readOnly={option === 'edit'}
-          />
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+              <FaMapMarkerAlt className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
+            </span>
+            <input
+              type="text"
+              id="destination"
+              name="destination"
+              value={formData.destination}
+              onChange={handleChange}
+              onFocus={() => setShowSuggestions(true)}
+              className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                option === 'edit' ? 'bg-gray-100 dark:bg-gray-700' : ''
+              } ${darkMode ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}
+              required
+              readOnly={option === 'edit'}
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <ul className={`absolute z-10 w-full mt-1 bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm ${darkMode ? 'bg-gray-700' : 'bg-white'}`}>
+                {suggestions.map((suggestion) => (
+                  <li
+                    key={suggestion.place_id}
+                    className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 ${darkMode ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}`}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
+                    {suggestion.description}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
         <div>
           <label htmlFor="days" className="block mb-1 font-medium">Number of Days</label>
