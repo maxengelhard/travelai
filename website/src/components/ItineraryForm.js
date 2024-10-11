@@ -35,7 +35,7 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
 
   useEffect(() => {
     const fetchSuggestions = async () => {
-      if (formData.destination.length > 2 && !suggestionClicked) {
+      if (option === 'create' && formData.destination.length > 2 && !suggestionClicked) {
         try {
           const response = await API.get('search-location', {
             queryParams: { input: formData.destination }
@@ -53,7 +53,7 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
 
     const timeoutId = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(timeoutId);
-  }, [formData.destination, suggestionClicked]);
+  }, [option, formData.destination, suggestionClicked]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -71,7 +71,7 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (name === 'destination') {
+    if (name === 'destination' && option === 'create') {
       setSuggestionClicked(false);
     }
   };
@@ -151,19 +151,28 @@ const ItineraryForm = ({ userInfo, onItineraryUpdate, option, onClose, currentIt
               name="destination"
               value={formData.destination}
               onChange={handleChange}
-              onFocus={() => setShowSuggestions(true)}
+              onFocus={() => option === 'create' && setShowSuggestions(true)}
               className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 option === 'edit' ? 'bg-gray-100 dark:bg-gray-700' : ''
               } ${darkMode ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}
               required
               readOnly={option === 'edit'}
+              disabled={option === 'edit'}
             />
-            {showSuggestions && suggestions.length > 0 && (
-              <ul className={`absolute z-10 w-full mt-1 bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm ${darkMode ? 'bg-gray-700' : 'bg-white'}`}>
+            {option === 'create' && showSuggestions && suggestions.length > 0 && (
+              <ul className={`absolute z-10 w-full mt-1 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 overflow-auto focus:outline-none sm:text-sm ${
+                darkMode 
+                  ? 'bg-gray-800 ring-gray-700 text-gray-200' 
+                  : 'bg-white ring-gray-300 text-gray-900'
+              }`}>
                 {suggestions.map((suggestion) => (
                   <li
                     key={suggestion.place_id}
-                    className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 ${darkMode ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}`}
+                    className={`cursor-pointer select-none relative py-2 pl-3 pr-9 ${
+                      darkMode
+                        ? 'hover:bg-gray-700 text-gray-200'
+                        : 'hover:bg-gray-100 text-gray-900'
+                    }`}
                     onClick={() => handleSuggestionClick(suggestion)}
                   >
                     {suggestion.description}
