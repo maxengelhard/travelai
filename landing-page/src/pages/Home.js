@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet';
 import TravelForm from '../components/TravelForm';
 import Itinerary from '../components/Itinerary';
 import Navigation from '../components/Navigation';
+import Footer from '../components/Footer';
 import Testimonial from '../components/Testimonial';
 import ItineraryExamples from '../components/ItineraryExamples';
 import ExitIntentModal from '../components/ExitIntentModal';
@@ -423,6 +424,9 @@ function Home() {
       <div className="z-20 relative w-full bg-black py-16" ref={pricingRef}>
         <Pricing prefilledEmail={prefilledEmail} />
       </div>
+      <div className="z-20 relative w-full">
+          <Footer />
+        </div> 
     </>
   );
 }

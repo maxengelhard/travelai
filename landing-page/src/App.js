@@ -2,10 +2,13 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import Navigation from './components/Navigation';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import Pricing from './pages/Pricing';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import { Analytics } from "@vercel/analytics/react"
@@ -27,6 +30,8 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:title" element={<BlogPost />} />
             <Route 
@@ -43,6 +48,7 @@ function App() {
             />
           </Routes>
         </main>
+        <Footer />
       </div>
       <Analytics />
     </Router>
