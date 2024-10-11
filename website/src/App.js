@@ -19,13 +19,23 @@ function App() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    // Initialize darkMode from localStorage, defaulting to true if not set
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === null ? true : savedTheme === 'dark';
+  });
+
+  const toggleDarkMode = () => {
+    setDarkMode(prevMode => !prevMode);
+  };
 
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
 
@@ -84,7 +94,7 @@ function App() {
         path="/itinerary-creation" 
         element={
           isAuthenticated ? 
-            <ItineraryCreationPage onSignOut={handleSignOut} darkMode={darkMode} setDarkMode={setDarkMode} /> : 
+            <ItineraryCreationPage onSignOut={handleSignOut} darkMode={darkMode} setDarkMode={toggleDarkMode} /> : 
             <Navigate to="/login" replace />
         } 
       />

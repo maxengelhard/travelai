@@ -6,6 +6,7 @@ from lambda_decorators import json_http_resp, cors_headers, load_json_body
 from datetime import datetime
 import pytz
 import uuid
+import requests
 
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 s3 = boto3.client('s3')
@@ -49,6 +50,42 @@ def update_user_credits(email, new_credit_amount):
         Body=json.dumps(user_data),
         ContentType='application/json'
     )
+
+def get_getyourguide_suggestions(destination):
+    url = "https://partner.getyourguide.com/en-us/api/get-autocomplete-suggestions"
+    params = {
+        "limit": 20,  # Increase limit to get more results
+        "query": destination
+    }
+    headers = {
+        'accept': 'application/json, text/plain, */*',
+        'accept-language': 'en-US,en;q=0.9',
+        'referer': 'https://partner.getyourguide.com/en-us/solutions/city',
+        'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
+    }
+    response = requests.get(url, params=params, headers=headers)
+    suggestions = response.json()['suggestions']
+    
+    # Parse the destination to handle different formats
+    destination_parts = destination.split(',')
+    destination_city = destination_parts[0].strip().lower()
+    
+    # If there's a state/province, add it to the search terms
+    if len(destination_parts) > 1:
+        destination_state = destination_parts[1].strip().lower()
+        destination_search = f"{destination_city} {destination_state}"
+    else:
+        destination_search = destination_city
+
+    # Filter for POIs in the specified destination
+    pois = [
+        suggestion for suggestion in suggestions
+        if suggestion['locationType'] == 'poi' and
+        (destination_search in suggestion['suggestion'].lower() or
+         destination_city in suggestion['suggestion'].lower())
+    ]
+    
+    return pois[:5]
 
 @cors_headers
 @load_json_body
@@ -105,19 +142,29 @@ def lambda_handler(event, context):
     if themes:
         prompt += f"The themes for this trip are: {', '.join(themes)}. "
     prompt += f"Please incorporate the following changes: {edit_prompt}"
+
+    gyg_suggestions = get_getyourguide_suggestions(destination)
+    if gyg_suggestions:
+        prompt += "Consider including some of these popular attractions:"
+        for suggestion in gyg_suggestions[:5]:  # Limit to top 5 suggestions
+            prompt += f"\n- {suggestion['suggestion']}"
+
     prompt += """
-    
+
     Please provide the updated itinerary in the following format:
     Day X:
     Morning: [Morning activity]
-    Lunch: [Lunch recommendation]
+    Lunch: [Lunch recommendation] (Estimated cost: $XX)
     Afternoon: [Afternoon activity]
-    Dinner: [Dinner recommendation]
+    Dinner: [Dinner recommendation] (Estimated cost: $XX)
     Evening: [Evening activity]
-    Costs: [Estimated costs for the day, if applicable]
+    Costs: [Detailed breakdown of estimated costs for the day, including meals and activities]
 
     Ensure each section is on a new line and follows this exact structure for each day.
-    IMPORTANT: Make sure that no activities or restaurants repeat across the entire itinerary. Each activity and meal should be unique throughout the trip.
+    IMPORTANT: 
+    1. Make sure that no activities or restaurants repeat across the entire itinerary. Each activity and meal should be unique throughout the trip.
+    2. Include estimated costs for lunch and dinner in parentheses next to each recommendation.
+    3. Provide a detailed breakdown of all costs in the 'Costs' section, including meals and activities.
     """
 
     try:
