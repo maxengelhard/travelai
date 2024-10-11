@@ -6,6 +6,7 @@ from lambda_decorators import json_http_resp, cors_headers, load_json_body
 from datetime import datetime
 import pytz
 import uuid
+import requests
 
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 s3 = boto3.client('s3')
@@ -43,6 +44,42 @@ def update_user_credits(email, new_credit_amount):
         ContentType='application/json'
     )
 
+def get_getyourguide_suggestions(destination):
+    url = "https://partner.getyourguide.com/en-us/api/get-autocomplete-suggestions"
+    params = {
+        "limit": 20,  # Increase limit to get more results
+        "query": destination
+    }
+    headers = {
+        'accept': 'application/json, text/plain, */*',
+        'accept-language': 'en-US,en;q=0.9',
+        'referer': 'https://partner.getyourguide.com/en-us/solutions/city',
+        'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
+    }
+    response = requests.get(url, params=params, headers=headers)
+    suggestions = response.json()['suggestions']
+    
+    # Parse the destination to handle different formats
+    destination_parts = destination.split(',')
+    destination_city = destination_parts[0].strip().lower()
+    
+    # If there's a state/province, add it to the search terms
+    if len(destination_parts) > 1:
+        destination_state = destination_parts[1].strip().lower()
+        destination_search = f"{destination_city} {destination_state}"
+    else:
+        destination_search = destination_city
+
+    # Filter for POIs in the specified destination
+    pois = [
+        suggestion for suggestion in suggestions
+        if suggestion['locationType'] == 'poi' and
+        (destination_search in suggestion['suggestion'].lower() or
+         destination_city in suggestion['suggestion'].lower())
+    ]
+    
+    return pois[:5]
+
 @cors_headers
 @load_json_body
 @json_http_resp
@@ -74,6 +111,9 @@ def lambda_handler(event, context):
             }
         }
 
+    # Get GetYourGuide suggestions
+    gyg_suggestions = get_getyourguide_suggestions(destination)
+
     prompt_parts = ["Create a detailed itinerary for a trip"]
     
     if destination:
@@ -89,6 +129,12 @@ def lambda_handler(event, context):
         themes_str = ", ".join(themes)
         prompt_parts.append(f"focusing on the following themes: {themes_str}")
     
+    # Add GetYourGuide suggestions to the prompt
+    if gyg_suggestions:
+        prompt_parts.append("Consider including some of these popular attractions:")
+        for suggestion in gyg_suggestions[:5]:  # Limit to top 5 suggestions
+            prompt_parts.append(f"- {suggestion['suggestion']}")
+
     prompt = f"{' '.join(prompt_parts)}. " + """
     For each day, provide the following information in this exact format:
     Day X:
@@ -336,6 +382,5 @@ def lambda_handler(event, context):
 #         }
 
 
-# if __name__ == "__main__":
-#     result = lambda_handler({"body": {"destination": "Paris", "days": "3", "budget": "1000","email":"maxvengelhard@gmail.com"}}, None)
-#     print(result)
+if __name__ == "__main__":
+    result = get_getyourguide_suggestions("Sydney NSW, Australia")
