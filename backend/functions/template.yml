@@ -674,6 +674,7 @@ Resources:
           LEONARDO_API_KEY: !Ref LEONARDOAPIKEY
           S3_DB: !Ref S3DB
           EMAIL_PASSWORD: !Ref EMAILPASSWORD
+          STAGE: !Ref STAGE
       Events:
         NineAMTrigger:
           Type: Schedule

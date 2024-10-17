@@ -9,7 +9,6 @@ from botocore.exceptions import ClientError
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
 from email.utils import formataddr
 
 LEONARDO_API_KEY = os.environ['LEONARDO_API_KEY']
@@ -17,6 +16,7 @@ client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
 s3 = boto3.client('s3')
 BUCKET_NAME = os.environ['S3_DB']
+STAGE = os.environ['STAGE']
 
 # Email configuration
 SMTP_SERVER = "smtp.gmail.com"
@@ -98,15 +98,7 @@ def generate_caption(city):
 
 def save_to_s3(city, image_urls, caption):
     timestamp = int(time.time())
-    image_contents = []
     
-    # Save images
-    for i, image_url in enumerate(image_urls):
-        image_response = requests.get(image_url)
-        image_key = f'social-media/{city}/images/image_{timestamp}_{i}.jpg'
-        s3.put_object(Bucket=BUCKET_NAME, Key=image_key, Body=image_response.content)
-        image_contents.append(image_response.content)
-
     # Save caption
     caption_key = f'social-media/{city}/captions/caption_{timestamp}.txt'
     s3.put_object(Bucket=BUCKET_NAME, Key=caption_key, Body=caption.encode('utf-8'))
@@ -115,21 +107,27 @@ def save_to_s3(city, image_urls, caption):
     urls_key = f'social-media/{city}/image_urls/urls_{timestamp}.json'
     s3.put_object(Bucket=BUCKET_NAME, Key=urls_key, Body=json.dumps(image_urls).encode('utf-8'))
 
-    return image_contents
-
-def send_email(city, image_contents, caption, image_urls):
+def send_email(city, caption, image_urls):
     msg = MIMEMultipart('alternative')
     msg['From'] = formataddr((SMTP_USERNAME, SENDER_EMAIL))
     msg['To'] = RECIPIENT_EMAIL
     msg['Subject'] = f"New Social Media Post Options for {city}"
 
-    text = MIMEText(f"Caption: {caption}\n\nImage URLs:\n" + "\n".join(image_urls))
-    msg.attach(text)
+    html_content = f"""
+    <html>
+    <body>
+    <h2>Caption:</h2>
+    <p>{caption}</p>
+    <h2>Image URLs:</h2>
+    <ul>
+    {"".join(f"<li><a href='{url}'>{url}</a></li>" for url in image_urls)}
+    </ul>
+    </body>
+    </html>
+    """
 
-    for i, image_content in enumerate(image_contents):
-        image = MIMEImage(image_content)
-        image.add_header('Content-Disposition', 'attachment', filename=f"{city}_image_{i}.jpg")
-        msg.attach(image)
+    text = MIMEText(html_content, 'html')
+    msg.attach(text)
 
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
@@ -141,6 +139,12 @@ def send_email(city, image_contents, caption, image_urls):
         print(f"Failed to send email for {city}: {str(e)}")
 
 def lambda_handler(event, context):
+    if STAGE == "dev":
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Image generation, storage, and email sending complete')
+        }
+    
     popular_cities = get_cities_from_s3()
     
     for _ in range(1):  # Generate 1 set of images per run
@@ -163,8 +167,8 @@ def lambda_handler(event, context):
             
             if image_urls:
                 caption = generate_caption(city)
-                image_contents = save_to_s3(city, image_urls, caption)
-                send_email(city, image_contents, caption, image_urls)
+                save_to_s3(city, image_urls, caption)
+                send_email(city, caption, image_urls)
                 print(f"Generated and saved content for {city}")
             else:
                 print(f"Failed to generate images for {city}")
