@@ -55,6 +55,8 @@ Parameters:
     Type: String
   GOOGLEMAPSAPIKEY:
     Type: String
+  LEONARDOAPIKEY:
+    Type: String
 
 Conditions:
   IsProd: !Equals [ !Ref STAGE, prd ]
@@ -654,8 +656,52 @@ Resources:
               - logs:PutLogEvents
             Resource:
               - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
-              
-              
+
+  CreateSocialMediaPost:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub "tripjourney_create_social_media_post_${STAGE}"
+      Handler: create_social_media_posts.lambda_handler
+      Runtime: python3.10
+      Architectures: 
+        - x86_64  
+      Description: Create a social media post
+      Timeout: 600
+      Environment:
+        Variables:
+          OPENAI_API_KEY: !Ref OPENAIAPIKEY
+          LEONARDO_API_KEY: !Ref LEONARDOAPIKEY
+          S3_DB: !Ref S3DB
+          EMAIL_PASSWORD: !Ref EMAILPASSWORD
+          STAGE: !Ref STAGE
+      Events:
+        NineAMTrigger:
+          Type: Schedule
+          Properties: 
+            Schedule: cron(0 9 * * ? *) # run at 9am every day
+      Policies:
+        Statement:
+          - Effect: Allow     
+            Action:
+              - logs:CreateLogGroup
+            Resource: 
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !Sub "arn:aws:s3:::${S3DB}" 
+              - !Sub "arn:aws:s3:::${S3DB}/*" 
 
 ###### STRIPE ######
   StripeUserWebhook:
