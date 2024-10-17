@@ -10,6 +10,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
+from email.utils import formataddr
 
 LEONARDO_API_KEY = os.environ['LEONARDO_API_KEY']
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
@@ -117,8 +118,8 @@ def save_to_s3(city, image_urls, caption):
     return image_contents
 
 def send_email(city, image_contents, caption, image_urls):
-    msg = MIMEMultipart()
-    msg['From'] = SENDER_EMAIL
+    msg = MIMEMultipart('alternative')
+    msg['From'] = formataddr((SMTP_USERNAME, SENDER_EMAIL))
     msg['To'] = RECIPIENT_EMAIL
     msg['Subject'] = f"New Social Media Post Options for {city}"
 
@@ -133,7 +134,7 @@ def send_email(city, image_contents, caption, image_urls):
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.login(SENDER_EMAIL, SMTP_PASSWORD)
             server.send_message(msg)
         print(f"Email sent successfully for {city}")
     except Exception as e:
