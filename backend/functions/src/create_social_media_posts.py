@@ -72,6 +72,7 @@ def create_image(city):
 
     response = requests.request("POST", url, headers=headers, data=payload)
     generation_resp = response.json()
+    print(generation_resp)
     return generation_resp['sdGenerationJob']['generationId']
 
 def get_images(generation_id):
@@ -81,6 +82,7 @@ def get_images(generation_id):
         'authorization': f'Bearer {LEONARDO_API_KEY}'
     }
     response = requests.request("GET", url, headers=headers)
+    print(response.json())
     return response.json()
 
 def generate_caption(city):
@@ -148,6 +150,7 @@ def lambda_handler(event, context):
             
             # Wait for image generation to complete
             image_data = None
+            image_urls = []
             attempts = 0
             while attempts < 10 and not image_data:
                 time.sleep(10)  # Wait 10 seconds between checks
