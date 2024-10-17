@@ -142,7 +142,7 @@ def send_email(city, image_contents, caption, image_urls):
 def lambda_handler(event, context):
     popular_cities = get_cities_from_s3()
     
-    for _ in range(3):  # Generate 3 sets of images per run
+    for _ in range(1):  # Generate 1 set of images per run
         city = random.choice(popular_cities)
         
         if not city_exists_in_s3(city):
