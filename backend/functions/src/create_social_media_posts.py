@@ -153,7 +153,7 @@ def lambda_handler(event, context):
             image_urls = []
             attempts = 0
             while attempts < 10 and not image_data:
-                time.sleep(10)  # Wait 10 seconds between checks
+                time.sleep(30)  # Wait 30 seconds between checks
                 image_data = get_images(generation_id)
                 if image_data['generations_by_pk']['generated_images']:
                     image_urls = [img['url'] for img in image_data['generations_by_pk']['generated_images']]
