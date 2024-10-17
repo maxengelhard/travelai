@@ -667,6 +667,7 @@ Resources:
       Architectures: 
         - x86_64  
       Description: Create a social media post
+      Timeout: 300
       Environment:
         Variables:
           OPENAI_API_KEY: !Ref OPENAIAPIKEY
