@@ -45,11 +45,15 @@ def generate_prompt(city):
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant that generates very descriptive prompts for images."},
+            {"role": "system", "content": "You are a helpful assistant that generates very descriptive prompts for images. Keep your response under 1000 characters."},
             {"role": "user", "content": f"Generate an extremely detailed prompt for an image that is a beautiful travel photo of {city}. Include refrences about people in the photo. People should be facing away from the camera."}
-        ]
+        ],
+        max_tokens=300
     )
     prompt = response.choices[0].message.content
+    if len(prompt) > 1000:
+        prompt = prompt[:997] + "..."
+    
     print(f"Image generation prompt: {prompt}") 
     return prompt
 
