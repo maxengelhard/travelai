@@ -93,8 +93,8 @@ def generate_caption(city):
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a travel agent creating engaging social media captions so people will be interested in Trip Journey AI travel agency."},
-            {"role": "user", "content": f"Write a short, engaging Instagram caption for a beautiful travel photo of {city}. Refrence how Trip Journey AI can make the epxerience easy and wonderful. Include relevant hashtags."}
+            {"role": "system", "content": "You are a social media marketer for a travel agency creating engaging social media captions so people will be interested in Trip Journey AI travel agency."},
+            {"role": "user", "content": f"Write a short, engaging Instagram caption for a beautiful travel photo of {city}. Refrence how Trip Journey AI can enhance their life through unique, flfilling travel experiences. Include relevant hashtags."}
         ]
     )
     return response.choices[0].message.content
