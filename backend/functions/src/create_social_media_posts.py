@@ -45,11 +45,14 @@ def generate_prompt(city):
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant that generates prompts for images."},
-            {"role": "user", "content": f"Generate a prompt for an image that is a beautiful travel photo of {city}."}
+            {"role": "system", "content": "You are a helpful assistant that generates very descriptive prompts for images."},
+            {"role": "user", "content": f"Generate an extremely detailed prompt for an image that is a beautiful travel photo of {city}. Include refrences about people in the photo as well."}
         ]
     )
-    return response.choices[0].message.content
+    prompt = response.choices[0].message.content
+    print(f"Image generation prompt: {prompt}") 
+    return prompt
+
 
 def create_image(city):
     prompt = generate_prompt(city)
