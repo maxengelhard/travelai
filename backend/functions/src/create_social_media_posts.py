@@ -46,7 +46,7 @@ def generate_prompt(city):
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are a helpful assistant that generates very descriptive prompts for images."},
-            {"role": "user", "content": f"Generate an extremely detailed prompt for an image that is a beautiful travel photo of {city}. Include refrences about people in the photo as well."}
+            {"role": "user", "content": f"Generate an extremely detailed prompt for an image that is a beautiful travel photo of {city}. Include refrences about people in the photo. People should be facing away from the camera."}
         ]
     )
     prompt = response.choices[0].message.content
@@ -93,8 +93,8 @@ def generate_caption(city):
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a travel enthusiast creating engaging social media captions."},
-            {"role": "user", "content": f"Write a short, engaging Instagram caption for a beautiful travel photo of {city}. Include relevant hashtags."}
+            {"role": "system", "content": "You are a travel agent creating engaging social media captions so people will be interested in Trip Journey AI travel agency."},
+            {"role": "user", "content": f"Write a short, engaging Instagram caption for a beautiful travel photo of {city}. Refrence how Trip Journey AI can make the epxerience easy and wonderful. Include relevant hashtags."}
         ]
     )
     return response.choices[0].message.content
