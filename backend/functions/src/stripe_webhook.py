@@ -80,6 +80,13 @@ def lambda_handler(event, context):
 
     if event['type'] == 'invoice.payment_succeeded':
         invoice = event['data']['object']
+        line_items = invoice['lines']['data']
+        if line_items:
+            price_id = line_items[0].get('price', {}).get('id')
+            if price_id:
+                price = stripe.Price.retrieve(price_id)
+                if not price.get('metadata', {}).get('store') == 'tripjourney':
+                    return {'statusCode': 200, 'body': 'Not a TripJourney event'}
         customer_id = invoice['customer']
         description = invoice['lines']['data'][0]['description'].lower()
         
@@ -126,6 +133,9 @@ def lambda_handler(event, context):
         save_user_data(email, user_data)
 
     elif event['type'] == 'customer.created':
+        metadata = event['data']['object'].get('metadata', {})
+        if not metadata.get('store') == 'tripjourney':
+            return {'statusCode': 200, 'body': 'Not a TripJourney event'}
         session = event['data']['object']
         customer_email = session['email']
         stripe_customer = session['id']
@@ -149,6 +159,14 @@ def lambda_handler(event, context):
         send_login_email(customer_email, temp_password)
 
     elif event['type'] == 'customer.subscription.deleted':
+        subscription = event['data']['object']
+        items = subscription.get('items', {}).get('data', [])
+        if items:
+            price_id = items[0].get('price', {}).get('id')
+            if price_id:
+                price = stripe.Price.retrieve(price_id)
+                if not price.get('metadata', {}).get('store') == 'tripjourney':
+                    return {'statusCode': 200, 'body': 'Not a TripJourney event'}
         stripe_customer = event['data']['object']['customer']
         
         # Find the user with this stripe_customer_id
